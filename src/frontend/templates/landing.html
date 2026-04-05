@@ -1,0 +1,65 @@
+﻿{% extends "base.html" %}
+
+{% block title %}ImmersJP - погружение в Японию{% endblock %}
+{% block body_class %}landing-page{% endblock %}
+{% block content %}
+<section class="hero-panel reveal">
+    <div class="hero-copy">
+        <p class="eyebrow">Бесплатная адаптивная платформа</p>
+        <h1>Япония не по карточкам. Япония как прожитый маршрут.</h1>
+        <p class="lead">
+            ImmersJP соединяет язык, культуру и историю в одном потоке.
+            Вместо зубрежки слов ты проходишь персональные сценарии, которые собирает ИИ под твою цель.
+        </p>
+        <div class="hero-actions">
+            {% if current_user %}
+                <a href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}" class="primary-button">Продолжить</a>
+            {% else %}
+                <a href="/auth/register" class="primary-button">Начать обучение</a>
+            {% endif %}
+            <a href="#product" class="ghost-button">Смотреть детали</a>
+        </div>
+    </div>
+    <div class="hero-side">
+        <div class="vertical-sign">日本 immersion notes</div>
+        <div class="paper-card paper-card--emphasis">
+            <span class="paper-card__label">Как это работает</span>
+            <ol>
+                <li>Цели и интересы</li>
+                <li>ИИ генерирует первые партии</li>
+                <li>Ты проходишь карточки и сохраняешь конспекты</li>
+                <li>PDF остается у тебя офлайн</li>
+            </ol>
+        </div>
+    </div>
+</section>
+
+<section id="product" class="section-grid reveal">
+    <article class="paper-card">
+        <span class="paper-card__label">Язык</span>
+        <h2>Не список слов, а живая сцена.</h2>
+        <p>Фразы, грамматика и бытовой контекст собираются в короткие конспекты, которые удобно проходить блоками по 10.</p>
+    </article>
+    <article class="paper-card">
+        <span class="paper-card__label">Культура</span>
+        <h2>Социальные коды без туристической мишуры.</h2>
+        <p>Повседневность, сервис, ритуалы, работа, дом и вещи, которые обычно не объясняют языковые приложения.</p>
+    </article>
+    <article class="paper-card">
+        <span class="paper-card__label">История</span>
+        <h2>Контекст, который делает современную Японию понятной.</h2>
+        <p>Не сухая хронология, а цепочки причин и последствий: эпохи, реформы, память, города, люди.</p>
+    </article>
+</section>
+
+<section class="statement-band reveal">
+    <div>
+        <p class="eyebrow">Позиционирование</p>
+        <h2>Duolingo дает механику. ImmersJP дает среду.</h2>
+    </div>
+    <p>
+        Платформа остается бесплатной и не прячет адаптивность за платным планом.
+        Конспекты, которые ты прошел, можно скачать в PDF и забрать с собой.
+    </p>
+</section>
+{% endblock %}

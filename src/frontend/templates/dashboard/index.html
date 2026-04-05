@@ -1,0 +1,26 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Dashboard - ImmersJP{% endblock %}
+{% block content %}
+<section class="stack-layout reveal">
+    <div class="section-heading">
+        <p class="eyebrow">Dashboard</p>
+        <h1>{{ dashboard.user_display_name }}, у тебя три линии погружения.</h1>
+        <p>{{ dashboard.recommendation }}</p>
+    </div>
+    <div class="section-grid">
+        {% for section in dashboard.sections %}
+            <article class="paper-card paper-card--track">
+                <span class="paper-card__label">{{ section.title }}</span>
+                <h2>{{ section.subtitle }}</h2>
+                <div class="progress-inline">
+                    <strong>{{ section.completed_cards }}</strong>
+                    <span>из {{ section.generated_cards }} карточек завершено</span>
+                </div>
+                <div class="progress-bar"><span style="width: {{ section.completion_rate }}%"></span></div>
+                <a href="{{ section.href }}" class="primary-button">Открыть блок</a>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

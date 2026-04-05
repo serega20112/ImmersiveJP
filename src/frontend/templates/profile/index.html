@@ -1,0 +1,40 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Профиль - ImmersJP{% endblock %}
+{% block content %}
+<section class="stack-layout reveal">
+    <div class="section-heading">
+        <p class="eyebrow">Профиль</p>
+        <h1>Прогресс и рекомендации.</h1>
+        <p>{{ report.next_step }}</p>
+    </div>
+    <div class="section-grid section-grid--wide">
+        <article class="paper-card">
+            <span class="paper-card__label">Общий темп</span>
+            <h2>{{ report.total_completed }} из {{ report.total_generated }}</h2>
+            <div class="progress-bar progress-bar--large"><span style="width: {{ report.completion_rate }}%"></span></div>
+            <p>{{ report.completion_rate }}% маршрута уже пройдено.</p>
+        </article>
+        <article class="paper-card paper-card--emphasis">
+            <span class="paper-card__label">Совет от ИИ</span>
+            <h2>{{ advice.headline }}</h2>
+            <p>{{ advice.summary }}</p>
+            <ul>
+                {% for point in advice.focus_points %}
+                    <li>{{ point }}</li>
+                {% endfor %}
+            </ul>
+        </article>
+    </div>
+    <div class="section-grid">
+        {% for track in report.tracks %}
+            <article class="paper-card paper-card--track">
+                <span class="paper-card__label">{{ track.title }}</span>
+                <h2>{{ track.completed_cards }} / {{ track.generated_cards }}</h2>
+                <p>Текущий batch: {{ track.current_batch }}</p>
+                <div class="progress-bar"><span style="width: {{ track.completion_rate }}%"></span></div>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

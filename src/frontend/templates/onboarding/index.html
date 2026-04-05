@@ -1,0 +1,41 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Онбординг - ImmersJP{% endblock %}
+{% block content %}
+<section class="stack-layout reveal">
+    <div class="section-heading">
+        <p class="eyebrow">Онбординг</p>
+        <h1>Соберем твой стартовый маршрут.</h1>
+        <p>Нам нужны цель, уровень и интересы. На этом основании ИИ создаст первые 10 карточек в каждом блоке.</p>
+    </div>
+    <form action="/onboarding" method="post" class="form-card form-card--wide">
+        <fieldset>
+            <legend>Цель</legend>
+            <div class="choice-grid">
+                <label class="choice-tile"><input type="radio" name="goal" value="tourism" required><span>Туризм</span></label>
+                <label class="choice-tile"><input type="radio" name="goal" value="relocation" required><span>Переезд</span></label>
+                <label class="choice-tile"><input type="radio" name="goal" value="work" required><span>Работа</span></label>
+                <label class="choice-tile"><input type="radio" name="goal" value="university" required><span>Университет</span></label>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Уровень языка</legend>
+            <div class="choice-grid choice-grid--compact">
+                <label class="choice-tile"><input type="radio" name="language_level" value="zero" required><span>Ноль</span></label>
+                <label class="choice-tile"><input type="radio" name="language_level" value="basic" required><span>Базовый</span></label>
+                <label class="choice-tile"><input type="radio" name="language_level" value="intermediate" required><span>Средний</span></label>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Интересы</legend>
+            <div class="choice-grid">
+                <label class="choice-tile"><input type="checkbox" name="interests" value="anime"><span>Аниме</span></label>
+                <label class="choice-tile"><input type="checkbox" name="interests" value="history"><span>История</span></label>
+                <label class="choice-tile"><input type="checkbox" name="interests" value="business"><span>Бизнес</span></label>
+                <label class="choice-tile"><input type="checkbox" name="interests" value="culture"><span>Культура</span></label>
+            </div>
+        </fieldset>
+        <button type="submit" class="primary-button">Сгенерировать стартовые карточки</button>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,24 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Подтверждение почты - ImmersJP{% endblock %}
+{% block content %}
+<section class="form-layout reveal">
+    <div class="form-intro">
+        <p class="eyebrow">Почта</p>
+        <h1>Подтверди адрес и продолжай.</h1>
+        <p>Код приходит на указанный email. Если SMTP не настроен, он будет виден в логах приложения.</p>
+    </div>
+    <form action="/auth/verify-email" method="post" class="form-card">
+        <label>
+            <span>Email</span>
+            <input type="email" name="email" value="{{ email }}" required>
+        </label>
+        <label>
+            <span>Код подтверждения</span>
+            <input type="text" name="code" inputmode="numeric" maxlength="6" required>
+        </label>
+        <button type="submit" class="primary-button">Подтвердить</button>
+        <p class="form-note">После подтверждения можно войти и перейти к онбордингу.</p>
+    </form>
+</section>
+{% endblock %}

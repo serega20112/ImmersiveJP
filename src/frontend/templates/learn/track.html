@@ -1,0 +1,60 @@
+﻿{% extends "base.html" %}
+
+{% block title %}{{ page.title }} - ImmersJP{% endblock %}
+{% block content %}
+<section class="learning-layout reveal">
+    <aside class="paper-card learning-sidebar">
+        <span class="paper-card__label">{{ page.title }}</span>
+        <h1>{{ page.subtitle }}</h1>
+        <p>Текущая партия: {{ page.current_batch if page.current_batch else 'еще не создана' }}</p>
+        <div class="stat-grid">
+            <div><strong>{{ page.completed_total }}</strong><span>пройдено</span></div>
+            <div><strong>{{ page.generated_total }}</strong><span>сгенерировано</span></div>
+        </div>
+        <div class="sidebar-actions">
+            <a href="/learn/download-pdf?track={{ page.track }}" class="ghost-button">Скачать PDF</a>
+            <a href="/learn/next?track={{ page.track }}" class="primary-button {% if not page.can_generate_next %}is-disabled{% endif %}">Следующая партия</a>
+        </div>
+        {% if not page.cards %}
+            <p class="form-note">Карточек пока нет. Вернись в dashboard или перезапусти онбординг.</p>
+        {% endif %}
+    </aside>
+    <div class="card-stack">
+        {% for card in page.cards %}
+            <article class="paper-card lesson-card {% if card.is_completed %}lesson-card--done{% endif %}">
+                <div class="lesson-card__head">
+                    <span>Карточка {{ card.position }}</span>
+                    <span>Batch {{ card.batch_number }}</span>
+                </div>
+                <h2>{{ card.topic }}</h2>
+                <p>{{ card.explanation }}</p>
+                <div class="lesson-card__group">
+                    <h3>Примеры</h3>
+                    <ul>
+                        {% for example in card.examples %}
+                            <li>{{ example }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="lesson-card__group">
+                    <h3>Ключевые слова</h3>
+                    <div class="tag-row">
+                        {% for term in card.key_terms %}
+                            <span class="tag">{{ term }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if not card.is_completed %}
+                    <form action="/learn/complete" method="post">
+                        <input type="hidden" name="card_id" value="{{ card.id }}">
+                        <input type="hidden" name="track" value="{{ page.track }}">
+                        <button type="submit" class="primary-button">Отметить как пройденную</button>
+                    </form>
+                {% else %}
+                    <div class="done-pill">Карточка завершена</div>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
