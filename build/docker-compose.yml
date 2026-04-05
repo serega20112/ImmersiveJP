@@ -14,7 +14,7 @@
       - "8000:8000"
 
   postgres:
-    image: postgres:17-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: immersjp
       POSTGRES_USER: immersjp
