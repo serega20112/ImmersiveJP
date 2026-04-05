@@ -1,26 +1,41 @@
-﻿{% extends "base.html" %}
-
+{% extends "base.html" %}
 {% block title %}Dashboard - ImmersJP{% endblock %}
+{% block body_class %}page--dashboard{% endblock %}
 {% block content %}
-<section class="stack-layout reveal">
-    <div class="section-heading">
-        <p class="eyebrow">Dashboard</p>
-        <h1>{{ dashboard.user_display_name }}, у тебя три линии погружения.</h1>
-        <p>{{ dashboard.recommendation }}</p>
+<section class="dashboard-hero reveal">
+  <article class="panel panel--hero dashboard-hero__main">
+    <p class="section-kicker">Личный маршрут</p>
+    <h1>{{ dashboard.user_display_name }}, у тебя три линии погружения.</h1>
+    <p>{{ dashboard.recommendation }}</p>
+  </article>
+  <article class="panel dashboard-hero__side">
+    <p class="section-kicker">Структура</p>
+    <p>
+      Язык дает форму, культура дает среду, история дает причинность. Вместе они собирают более
+      устойчивое понимание страны.
+    </p>
+  </article>
+</section>
+
+<section class="dashboard-grid reveal">
+  {% for section in dashboard.sections %}
+  <article class="panel track-panel track-panel--{{ section.track }}">
+    <div class="track-panel__head">
+      <div>
+        <p class="section-kicker">{{ section.title }}</p>
+        <h2>{{ section.subtitle }}</h2>
+      </div>
+      <span class="track-panel__percent">{{ section.completion_rate|round(0)|int }}%</span>
     </div>
-    <div class="section-grid">
-        {% for section in dashboard.sections %}
-            <article class="paper-card paper-card--track">
-                <span class="paper-card__label">{{ section.title }}</span>
-                <h2>{{ section.subtitle }}</h2>
-                <div class="progress-inline">
-                    <strong>{{ section.completed_cards }}</strong>
-                    <span>из {{ section.generated_cards }} карточек завершено</span>
-                </div>
-                <div class="progress-bar"><span style="width: {{ section.completion_rate }}%"></span></div>
-                <a href="{{ section.href }}" class="primary-button">Открыть блок</a>
-            </article>
-        {% endfor %}
+    <div class="progress-meta">
+      <strong>{{ section.completed_cards }} / {{ section.generated_cards }}</strong>
+      <span>карточек уже закрыто</span>
     </div>
+    <div class="progress-bar progress-bar--track">
+      <span style="width: {{ section.completion_rate }}%"></span>
+    </div>
+    <a href="{{ section.href }}" class="primary-button">Открыть трек</a>
+  </article>
+  {% endfor %}
 </section>
 {% endblock %}

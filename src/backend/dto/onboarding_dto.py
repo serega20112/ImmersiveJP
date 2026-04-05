@@ -8,7 +8,7 @@ class OnboardingDTO(BaseModel):
 
     goal: str
     language_level: str
-    interests: list[str]
+    interests_text: str
 
 
 class OnboardingResultDTO(BaseModel):

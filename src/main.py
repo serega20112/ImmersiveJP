@@ -1,6 +1,4 @@
-﻿from __future__ import annotations
-
-import uvicorn
+﻿import uvicorn
 
 from src.backend.create_app import create_app
 from src.backend.dependencies.settings import Settings

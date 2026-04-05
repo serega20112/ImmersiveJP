@@ -84,7 +84,9 @@ class PdfBuilder:
             story.append(Spacer(1, 2 * mm))
             story.append(Paragraph(card.explanation, body_style))
             story.append(Spacer(1, 2 * mm))
-            examples = "<br/>".join(f"- {item}" for item in card.examples)
+            examples = "<br/>".join(
+                f"- {item.raw_text}" for item in card.examples
+            )
             story.append(Paragraph(f"Примеры:<br/>{examples}", body_style))
             story.append(Spacer(1, 2 * mm))
             key_terms = ", ".join(card.key_terms)

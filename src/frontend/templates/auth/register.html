@@ -1,28 +1,37 @@
-﻿{% extends "base.html" %}
-
+{% extends "base.html" %}
 {% block title %}Регистрация - ImmersJP{% endblock %}
+{% block body_class %}page--auth{% endblock %}
 {% block content %}
-<section class="form-layout reveal">
-    <div class="form-intro">
-        <p class="eyebrow">Шаг 1</p>
-        <h1>Создай аккаунт и получи персональный маршрут.</h1>
-        <p>После регистрации мы отправим код подтверждения на почту. Он нужен, чтобы не плодить пустые аккаунты и сохранить прогресс за тобой.</p>
-    </div>
-    <form action="/auth/register" method="post" class="form-card">
-        <label>
-            <span>Имя</span>
-            <input type="text" name="display_name" required minlength="2" maxlength="40">
-        </label>
-        <label>
-            <span>Email</span>
-            <input type="email" name="email" required>
-        </label>
-        <label>
-            <span>Пароль</span>
-            <input type="password" name="password" required minlength="8">
-        </label>
-        <button type="submit" class="primary-button">Создать аккаунт</button>
-        <p class="form-note">Уже зарегистрирован? <a href="/auth/login">Войти</a>.</p>
-    </form>
+<section class="auth-layout reveal">
+  <aside class="panel auth-aside">
+    <p class="section-kicker">Шаг 1</p>
+    <h1>Создай базу для личного маршрута.</h1>
+    <p>
+      После регистрации мы отправим код на почту. Это нужно, чтобы не плодить пустые аккаунты
+      и нормально хранить прогресс.
+    </p>
+    <ul class="plain-list">
+      <li>один аккаунт на весь путь обучения</li>
+      <li>прогресс по трем трекам в одном профиле</li>
+      <li>доступ к генерации новых партий и PDF</li>
+    </ul>
+  </aside>
+
+  <form action="/auth/register" method="post" class="panel auth-card">
+    <label class="field-stack">
+      <span>Имя</span>
+      <input type="text" name="display_name" minlength="2" maxlength="40" required />
+    </label>
+    <label class="field-stack">
+      <span>Email</span>
+      <input type="email" name="email" required />
+    </label>
+    <label class="field-stack">
+      <span>Пароль</span>
+      <input type="password" name="password" minlength="8" required />
+    </label>
+    <button type="submit" class="primary-button">Создать аккаунт</button>
+    <p class="form-note">Уже есть аккаунт? <a href="/auth/login">Войти</a>.</p>
+  </form>
 </section>
 {% endblock %}

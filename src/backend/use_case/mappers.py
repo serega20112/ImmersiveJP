@@ -4,7 +4,7 @@ from src.backend.domain.content import LearningCard
 from src.backend.domain.progress import TrackProgressSnapshot
 from src.backend.domain.user import User
 from src.backend.dto.auth_dto import UserViewDTO
-from src.backend.dto.learning_dto import TrackCardDTO
+from src.backend.dto.learning_dto import CardExampleDTO, TrackCardDTO
 from src.backend.dto.profile_dto import TrackProgressDTO
 
 
@@ -26,8 +26,9 @@ def to_track_card_dto(card: LearningCard, completed_ids: set[int]) -> TrackCardD
         id=int(card.id or 0),
         track=card.track.value,
         topic=card.topic,
+        preview=_build_preview(card.explanation),
         explanation=card.explanation,
-        examples=list(card.examples),
+        examples=[_to_card_example_dto(example) for example in card.examples],
         key_terms=list(card.key_terms),
         batch_number=card.batch_number,
         position=card.position,
@@ -44,3 +45,33 @@ def to_track_progress_dto(snapshot: TrackProgressSnapshot) -> TrackProgressDTO:
         current_batch=snapshot.current_batch,
         completion_rate=snapshot.completion_rate,
     )
+
+
+def _build_preview(text: str, max_length: int = 170) -> str:
+    compact = " ".join(text.split())
+    if len(compact) <= max_length:
+        return compact
+    truncated = compact[: max_length - 1].rsplit(" ", maxsplit=1)[0].strip()
+    if not truncated:
+        truncated = compact[: max_length - 1].strip()
+    return f"{truncated}..."
+
+
+def _to_card_example_dto(example: str) -> CardExampleDTO:
+    parts = [part.strip() for part in example.split("|")]
+    if len(parts) >= 3:
+        japanese, romaji, translation = parts[:3]
+        return CardExampleDTO(
+            raw_text=example,
+            japanese=japanese,
+            romaji=romaji,
+            translation=translation,
+        )
+    if len(parts) == 2:
+        japanese, translation = parts
+        return CardExampleDTO(
+            raw_text=example,
+            japanese=japanese,
+            translation=translation,
+        )
+    return CardExampleDTO(raw_text=example, japanese=example)

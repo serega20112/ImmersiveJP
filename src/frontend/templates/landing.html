@@ -1,65 +1,97 @@
-﻿{% extends "base.html" %}
-
+{% extends "base.html" %}
 {% block title %}ImmersJP - погружение в Японию{% endblock %}
-{% block body_class %}landing-page{% endblock %}
+{% block body_class %}page--landing{% endblock %}
 {% block content %}
-<section class="hero-panel reveal">
-    <div class="hero-copy">
-        <p class="eyebrow">Бесплатная адаптивная платформа</p>
-        <h1>Япония не по карточкам. Япония как прожитый маршрут.</h1>
-        <p class="lead">
-            ImmersJP соединяет язык, культуру и историю в одном потоке.
-            Вместо зубрежки слов ты проходишь персональные сценарии, которые собирает ИИ под твою цель.
-        </p>
-        <div class="hero-actions">
-            {% if current_user %}
-                <a href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}" class="primary-button">Продолжить</a>
-            {% else %}
-                <a href="/auth/register" class="primary-button">Начать обучение</a>
-            {% endif %}
-            <a href="#product" class="ghost-button">Смотреть детали</a>
-        </div>
-    </div>
-    <div class="hero-side">
-        <div class="vertical-sign">日本 immersion notes</div>
-        <div class="paper-card paper-card--emphasis">
-            <span class="paper-card__label">Как это работает</span>
-            <ol>
-                <li>Цели и интересы</li>
-                <li>ИИ генерирует первые партии</li>
-                <li>Ты проходишь карточки и сохраняешь конспекты</li>
-                <li>PDF остается у тебя офлайн</li>
-            </ol>
-        </div>
-    </div>
-</section>
-
-<section id="product" class="section-grid reveal">
-    <article class="paper-card">
-        <span class="paper-card__label">Язык</span>
-        <h2>Не список слов, а живая сцена.</h2>
-        <p>Фразы, грамматика и бытовой контекст собираются в короткие конспекты, которые удобно проходить блоками по 10.</p>
-    </article>
-    <article class="paper-card">
-        <span class="paper-card__label">Культура</span>
-        <h2>Социальные коды без туристической мишуры.</h2>
-        <p>Повседневность, сервис, ритуалы, работа, дом и вещи, которые обычно не объясняют языковые приложения.</p>
-    </article>
-    <article class="paper-card">
-        <span class="paper-card__label">История</span>
-        <h2>Контекст, который делает современную Японию понятной.</h2>
-        <p>Не сухая хронология, а цепочки причин и последствий: эпохи, реформы, память, города, люди.</p>
-    </article>
-</section>
-
-<section class="statement-band reveal">
-    <div>
-        <p class="eyebrow">Позиционирование</p>
-        <h2>Duolingo дает механику. ImmersJP дает среду.</h2>
-    </div>
-    <p>
-        Платформа остается бесплатной и не прячет адаптивность за платным планом.
-        Конспекты, которые ты прошел, можно скачать в PDF и забрать с собой.
+<section class="hero reveal">
+  <div class="hero__panel panel panel--hero">
+    <p class="section-kicker">Бесплатная адаптивная платформа</p>
+    <h1 class="hero__title">Изучай Японию как маршрут, а не как набор карточек.</h1>
+    <p class="hero__lead">
+      Язык, культура и история идут одним потоком. ImmersJP собирает конспекты под твою цель,
+      сохраняет прогресс и дает PDF, который остается с тобой офлайн.
     </p>
+    <div class="hero__actions">
+      {% if current_user %}
+      <a href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}" class="primary-button">
+        Продолжить маршрут
+      </a>
+      {% else %}
+      <a href="/auth/register" class="primary-button">Начать обучение</a>
+      {% endif %}
+      <a href="#product" class="ghost-button">Смотреть структуру</a>
+    </div>
+    <ul class="metric-strip">
+      <li>
+        <strong>3</strong>
+        <span>трека в одном ритме</span>
+      </li>
+      <li>
+        <strong>10</strong>
+        <span>карточек в каждой партии</span>
+      </li>
+      <li>
+        <strong>PDF</strong>
+        <span>для повторения без сети</span>
+      </li>
+    </ul>
+  </div>
+
+  <aside class="hero__aside panel panel--accent">
+    <div class="hero__aside-kanji">日本</div>
+    <div>
+      <p class="section-kicker">Как идет обучение</p>
+      <ol class="step-list">
+        <li>Ты задаешь цель, уровень и интересы.</li>
+        <li>Сервис генерирует стартовый маршрут под тебя.</li>
+        <li>На треке видны короткие превью, а полный конспект открывается отдельно.</li>
+        <li>После прохождения партии строится следующая.</li>
+      </ol>
+    </div>
+  </aside>
+</section>
+
+<section id="product" class="bento-grid bento-grid--three reveal">
+  <article class="panel feature-card feature-card--language">
+    <p class="section-kicker">Язык</p>
+    <h2>Фразы, частицы и речевые сцены без сухого словаря.</h2>
+    <p>
+      Важен не только перевод, а контекст: где фраза звучит, какой у нее тон и как она
+      меняется в реальном разговоре.
+    </p>
+  </article>
+  <article class="panel feature-card feature-card--culture">
+    <p class="section-kicker">Культура</p>
+    <h2>Повседневные правила, ритуалы и социальный код страны.</h2>
+    <p>
+      Очереди, сервис, дом, улица, деловой этикет, сезонность и то, что обычно не попадает в учебники.
+    </p>
+  </article>
+  <article class="panel feature-card feature-card--history">
+    <p class="section-kicker">История</p>
+    <h2>Не даты ради дат, а цепочка причин, которая объясняет современную Японию.</h2>
+    <p>
+      Эпохи, реформы, память, города и люди, без которых контекст современной культуры остается плоским.
+    </p>
+  </article>
+</section>
+
+<section class="manifesto reveal">
+  <article class="panel manifesto__lead">
+    <p class="section-kicker">Позиционирование</p>
+    <h2>Duolingo дает механику. ImmersJP дает среду.</h2>
+    <p>
+      Здесь нет платной стены и нет попытки свести Японию к геймификации. Ты проходишь маршрут,
+      который складывается вокруг твоей задачи: туризм, переезд, работа или университет.
+    </p>
+  </article>
+  <article class="panel manifesto__note">
+    <p class="section-kicker">Что остается у пользователя</p>
+    <ul class="plain-list">
+      <li>персональные партии карточек по каждому треку</li>
+      <li>прогресс и рекомендации от ИИ в профиле</li>
+      <li>экспорт пройденных материалов в PDF</li>
+      <li>контекст, который не разваливается на отдельные слова</li>
+    </ul>
+  </article>
 </section>
 {% endblock %}

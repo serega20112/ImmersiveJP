@@ -8,6 +8,6 @@ from src.backend.infrastructure.web import render_template
 index_router = APIRouter()
 
 
-@index_router.get('/', name='index.landing')
+@index_router.get("/", name="index.landing")
 async def landing_page(request: Request):
-    return render_template(request, 'landing.html')
+    return render_template(request, "landing.html")

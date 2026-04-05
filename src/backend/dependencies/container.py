@@ -40,8 +40,10 @@ from src.backend.use_case.learning import (
     CompleteCardUseCase,
     ExportCardsToPDFUseCase,
     GenerateCardsUseCase,
+    GetCardPageUseCase,
     GetNextCardsUseCase,
     GetTrackPageUseCase,
+    RepairCurrentBatchUseCase,
 )
 from src.backend.use_case.onboarding import CompleteOnboardingUseCase
 from src.backend.use_case.profile import (
@@ -220,6 +222,23 @@ class RequestContainer:
         )
 
     @cached_property
+    def get_card_page_use_case(self) -> GetCardPageUseCase:
+        return GetCardPageUseCase(
+            self.content_repository,
+            self.progress_repository,
+            self.session_repository,
+        )
+
+    @cached_property
+    def repair_current_batch_use_case(self) -> RepairCurrentBatchUseCase:
+        return RepairCurrentBatchUseCase(
+            self.user_repository,
+            self.content_repository,
+            self.session_repository,
+            self.root.llm_client,
+        )
+
+    @cached_property
     def complete_card_use_case(self) -> CompleteCardUseCase:
         return CompleteCardUseCase(self.content_repository, self.progress_repository)
 
@@ -284,6 +303,8 @@ class RequestContainer:
     def learning_service(self) -> LearningService:
         return LearningService(
             self.get_track_page_use_case,
+            self.get_card_page_use_case,
+            self.repair_current_batch_use_case,
             self.complete_card_use_case,
             self.get_next_cards_use_case,
             self.export_cards_to_pdf_use_case,

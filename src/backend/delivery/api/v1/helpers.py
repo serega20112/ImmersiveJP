@@ -33,7 +33,7 @@ def get_profile_service(request: Request) -> ProfileService:
 
 
 def get_current_user(request: Request) -> UserViewDTO | None:
-    return getattr(request.state, 'current_user', None)
+    return getattr(request.state, "current_user", None)
 
 
 def redirect_to_route(request: Request, route_name: str) -> RedirectResponse:
@@ -42,10 +42,16 @@ def redirect_to_route(request: Request, route_name: str) -> RedirectResponse:
 
 def track_href(track: str) -> str:
     return {
-        'language': '/learn/language',
-        'culture': '/learn/culture',
-        'history': '/learn/history',
+        "language": "/learn/language",
+        "culture": "/learn/culture",
+        "history": "/learn/history",
     }[track]
+
+
+def resolve_return_to(return_to: str | None, fallback: str) -> str:
+    if return_to and return_to.startswith("/") and not return_to.startswith("//"):
+        return return_to
+    return fallback
 
 
 def set_auth_cookies(
@@ -54,20 +60,20 @@ def set_auth_cookies(
     refresh_token: str,
 ) -> None:
     cookie_kwargs = {
-        'httponly': True,
-        'samesite': Settings.cookie_samesite,
-        'secure': Settings.cookie_secure,
-        'path': '/',
+        "httponly": True,
+        "samesite": Settings.cookie_samesite,
+        "secure": Settings.cookie_secure,
+        "path": "/",
     }
-    response.set_cookie('access_token', access_token, **cookie_kwargs)
-    response.set_cookie('refresh_token', refresh_token, **cookie_kwargs)
+    response.set_cookie("access_token", access_token, **cookie_kwargs)
+    response.set_cookie("refresh_token", refresh_token, **cookie_kwargs)
 
 
 def clear_auth_cookies(response: RedirectResponse) -> None:
     cookie_kwargs = {
-        'samesite': Settings.cookie_samesite,
-        'secure': Settings.cookie_secure,
-        'path': '/',
+        "samesite": Settings.cookie_samesite,
+        "secure": Settings.cookie_secure,
+        "path": "/",
     }
-    response.delete_cookie('access_token', **cookie_kwargs)
-    response.delete_cookie('refresh_token', **cookie_kwargs)
+    response.delete_cookie("access_token", **cookie_kwargs)
+    response.delete_cookie("refresh_token", **cookie_kwargs)

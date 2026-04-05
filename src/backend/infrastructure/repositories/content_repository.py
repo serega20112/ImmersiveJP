@@ -11,6 +11,10 @@ class AbstractContentRepository(ABC):
         pass
 
     @abstractmethod
+    async def update_many(self, cards: list[LearningCard]) -> list[LearningCard]:
+        pass
+
+    @abstractmethod
     async def get_by_id(self, card_id: int) -> LearningCard | None:
         pass
 

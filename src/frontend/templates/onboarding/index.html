@@ -1,41 +1,100 @@
-﻿{% extends "base.html" %}
-
+{% extends "base.html" %}
 {% block title %}Онбординг - ImmersJP{% endblock %}
+{% block body_class %}page--onboarding{% endblock %}
 {% block content %}
-<section class="stack-layout reveal">
-    <div class="section-heading">
-        <p class="eyebrow">Онбординг</p>
-        <h1>Соберем твой стартовый маршрут.</h1>
-        <p>Нам нужны цель, уровень и интересы. На этом основании ИИ создаст первые 10 карточек в каждом блоке.</p>
+<section class="onboarding-layout reveal">
+  <aside class="panel onboarding-aside">
+    <p class="section-kicker">Онбординг</p>
+    <h1>Соберем стартовый маршрут под твою задачу.</h1>
+    <p>
+      Здесь нужна только база: зачем тебе Япония, какой сейчас уровень и что реально интересно.
+      На этом сервис строит первую партию карточек.
+    </p>
+    <div class="aside-callout">
+      <strong>Что дальше</strong>
+      <p>После генерации ты сразу попадешь в языковой трек и увидишь превью всех карточек текущей партии.</p>
     </div>
-    <form action="/onboarding" method="post" class="form-card form-card--wide">
-        <fieldset>
-            <legend>Цель</legend>
-            <div class="choice-grid">
-                <label class="choice-tile"><input type="radio" name="goal" value="tourism" required><span>Туризм</span></label>
-                <label class="choice-tile"><input type="radio" name="goal" value="relocation" required><span>Переезд</span></label>
-                <label class="choice-tile"><input type="radio" name="goal" value="work" required><span>Работа</span></label>
-                <label class="choice-tile"><input type="radio" name="goal" value="university" required><span>Университет</span></label>
-            </div>
-        </fieldset>
-        <fieldset>
-            <legend>Уровень языка</legend>
-            <div class="choice-grid choice-grid--compact">
-                <label class="choice-tile"><input type="radio" name="language_level" value="zero" required><span>Ноль</span></label>
-                <label class="choice-tile"><input type="radio" name="language_level" value="basic" required><span>Базовый</span></label>
-                <label class="choice-tile"><input type="radio" name="language_level" value="intermediate" required><span>Средний</span></label>
-            </div>
-        </fieldset>
-        <fieldset>
-            <legend>Интересы</legend>
-            <div class="choice-grid">
-                <label class="choice-tile"><input type="checkbox" name="interests" value="anime"><span>Аниме</span></label>
-                <label class="choice-tile"><input type="checkbox" name="interests" value="history"><span>История</span></label>
-                <label class="choice-tile"><input type="checkbox" name="interests" value="business"><span>Бизнес</span></label>
-                <label class="choice-tile"><input type="checkbox" name="interests" value="culture"><span>Культура</span></label>
-            </div>
-        </fieldset>
-        <button type="submit" class="primary-button">Сгенерировать стартовые карточки</button>
-    </form>
+  </aside>
+
+  <form
+    action="/onboarding"
+    method="post"
+    class="panel onboarding-card"
+    data-pending-form
+    data-pending-label="Генерируем маршрут..."
+  >
+    <fieldset class="field-group">
+      <legend>Цель</legend>
+      <div class="choice-grid" data-choice-group>
+        <input type="hidden" name="goal" value="" data-choice-input />
+        <button type="button" class="choice-button" data-choice-value="tourism" aria-pressed="false">
+          <span class="choice-button__body">
+            <strong>Туризм</strong>
+            <small>Навигация, кафе, транспорт, бытовые диалоги.</small>
+          </span>
+        </button>
+        <button type="button" class="choice-button" data-choice-value="relocation" aria-pressed="false">
+          <span class="choice-button__body">
+            <strong>Переезд</strong>
+            <small>Жилье, районы, документы и повседневный быт.</small>
+          </span>
+        </button>
+        <button type="button" class="choice-button" data-choice-value="work" aria-pressed="false">
+          <span class="choice-button__body">
+            <strong>Работа</strong>
+            <small>Деловой язык, офисная среда и нормы общения.</small>
+          </span>
+        </button>
+        <button type="button" class="choice-button" data-choice-value="university" aria-pressed="false">
+          <span class="choice-button__body">
+            <strong>Университет</strong>
+            <small>Кампус, учебный язык, академическая рутина.</small>
+          </span>
+        </button>
+      </div>
+    </fieldset>
+
+    <fieldset class="field-group">
+      <legend>Уровень языка</legend>
+      <div class="choice-grid choice-grid--compact" data-choice-group>
+        <input type="hidden" name="language_level" value="" data-choice-input />
+        <button type="button" class="choice-button" data-choice-value="zero" aria-pressed="false">
+          <span class="choice-button__body">
+            <strong>Ноль</strong>
+            <small>Начинаю с самого старта.</small>
+          </span>
+        </button>
+        <button type="button" class="choice-button" data-choice-value="basic" aria-pressed="false">
+          <span class="choice-button__body">
+            <strong>Базовый</strong>
+            <small>Уже цепляю знакомые конструкции.</small>
+          </span>
+        </button>
+        <button type="button" class="choice-button" data-choice-value="intermediate" aria-pressed="false">
+          <span class="choice-button__body">
+            <strong>Средний</strong>
+            <small>Нужен сложный контекст, а не азбука.</small>
+          </span>
+        </button>
+      </div>
+    </fieldset>
+
+    <label class="field-stack">
+      <span>Интересы</span>
+      <textarea
+        name="interests_text"
+        rows="6"
+        placeholder="anime, архитектура, programming, история, кино, политика, бизнес"
+        required
+      ></textarea>
+    </label>
+
+    <button type="submit" class="primary-button" data-pending-button>
+      Создать стартовые карточки
+    </button>
+    <p class="pending-note" data-pending-note hidden>
+      Модель подбирает первую партию. Если внешний LLM отвечает медленно, fallback все равно доведет генерацию до результата.
+    </p>
+  </form>
 </section>
 {% endblock %}

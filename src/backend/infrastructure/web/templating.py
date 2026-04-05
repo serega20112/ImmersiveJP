@@ -27,6 +27,7 @@ def render_template(request: Request, template_name: str, **context):
         "request": request,
         "current_user": getattr(request.state, "current_user", None),
         "flash_messages": pop_flashes(request),
+        "asset_version": getattr(request.app.state, "asset_version", "dev"),
         **context,
     }
     return templates.TemplateResponse(template_name, template_context)

@@ -3,14 +3,24 @@
 from pydantic import BaseModel, ConfigDict
 
 
+class CardExampleDTO(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    raw_text: str
+    japanese: str
+    romaji: str | None = None
+    translation: str | None = None
+
+
 class TrackCardDTO(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     id: int
     track: str
     topic: str
+    preview: str
     explanation: str
-    examples: list[str]
+    examples: list[CardExampleDTO]
     key_terms: list[str]
     batch_number: int
     position: int
@@ -24,6 +34,21 @@ class TrackPageDTO(BaseModel):
     title: str
     subtitle: str
     cards: list[TrackCardDTO]
+    current_batch: int
+    completed_total: int
+    generated_total: int
+    all_current_batch_completed: bool
+    can_generate_next: bool
+
+
+class TrackCardPageDTO(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    track: str
+    title: str
+    subtitle: str
+    card: TrackCardDTO
+    batch_cards: list[TrackCardDTO]
     current_batch: int
     completed_total: int
     generated_total: int

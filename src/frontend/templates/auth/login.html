@@ -1,24 +1,32 @@
-﻿{% extends "base.html" %}
-
+{% extends "base.html" %}
 {% block title %}Вход - ImmersJP{% endblock %}
+{% block body_class %}page--auth{% endblock %}
 {% block content %}
-<section class="form-layout reveal">
-    <div class="form-intro">
-        <p class="eyebrow">С возвращением</p>
-        <h1>Войди и продолжи погружение.</h1>
-        <p>После входа ты попадаешь прямо в свой маршрут: dashboard, текущие карточки и советы по прогрессу.</p>
-    </div>
-    <form action="/auth/login" method="post" class="form-card">
-        <label>
-            <span>Email</span>
-            <input type="email" name="email" required>
-        </label>
-        <label>
-            <span>Пароль</span>
-            <input type="password" name="password" required>
-        </label>
-        <button type="submit" class="primary-button">Войти</button>
-        <p class="form-note">Нет аккаунта? <a href="/auth/register">Регистрация</a>.</p>
-    </form>
+<section class="auth-layout reveal">
+  <aside class="panel auth-aside">
+    <p class="section-kicker">С возвращением</p>
+    <h1>Вернись в маршрут с того места, где остановился.</h1>
+    <p>
+      После входа открываются треки, прогресс и персональные рекомендации. Ничего не теряется между сессиями.
+    </p>
+    <ul class="plain-list">
+      <li>быстрый доступ к текущей партии</li>
+      <li>PDF по уже пройденным карточкам</li>
+      <li>единый профиль для языка, культуры и истории</li>
+    </ul>
+  </aside>
+
+  <form action="/auth/login" method="post" class="panel auth-card">
+    <label class="field-stack">
+      <span>Email</span>
+      <input type="email" name="email" required />
+    </label>
+    <label class="field-stack">
+      <span>Пароль</span>
+      <input type="password" name="password" required />
+    </label>
+    <button type="submit" class="primary-button">Войти</button>
+    <p class="form-note">Нет аккаунта? <a href="/auth/register">Зарегистрироваться</a>.</p>
+  </form>
 </section>
 {% endblock %}

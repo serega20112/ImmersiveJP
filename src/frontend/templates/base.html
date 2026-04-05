@@ -1,46 +1,81 @@
-﻿<!DOCTYPE html>
+<!doctype html>
 <html lang="ru" data-theme="paper">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}ImmersJP{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}">
-    <script defer src="{{ url_for('static', path='js/app.js') }}"></script>
-</head>
-<body class="{% block body_class %}{% endblock %}">
-<div class="page-shell"></div>
-<header class="site-header">
-    <a href="/" class="brand-mark">
-        <span class="brand-mark__kanji">浸</span>
-        <span class="brand-mark__text">ImmersJP</span>
-    </a>
-    <nav class="site-nav">
-        {% if current_user %}
-            <a href="/dashboard">Dashboard</a>
-            <a href="/profile">Profile</a>
-            <form action="/auth/logout" method="post">
-                <button type="submit" class="ghost-button">Выйти</button>
-            </form>
-        {% else %}
-            <a href="/auth/login">Вход</a>
-            <a href="/auth/register" class="accent-link">Регистрация</a>
-        {% endif %}
-        <button type="button" class="theme-toggle ghost-button" data-theme-toggle>Тема</button>
-    </nav>
-</header>
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}?v={{ asset_version }}" />
+    <script defer src="{{ url_for('static', path='js/app.js') }}?v={{ asset_version }}"></script>
+  </head>
+  <body class="{% block body_class %}{% endblock %}">
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a href="/" class="brand-mark">
+          <span class="brand-mark__seal">浸</span>
+          <span class="brand-mark__copy">
+            <strong>ImmersJP</strong>
+            <small>language + culture + history</small>
+          </span>
+        </a>
 
-<main class="site-main">
-    {% if flash_messages %}
-        <section class="flash-stack">
-            {% for flash in flash_messages %}
-                <div class="flash flash--{{ flash.category }}">{{ flash.message }}</div>
-            {% endfor %}
-        </section>
-    {% endif %}
-    {% block content %}{% endblock %}
-</main>
-</body>
+        <nav class="site-nav">
+          {% if current_user %}
+          <a
+            href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}"
+            class="nav-link {% if request.url.path.startswith('/dashboard') or request.url.path.startswith('/onboarding') %}is-active{% endif %}"
+          >
+            Маршрут
+          </a>
+          <a
+            href="/profile"
+            class="nav-link {% if request.url.path.startswith('/profile') %}is-active{% endif %}"
+          >
+            Профиль
+          </a>
+          {% else %}
+          <a href="/" class="nav-link {% if request.url.path == '/' %}is-active{% endif %}">Главная</a>
+          <a
+            href="/auth/login"
+            class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}"
+          >
+            Вход
+          </a>
+          <a
+            href="/auth/register"
+            class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}"
+          >
+            Начать
+          </a>
+          {% endif %}
+
+          <button type="button" class="ghost-button" data-theme-toggle>Тема</button>
+
+          {% if current_user %}
+          <form action="/auth/logout" method="post">
+            <button type="submit" class="ghost-button">Выйти</button>
+          </form>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-main">
+      {% if flash_messages %}
+      <section class="flash-stack">
+        {% for flash in flash_messages %}
+        <div class="flash flash--{{ flash.category }}">{{ flash.message }}</div>
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </body>
 </html>

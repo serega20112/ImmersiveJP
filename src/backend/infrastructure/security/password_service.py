@@ -1,11 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from passlib.context import CryptContext
 
 
 class PasswordService:
     def __init__(self):
-        self._context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        self._context = CryptContext(schemes=['pbkdf2_sha256'], deprecated='auto')
 
     def hash_password(self, password: str) -> str:
         return self._context.hash(password)

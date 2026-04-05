@@ -22,15 +22,15 @@ from src.backend.use_case.auth.register_user import EmailAlreadyExistsError
 from src.backend.use_case.auth.register_user import InvalidRegistrationDataError
 from src.backend.use_case.auth.verify_email import InvalidVerificationCodeError
 
-auth_router = APIRouter(prefix='/auth')
+auth_router = APIRouter(prefix="/auth")
 
 
-@auth_router.get('/register', name='auth.register_page')
+@auth_router.get("/register", name="auth.register_page")
 async def register_page(request: Request):
-    return render_template(request, 'auth/register.html')
+    return render_template(request, "auth/register.html")
 
 
-@auth_router.post('/register', name='auth.register_user')
+@auth_router.post("/register", name="auth.register_user")
 async def register_user(
     request: Request,
     email: Annotated[str, Form()],
@@ -46,22 +46,26 @@ async def register_user(
                 display_name=display_name,
             )
         )
-        flash(request, 'Аккаунт создан. Мы отправили код подтверждения на почту.', 'success')
+        flash(
+            request,
+            "Аккаунт создан. Мы отправили код подтверждения на почту.",
+            "success",
+        )
         return RedirectResponse(
             url=f"{request.app.url_path_for('auth.verify_email_page')}?email={email}",
             status_code=303,
         )
     except (EmailAlreadyExistsError, InvalidRegistrationDataError) as error:
-        flash(request, str(error), 'error')
-        return redirect_to_route(request, 'auth.register_page')
+        flash(request, str(error), "error")
+        return redirect_to_route(request, "auth.register_page")
 
 
-@auth_router.get('/login', name='auth.login_page')
+@auth_router.get("/login", name="auth.login_page")
 async def login_page(request: Request):
-    return render_template(request, 'auth/login.html')
+    return render_template(request, "auth/login.html")
 
 
-@auth_router.post('/login', name='auth.login_user')
+@auth_router.post("/login", name="auth.login_user")
 async def login_user(
     request: Request,
     email: Annotated[str, Form()],
@@ -70,37 +74,39 @@ async def login_user(
     auth_service = get_auth_service(request)
     try:
         auth_result = await auth_service.login(LoginDTO(email=email, password=password))
-        flash(request, f"С возвращением, {auth_result.user.display_name}.", 'success')
-        response = redirect_to_route(request, 'dashboard.dashboard_page')
-        set_auth_cookies(response, auth_result.tokens.access_token, auth_result.tokens.refresh_token)
+        flash(request, f"С возвращением, {auth_result.user.display_name}.", "success")
+        response = redirect_to_route(request, "dashboard.dashboard_page")
+        set_auth_cookies(
+            response, auth_result.tokens.access_token, auth_result.tokens.refresh_token
+        )
         return response
     except (InvalidCredentialsError, EmailNotVerifiedError) as error:
-        flash(request, str(error), 'error')
-        return redirect_to_route(request, 'auth.login_page')
+        flash(request, str(error), "error")
+        return redirect_to_route(request, "auth.login_page")
 
 
-@auth_router.post('/logout', name='auth.logout_user')
+@auth_router.post("/logout", name="auth.logout_user")
 async def logout_user(request: Request):
     auth_service = get_auth_service(request)
     await auth_service.logout(
-        request.cookies.get('access_token'),
-        request.cookies.get('refresh_token'),
+        request.cookies.get("access_token"),
+        request.cookies.get("refresh_token"),
     )
-    response = redirect_to_route(request, 'index.landing')
+    response = redirect_to_route(request, "index.landing")
     clear_auth_cookies(response)
     return response
 
 
-@auth_router.get('/verify-email', name='auth.verify_email_page')
+@auth_router.get("/verify-email", name="auth.verify_email_page")
 async def verify_email_page(request: Request):
     return render_template(
         request,
-        'auth/verify_email.html',
-        email=str(request.query_params.get('email') or ''),
+        "auth/verify_email.html",
+        email=str(request.query_params.get("email") or ""),
     )
 
 
-@auth_router.post('/verify-email', name='auth.verify_email')
+@auth_router.post("/verify-email", name="auth.verify_email")
 async def verify_email(
     request: Request,
     email: Annotated[str, Form()],
@@ -109,10 +115,10 @@ async def verify_email(
     auth_service = get_auth_service(request)
     try:
         await auth_service.verify_email(VerificationDTO(email=email, code=code))
-        flash(request, 'Почта подтверждена. Теперь можно войти.', 'success')
-        return redirect_to_route(request, 'auth.login_page')
+        flash(request, "Почта подтверждена. Теперь можно войти.", "success")
+        return redirect_to_route(request, "auth.login_page")
     except InvalidVerificationCodeError as error:
-        flash(request, str(error), 'error')
+        flash(request, str(error), "error")
         return RedirectResponse(
             url=f"{request.app.url_path_for('auth.verify_email_page')}?email={email}",
             status_code=303,
