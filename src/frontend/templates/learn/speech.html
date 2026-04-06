@@ -1,0 +1,171 @@
+﻿{% extends "base.html" %}
+{% block title %}Речевая практика - ImmersJP{% endblock %}
+{% block body_class %}page--learn page--speech{% endblock %}
+{% block content %}
+<section class="page-hero reveal">
+  <div class="page-hero__copy panel panel--hero">
+    <p class="section-kicker">{{ page.title }}</p>
+    <h1>Практика речи по словам из карточек.</h1>
+    <p class="page-lead">
+      Здесь можно взять слова из текущего языкового блока или добавить свои. Сервис соберет
+      предложения и короткие диалоги, чтобы материал можно было проговаривать вслух.
+    </p>
+    <div class="hero-facts">
+      <span class="hero-fact">10 предложений</span>
+      <span class="hero-fact">5 диалогов</span>
+      <span class="hero-fact">уровень учитывается</span>
+    </div>
+  </div>
+
+  <aside class="panel page-hero__side">
+    <div class="utility-stack">
+      <a href="{{ url_for('learning.language') }}" class="ghost-button">Назад к языку</a>
+      <a href="{{ url_for('profile.page') }}" class="ghost-button">Профиль</a>
+    </div>
+    {% if page.skill_summary %}
+    <p class="utility-card__note">{{ page.skill_summary }}</p>
+    {% else %}
+    <p class="utility-card__note">Раздел работает лучше после первой языковой партии.</p>
+    {% endif %}
+  </aside>
+</section>
+
+<section class="speech-workbench reveal">
+  <article class="panel speech-form-card panel--hero">
+    <div class="section-head">
+      <p class="section-kicker">Список слов</p>
+      <h2>Можно вставить свои слова или взять их из последней партии.</h2>
+      <p>Подходит японский текст, ромадзи, перевод или смешанный формат.</p>
+    </div>
+
+    <form action="{{ url_for('learning.speech_generate') }}" method="post" class="speech-form" data-pending-form data-pending-label="Собираем практику...">
+      <label class="field-stack">
+        <span>Слова или термины</span>
+        <textarea
+          id="speech-words"
+          name="words_text"
+          rows="5"
+          placeholder="みず | mizu | вода, たべる | taberu | есть, がっこう | gakkou | школа"
+        >{{ page.words_text }}</textarea>
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="primary-button" data-pending-button>Собрать практику</button>
+        <p class="pending-note" data-pending-note hidden>Подготовка может занять немного времени.</p>
+      </div>
+    </form>
+  </article>
+
+  <aside class="speech-rail">
+    {% if page.suggested_words %}
+    <section class="panel">
+      <p class="section-kicker">Подсказки</p>
+      <h2>Слова из последней языковой партии.</h2>
+      <div class="tag-row suggested-words">
+        {% for word in page.suggested_words %}
+        <button type="button" class="word-chip" data-word-chip data-word-target="speech-words" data-word-value="{{ word }}">{{ word }}</button>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if page.latest_topics %}
+    <section class="panel">
+      <p class="section-kicker">Последние темы</p>
+      <div class="tag-row">
+        {% for topic in page.latest_topics %}
+        <span class="tag">{{ topic }}</span>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <section class="panel panel--tone">
+      <p class="section-kicker">Как использовать</p>
+      <ul class="plain-list">
+        <li>сначала прочитай все предложения в спокойном темпе</li>
+        <li>потом проговори диалоги двумя ролями</li>
+        <li>после этого вернись в карточки и проверь, насколько материал стал понятнее на слух</li>
+      </ul>
+    </section>
+  </aside>
+</section>
+
+{% if page.practice %}
+<section class="panel practice-overview reveal">
+  <div class="practice-overview__copy">
+    <p class="section-kicker">Режим</p>
+    <h2>{{ page.practice.difficulty_label }}</h2>
+    <p>{{ page.practice.coaching_tip }}</p>
+  </div>
+  <div class="practice-overview__meta">
+    <div class="mini-metrics">
+      <div class="mini-metric">
+        <strong>10</strong>
+        <span>предложений</span>
+      </div>
+      <div class="mini-metric">
+        <strong>5</strong>
+        <span>диалогов</span>
+      </div>
+    </div>
+    <div class="tag-row">
+      {% for word in page.practice.words %}
+      <span class="tag">{{ word }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="speech-section reveal">
+  <div class="section-head">
+    <p class="section-kicker">10 предложений</p>
+    <h2>Прочитай их и проговори несколько раз.</h2>
+  </div>
+  <div class="speech-line-grid">
+    {% for sentence in page.practice.sentences %}
+    <article class="panel speech-line-card">
+      <strong>{{ sentence.japanese }}</strong>
+      {% if sentence.romaji %}
+      <span>{{ sentence.romaji }}</span>
+      {% endif %}
+      {% if sentence.translation %}
+      <p>{{ sentence.translation }}</p>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="speech-section reveal">
+  <div class="section-head">
+    <p class="section-kicker">5 диалогов</p>
+    <h2>Пройди их по ролям, чтобы закрепить фразы в связке.</h2>
+  </div>
+  <div class="dialogue-grid">
+    {% for dialogue in page.practice.dialogues %}
+    <article class="panel dialogue-card">
+      <p class="section-kicker">{{ dialogue.title }}</p>
+      <h3>{{ dialogue.scenario }}</h3>
+      <div class="dialogue-turns">
+        {% for turn in dialogue.turns %}
+        <div class="dialogue-turn">
+          <span class="dialogue-turn__speaker">{{ turn.speaker }}</span>
+          <div>
+            <strong>{{ turn.japanese }}</strong>
+            {% if turn.romaji %}
+            <span>{{ turn.romaji }}</span>
+            {% endif %}
+            {% if turn.translation %}
+            <p>{{ turn.translation }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
