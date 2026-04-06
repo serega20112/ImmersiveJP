@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.backend.domain.content import TrackType
 from src.backend.domain.progress import TrackProgressSnapshot
@@ -7,8 +7,9 @@ from src.backend.infrastructure.repositories import (
     AbstractContentRepository,
     AbstractProgressRepository,
     AbstractSessionRepository,
+    AbstractUserRepository,
 )
-from src.backend.use_case.mappers import to_track_progress_dto
+from src.backend.use_case.mappers import to_skill_assessment_dto, to_track_progress_dto
 
 
 class BuildProgressReportUseCase:
@@ -17,12 +18,18 @@ class BuildProgressReportUseCase:
         content_repository: AbstractContentRepository,
         progress_repository: AbstractProgressRepository,
         session_repository: AbstractSessionRepository,
+        user_repository: AbstractUserRepository,
     ):
         self._content_repository = content_repository
         self._progress_repository = progress_repository
         self._session_repository = session_repository
+        self._user_repository = user_repository
 
     async def execute(self, user_id: int) -> ProgressReportDTO:
+        user = await self._user_repository.get_by_id(user_id)
+        if user is None:
+            raise ValueError("Пользователь не найден")
+
         snapshots: list[TrackProgressSnapshot] = []
         total_generated = 0
         total_completed = await self._progress_repository.get_total_completed(user_id)
@@ -55,9 +62,10 @@ class BuildProgressReportUseCase:
             total_generated=total_generated,
             completion_rate=completion_rate,
             next_step=(
-                f"Добей текущую партию в блоке '{next_track.track.title}' и только потом запускай следующую."
+                f"Сейчас лучше закончить текущую партию в разделе '{next_track.track.title}'. После этого можно переходить дальше."
                 if total_generated
-                else "Пройди онбординг, чтобы получить первую партию карточек."
+                else "Сначала пройди онбординг, чтобы получить стартовые карточки."
             ),
             tracks=[to_track_progress_dto(snapshot) for snapshot in snapshots],
+            skill_assessment=to_skill_assessment_dto(user.skill_assessment),
         )

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated
-
 from fastapi import APIRouter
-from fastapi import Form
 from fastapi import Request
 
 from src.backend.delivery.api.v1.helpers import get_current_user
@@ -26,29 +23,38 @@ async def onboarding_page(request: Request):
         return redirect_to_route(request, "auth.register_page")
     if current_user.onboarding_completed:
         return redirect_to_route(request, "dashboard.dashboard_page")
-    return render_template(request, "onboarding/index.html")
+    page = await get_onboarding_service(request).get_page()
+    return render_template(request, "onboarding/index.html", page=page)
 
 
 @onboarding_router.post("/onboarding", name="onboarding.complete")
-async def complete_onboarding(
-    request: Request,
-    goal: Annotated[str, Form()],
-    language_level: Annotated[str, Form()],
-    interests_text: Annotated[str, Form()],
-):
+async def complete_onboarding(request: Request):
     current_user = get_current_user(request)
     if current_user is None:
         return redirect_to_route(request, "auth.register_page")
+
+    form = await request.form()
+    diagnostic_answers = {
+        key.removeprefix("diagnostic_"): str(value)
+        for key, value in form.items()
+        if key.startswith("diagnostic_")
+    }
     try:
-        await get_onboarding_service(request).complete(
+        result = await get_onboarding_service(request).complete(
             current_user.id,
             OnboardingDTO(
-                goal=goal,
-                language_level=language_level,
-                interests_text=interests_text,
+                goal=str(form.get("goal", "")),
+                language_level=str(form.get("language_level", "")),
+                interests_text=str(form.get("interests_text", "")),
+                diagnostic_answers=diagnostic_answers,
             ),
         )
-        flash(request, "Стартовые карточки готовы. Переходим сразу к первому блоку.", "success")
+        flash(request, result.skill_assessment.summary, "success")
+        flash(
+            request,
+            "Стартовые карточки готовы. Переходим сразу к первому блоку.",
+            "success",
+        )
         return redirect_to_route(request, "learning.language")
     except InvalidOnboardingDataError as error:
         flash(request, str(error), "error")

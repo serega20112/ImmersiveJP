@@ -9,13 +9,21 @@ import httpx
 from src.backend.dependencies.settings import Settings
 from src.backend.domain.content import TrackType
 from src.backend.domain.user import User
-from src.backend.dto.learning_dto import GeneratedCardDraftDTO
+from src.backend.dto.learning_dto import (
+    GeneratedCardDraftDTO,
+    SpeechDialogueDTO,
+    SpeechDialogueTurnDTO,
+    SpeechLineDTO,
+    SpeechPracticeDTO,
+)
 from src.backend.dto.profile_dto import AIAdviceDTO, ProgressReportDTO
 from src.backend.infrastructure.cache import KeyValueStore
 
 
 class HuggingFaceLLMClient:
     _CARDS_CACHE_VERSION = "cards-v2"
+    _SPEECH_CACHE_VERSION = "speech-v2"
+    _ADVICE_CACHE_VERSION = "advice-v2"
 
     def __init__(self, store: KeyValueStore):
         self._store = store
@@ -42,6 +50,22 @@ class HuggingFaceLLMClient:
             ),
             "interests": user.interests,
             "previous_topics": previous_topics,
+            "diagnostic_level": (
+                user.skill_assessment.estimated_level.value
+                if user.skill_assessment and user.skill_assessment.estimated_level
+                else None
+            ),
+            "diagnostic_summary": (
+                user.skill_assessment.summary if user.skill_assessment else None
+            ),
+            "strengths": (
+                list(user.skill_assessment.strengths) if user.skill_assessment else []
+            ),
+            "weak_points": (
+                list(user.skill_assessment.weak_points)
+                if user.skill_assessment
+                else []
+            ),
         }
         cache_key = self._cache_key(payload)
         cached = await self._store.get_json(cache_key)
@@ -61,6 +85,7 @@ class HuggingFaceLLMClient:
     ) -> AIAdviceDTO:
         payload = {
             "kind": "advice",
+            "version": self._ADVICE_CACHE_VERSION,
             "user_id": user.id,
             "goal": user.learning_goal.value if user.learning_goal else None,
             "language_level": (
@@ -68,6 +93,22 @@ class HuggingFaceLLMClient:
             ),
             "interests": user.interests,
             "report": report.model_dump(),
+            "diagnostic_level": (
+                user.skill_assessment.estimated_level.value
+                if user.skill_assessment and user.skill_assessment.estimated_level
+                else None
+            ),
+            "diagnostic_summary": (
+                user.skill_assessment.summary if user.skill_assessment else None
+            ),
+            "strengths": (
+                list(user.skill_assessment.strengths) if user.skill_assessment else []
+            ),
+            "weak_points": (
+                list(user.skill_assessment.weak_points)
+                if user.skill_assessment
+                else []
+            ),
         }
         cache_key = self._cache_key(payload)
         cached = await self._store.get_json(cache_key)
@@ -79,6 +120,49 @@ class HuggingFaceLLMClient:
             cache_key, advice.model_dump(), expire_seconds=6 * 60 * 60
         )
         return advice
+
+    async def generate_speech_practice(
+        self,
+        user: User,
+        words: list[str],
+    ) -> SpeechPracticeDTO:
+        payload = {
+            "kind": "speech",
+            "version": self._SPEECH_CACHE_VERSION,
+            "user_id": user.id,
+            "goal": user.learning_goal.value if user.learning_goal else None,
+            "language_level": (
+                user.language_level.value if user.language_level else None
+            ),
+            "interests": user.interests,
+            "words": words,
+            "diagnostic_level": (
+                user.skill_assessment.estimated_level.value
+                if user.skill_assessment and user.skill_assessment.estimated_level
+                else None
+            ),
+            "diagnostic_summary": (
+                user.skill_assessment.summary if user.skill_assessment else None
+            ),
+            "strengths": (
+                list(user.skill_assessment.strengths) if user.skill_assessment else []
+            ),
+            "weak_points": (
+                list(user.skill_assessment.weak_points)
+                if user.skill_assessment
+                else []
+            ),
+        }
+        cache_key = self._cache_key(payload)
+        cached = await self._store.get_json(cache_key)
+        if cached is not None:
+            return SpeechPracticeDTO.model_validate(cached)
+
+        practice = await self._request_speech_practice(payload)
+        await self._store.set_json(
+            cache_key, practice.model_dump(), expire_seconds=12 * 60 * 60
+        )
+        return practice
 
     async def close(self) -> None:
         await self._http_client.aclose()
@@ -132,7 +216,11 @@ class HuggingFaceLLMClient:
                     "messages": [
                         {
                             "role": "system",
-                            "content": "Ты наставник ImmersJP. Верни JSON-объект с полями headline, summary, focus_points.",
+                            "content": (
+                                "Ты редактор учебных рекомендаций ImmersJP. "
+                                "Верни только JSON-объект с полями headline, summary, focus_points. "
+                                "Тон спокойный, короткий, практический."
+                            ),
                         },
                         {
                             "role": "user",
@@ -146,6 +234,41 @@ class HuggingFaceLLMClient:
             return AIAdviceDTO.model_validate(self._extract_json(content))
         except Exception:
             return self._fallback_advice(user, report)
+
+    async def _request_speech_practice(self, payload: dict) -> SpeechPracticeDTO:
+        if not Settings.hf_api_token:
+            return self._fallback_speech_practice(payload)
+        try:
+            response = await self._http_client.post(
+                Settings.hf_api_url,
+                headers={
+                    "Authorization": f"Bearer {Settings.hf_api_token}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": Settings.hf_model,
+                    "provider": Settings.hf_provider,
+                    "temperature": 0.7,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": (
+                                "Верни только JSON-объект с полями sentences, dialogues, coaching_tip, difficulty_label. "
+                                "Тон короткий и практический."
+                            ),
+                        },
+                        {
+                            "role": "user",
+                            "content": self._build_speech_prompt(payload),
+                        },
+                    ],
+                },
+            )
+            response.raise_for_status()
+            content = response.json()["choices"][0]["message"]["content"]
+            return self._normalize_speech_practice(self._extract_json(content), payload)
+        except Exception:
+            return self._fallback_speech_practice(payload)
 
     @staticmethod
     def _cache_key(payload: dict) -> str:
@@ -227,6 +350,7 @@ class HuggingFaceLLMClient:
             f"Номер партии: {payload['batch_number']}\n"
             f"Размер партии: {payload['batch_size']}\n"
             f"Избегай повторов тем: {previous}\n"
+            f"{HuggingFaceLLMClient._build_skill_context(payload)}\n"
             "Верни JSON-массив, где у каждой карточки есть topic, explanation, examples, key_terms.\n"
             "Explanation делай плотным конспектом длиной около 160-220 слов.\n"
             "Examples возвращай массивом строк в формате: Japanese | Romaji | Русский перевод.\n"
@@ -240,9 +364,148 @@ class HuggingFaceLLMClient:
             f"Цель: {user.learning_goal.value if user.learning_goal else 'не указана'}.\n"
             f"Уровень: {user.language_level.value if user.language_level else 'не указан'}.\n"
             f"Интересы: {', '.join(user.interests) or 'не указаны'}.\n"
+            f"{HuggingFaceLLMClient._build_skill_context_from_user(user)}\n"
             f"Отчет: {report.model_dump_json()}\n"
-            "Верни JSON-объект с полями headline, summary, focus_points."
+            "Верни JSON-объект с полями headline, summary, focus_points.\n"
+            "headline: до 5 слов.\n"
+            "summary: 1-2 коротких предложения.\n"
+            "focus_points: 3 коротких действия.\n"
+            "Без рекламного тона, без мотивационных лозунгов, без образных метафор."
         )
+
+    @staticmethod
+    def _normalize_speech_practice(parsed: dict, payload: dict) -> SpeechPracticeDTO:
+        sentences = [
+            HuggingFaceLLMClient._to_speech_line(item)
+            for item in parsed.get("sentences") or []
+        ]
+        dialogues = [
+            HuggingFaceLLMClient._to_speech_dialogue(item)
+            for item in parsed.get("dialogues") or []
+            if isinstance(item, dict)
+        ]
+        if len(sentences) < 10 or len(dialogues) < 5:
+            return HuggingFaceLLMClient._fallback_speech_practice(payload)
+        return SpeechPracticeDTO(
+            words=list(payload["words"]),
+            sentences=sentences[:10],
+            dialogues=dialogues[:5],
+            coaching_tip=str(parsed.get("coaching_tip") or "").strip()
+            or HuggingFaceLLMClient._speech_coaching_tip(payload),
+            difficulty_label=str(parsed.get("difficulty_label") or "").strip()
+            or HuggingFaceLLMClient._speech_difficulty_label(payload),
+        )
+
+    @staticmethod
+    def _to_speech_line(item: dict | str) -> SpeechLineDTO:
+        if isinstance(item, dict):
+            return SpeechLineDTO(
+                japanese=str(item.get("japanese") or "").strip(),
+                romaji=str(item.get("romaji") or "").strip() or None,
+                translation=str(item.get("translation") or "").strip() or None,
+            )
+        parts = [part.strip() for part in str(item).split("|")]
+        if len(parts) >= 3:
+            return SpeechLineDTO(
+                japanese=parts[0],
+                romaji=parts[1],
+                translation=parts[2],
+            )
+        if len(parts) == 2:
+            return SpeechLineDTO(japanese=parts[0], translation=parts[1])
+        return SpeechLineDTO(japanese=str(item).strip())
+
+    @staticmethod
+    def _to_speech_dialogue(item: dict) -> SpeechDialogueDTO:
+        turns = []
+        for turn in item.get("turns") or []:
+            if isinstance(turn, dict):
+                turns.append(
+                    SpeechDialogueTurnDTO(
+                        speaker=str(turn.get("speaker") or "A").strip() or "A",
+                        japanese=str(turn.get("japanese") or "").strip(),
+                        romaji=str(turn.get("romaji") or "").strip() or None,
+                        translation=str(turn.get("translation") or "").strip() or None,
+                    )
+                )
+                continue
+            line = HuggingFaceLLMClient._to_speech_line(turn)
+            turns.append(
+                SpeechDialogueTurnDTO(
+                    speaker="A",
+                    japanese=line.japanese,
+                    romaji=line.romaji,
+                    translation=line.translation,
+                )
+            )
+        return SpeechDialogueDTO(
+            title=str(item.get("title") or "Диалог").strip(),
+            scenario=str(item.get("scenario") or "").strip(),
+            turns=turns,
+        )
+
+    @staticmethod
+    def _build_speech_prompt(payload: dict) -> str:
+        words = ", ".join(payload["words"]) or "слов нет"
+        interests = ", ".join(payload["interests"]) or "не указаны"
+        return (
+            "Собери разговорную тренировку для ImmersJP.\n"
+            f"Цель: {payload['goal']}\n"
+            f"Самооценка уровня: {payload['language_level']}\n"
+            f"Интересы: {interests}\n"
+            f"Слова: {words}\n"
+            f"{HuggingFaceLLMClient._build_skill_context(payload)}\n"
+            "Верни JSON-объект.\n"
+            "sentences: массив из 10 объектов с полями japanese, romaji, translation.\n"
+            "dialogues: массив из 5 объектов с полями title, scenario, turns.\n"
+            "turns: массив объектов с полями speaker, japanese, romaji, translation.\n"
+            "coaching_tip: 1 короткое практическое предложение.\n"
+            "difficulty_label: 2-3 слова без рекламного тона.\n"
+            "Используй максимум слов из списка и делай материал пригодным для проговаривания."
+        )
+
+    @staticmethod
+    def _build_skill_context(payload: dict) -> str:
+        details = [
+            (
+                f"Диагностический уровень: {payload['diagnostic_level']}"
+                if payload.get("diagnostic_level")
+                else None
+            ),
+            (
+                f"Диагностическая сводка: {payload['diagnostic_summary']}"
+                if payload.get("diagnostic_summary")
+                else None
+            ),
+            (
+                f"Сильные стороны: {', '.join(payload.get('strengths') or [])}"
+                if payload.get("strengths")
+                else None
+            ),
+            (
+                f"Слабые стороны: {', '.join(payload.get('weak_points') or [])}"
+                if payload.get("weak_points")
+                else None
+            ),
+        ]
+        lines = [line for line in details if line]
+        return "\n".join(lines) if lines else "Диагностика пока не заполнена."
+
+    @staticmethod
+    def _build_skill_context_from_user(user: User) -> str:
+        if user.skill_assessment is None:
+            return "Диагностика пока не заполнена."
+        payload = {
+            "diagnostic_level": (
+                user.skill_assessment.estimated_level.value
+                if user.skill_assessment.estimated_level
+                else None
+            ),
+            "diagnostic_summary": user.skill_assessment.summary,
+            "strengths": user.skill_assessment.strengths,
+            "weak_points": user.skill_assessment.weak_points,
+        }
+        return HuggingFaceLLMClient._build_skill_context(payload)
 
     @staticmethod
     def _fallback_cards(
@@ -578,6 +841,7 @@ class HuggingFaceLLMClient:
                         interests=interests,
                         goal=str(payload.get("goal") or "погружение"),
                         language_level=str(payload.get("language_level") or "без уровня"),
+                        skill_summary=str(payload.get("diagnostic_summary") or ""),
                     ),
                     examples=examples,
                     key_terms=key_terms,
@@ -903,6 +1167,7 @@ class HuggingFaceLLMClient:
                     interests=interests,
                     goal=goal,
                     language_level=language_level,
+                    skill_summary=str(payload.get("diagnostic_summary") or ""),
                 )
                 key_terms = list(dict.fromkeys([*base_terms, angle_title, track]))[:5]
                 candidates.append(
@@ -923,6 +1188,7 @@ class HuggingFaceLLMClient:
         interests: str,
         goal: str,
         language_level: str,
+        skill_summary: str,
     ) -> str:
         contextual_blocks = {
             "language": (
@@ -948,7 +1214,158 @@ class HuggingFaceLLMClient:
                 f"С учетом интересов '{interests}' ищи мост между прошлым и настоящим: бизнес, поп-культура, городская жизнь, образование или повседневный этикет."
             ),
         }
-        return f"{base_text} Эта карточка про тему '{topic}'. {contextual_blocks.get(track, contextual_blocks['culture'])}"
+        diagnostic_note = (
+            f" Диагностика пользователя: {skill_summary}"
+            if skill_summary
+            else ""
+        )
+        return (
+            f"{base_text} Эта карточка про тему '{topic}'. "
+            f"{contextual_blocks.get(track, contextual_blocks['culture'])}"
+            f"{diagnostic_note}"
+        )
+
+    @staticmethod
+    def _fallback_speech_practice(payload: dict) -> SpeechPracticeDTO:
+        seed_words = [
+            HuggingFaceLLMClient._parse_seed_word(word)
+            for word in payload.get("words") or []
+        ]
+        if not seed_words:
+            seed_words = [HuggingFaceLLMClient._parse_seed_word("日本語 | nihongo | японский язык")]
+
+        sentence_templates = [
+            ("{surface}を使います。", "{reading} o tsukaimasu.", "Я использую {translation}."),
+            ("毎日{surface}を練習します。", "mainichi {reading} o renshuu shimasu.", "Я каждый день тренирую {translation}."),
+            ("{surface}が好きです。", "{reading} ga suki desu.", "Мне нравится {translation}."),
+            ("今日は{surface}を確認します。", "kyou wa {reading} o kakunin shimasu.", "Сегодня я повторяю {translation}."),
+            ("あとで{surface}を読みます。", "ato de {reading} o yomimasu.", "Позже я прочитаю {translation}."),
+            ("先生と{surface}を話します。", "sensei to {reading} o hanashimasu.", "Я обсуждаю {translation} с преподавателем."),
+            ("友だちに{surface}を見せます。", "tomodachi ni {reading} o misemasu.", "Я показываю {translation} другу."),
+            ("まず{surface}を覚えます。", "mazu {reading} o oboemasu.", "Сначала я запоминаю {translation}."),
+            ("明日{surface}をもう一度使います。", "ashita {reading} o mou ichido tsukaimasu.", "Завтра я еще раз использую {translation}."),
+            ("この場面では{surface}が大事です。", "kono bamen de wa {reading} ga daiji desu.", "В этой сцене важно {translation}."),
+        ]
+        sentences: list[SpeechLineDTO] = []
+        for index, template in enumerate(sentence_templates):
+            word = seed_words[index % len(seed_words)]
+            sentences.append(
+                SpeechLineDTO(
+                    japanese=template[0].format(surface=word["surface"]),
+                    romaji=template[1].format(reading=word["reading"]),
+                    translation=template[2].format(translation=word["translation"]),
+                )
+            )
+
+        dialogue_templates = [
+            (
+                "Попросить и подтвердить",
+                "Короткий бытовой запрос без сложной грамматики.",
+                [
+                    ("A", "{surface}はありますか。", "{reading} wa arimasu ka.", "У вас есть {translation}?"),
+                    ("B", "はい、{surface}があります。", "hai, {reading} ga arimasu.", "Да, {translation} есть."),
+                    ("A", "じゃあ、{surface}をお願いします。", "jaa, {reading} o onegaishimasu.", "Тогда {translation}, пожалуйста."),
+                ],
+            ),
+            (
+                "Уточнить понимание",
+                "Проверка, что слово услышано и понято правильно.",
+                [
+                    ("A", "{surface}はどういう意味ですか。", "{reading} wa dou iu imi desu ka.", "Что значит {translation}?"),
+                    ("B", "{surface}は大切な言葉です。", "{reading} wa taisetsu na kotoba desu.", "{translation} это важное слово."),
+                    ("A", "わかりました。{surface}を使ってみます。", "wakarimashita. {reading} o tsukatte mimasu.", "Понял. Попробую использовать {translation}."),
+                ],
+            ),
+            (
+                "Короткая самопрезентация",
+                "Вставить слово в очень простой разговор о себе.",
+                [
+                    ("A", "今、{surface}を勉強しています。", "ima, {reading} o benkyou shiteimasu.", "Сейчас я изучаю {translation}."),
+                    ("B", "いいですね。どこで{surface}を使いますか。", "ii desu ne. doko de {reading} o tsukaimasu ka.", "Здорово. Где ты используешь {translation}?"),
+                    ("A", "授業と会話で使います。", "jugyou to kaiwa de tsukaimasu.", "Использую на занятиях и в разговоре."),
+                ],
+            ),
+            (
+                "Переспрос без паники",
+                "Формула, чтобы спокойно попросить повторить слово.",
+                [
+                    ("A", "すみません、{surface}をもう一度言ってください。", "sumimasen, {reading} o mou ichido itte kudasai.", "Извините, повторите {translation} еще раз."),
+                    ("B", "はい、{surface}です。", "hai, {reading} desu.", "Да, это {translation}."),
+                    ("A", "ありがとうございます。今なら言えます。", "arigatou gozaimasu. ima nara iemasu.", "Спасибо. Теперь я могу это произнести."),
+                ],
+            ),
+            (
+                "Мини-диалог для закрепления",
+                "Три реплики, которые удобно проговаривать циклом.",
+                [
+                    ("A", "{surface}を知っていますか。", "{reading} o shitteimasu ka.", "Ты знаешь {translation}?"),
+                    ("B", "はい、少し知っています。", "hai, sukoshi shitteimasu.", "Да, немного знаю."),
+                    ("A", "じゃあ、次は{surface}で文を作りましょう。", "jaa, tsugi wa {reading} de bun o tsukurimashou.", "Тогда давай составим предложение с {translation}."),
+                ],
+            ),
+        ]
+        dialogues: list[SpeechDialogueDTO] = []
+        for index, (title, scenario, turns_template) in enumerate(dialogue_templates):
+            word = seed_words[index % len(seed_words)]
+            turns = [
+                SpeechDialogueTurnDTO(
+                    speaker=speaker,
+                    japanese=japanese.format(surface=word["surface"]),
+                    romaji=romaji.format(reading=word["reading"]),
+                    translation=translation.format(translation=word["translation"]),
+                )
+                for speaker, japanese, romaji, translation in turns_template
+            ]
+            dialogues.append(
+                SpeechDialogueDTO(title=title, scenario=scenario, turns=turns)
+            )
+
+        return SpeechPracticeDTO(
+            words=[word["surface"] for word in seed_words],
+            sentences=sentences,
+            dialogues=dialogues,
+            coaching_tip=HuggingFaceLLMClient._speech_coaching_tip(payload),
+            difficulty_label=HuggingFaceLLMClient._speech_difficulty_label(payload),
+        )
+
+    @staticmethod
+    def _parse_seed_word(raw_word: str) -> dict[str, str]:
+        normalized = raw_word.strip()
+        if "|" in normalized:
+            parts = [part.strip() for part in normalized.split("|")]
+        elif " - " in normalized:
+            parts = [part.strip() for part in normalized.split(" - ")]
+        else:
+            parts = [normalized]
+        surface = parts[0] if parts else normalized
+        reading = parts[1] if len(parts) >= 2 else surface
+        translation = parts[2] if len(parts) >= 3 else surface
+        return {
+            "surface": surface,
+            "reading": reading,
+            "translation": translation,
+        }
+
+    @staticmethod
+    def _speech_difficulty_label(payload: dict) -> str:
+        level = payload.get("diagnostic_level") or payload.get("language_level")
+        labels = {
+            "zero": "Простой режим",
+            "basic": "Базовый режим",
+            "intermediate": "Расширенный режим",
+        }
+        return labels.get(str(level), "Речевая практика")
+
+    @staticmethod
+    def _speech_coaching_tip(payload: dict) -> str:
+        weak_points = set(payload.get("weak_points") or [])
+        if "Хирагана" in weak_points:
+            return "Сначала прочитай строки по ромадзи, потом повтори без подсказки."
+        if "Частицы" in weak_points:
+            return "Проговаривай предложения с акцентом на частицы и меняй одно существительное."
+        if "Базовый порядок предложения" in weak_points:
+            return "Читай диалоги по ролям и отдельно отмечай тему, действие и объект."
+        return "Сначала прочитай предложения, потом проговори диалоги."
 
     @staticmethod
     def _fallback_advice(user: User, report: ProgressReportDTO) -> AIAdviceDTO:
@@ -956,17 +1373,20 @@ class HuggingFaceLLMClient:
             report.tracks,
             key=lambda item: item.completion_rate if item.generated_cards else 101,
         )
-        goal = user.learning_goal.value if user.learning_goal else "погружение"
-        level = user.language_level.value if user.language_level else "без уровня"
+        weak_points = (
+            ", ".join(user.skill_assessment.weak_points)
+            if user.skill_assessment and user.skill_assessment.weak_points
+            else "заметных слабых мест пока нет"
+        )
         return AIAdviceDTO(
-            headline="Не разрывай фокус",
+            headline="Следующий шаг",
             summary=(
-                f"Для цели '{goal}' и уровня '{level}' сейчас полезнее добить текущую партию в блоке '{weakest_track.title}'. "
-                "Так обучение будет выглядеть как маршрут, а не как набор случайных тем."
+                f"Сейчас лучше закончить текущую партию в разделе '{weakest_track.title}'. "
+                f"Отдельно стоит следить за темами: {weak_points}."
             ),
             focus_points=[
-                f"Закрой текущий батч в разделе '{weakest_track.title}'.",
-                "После каждой карточки выпиши одно новое слово или одну культурную деталь.",
-                "Не переходи к следующей партии, пока текущая не стала понятной в собственных формулировках.",
+                f"Закрой текущую партию в разделе '{weakest_track.title}'.",
+                "После этого открой речевую практику и проговори слова из языкового блока.",
+                "Перед новой партией отметь 2-3 места, которые остались непонятными.",
             ],
         )

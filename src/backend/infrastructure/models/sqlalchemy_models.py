@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime
 
@@ -52,6 +52,11 @@ class UserModel(TimestampMixin, Base):
     onboarding_completed: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
+    diagnostic_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    diagnostic_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    diagnostic_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    strengths_json: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    weak_points_json: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
 
 
 class LearningCardModel(Base):

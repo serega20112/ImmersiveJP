@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from functools import cached_property
 from typing import Callable
@@ -40,12 +40,17 @@ from src.backend.use_case.learning import (
     CompleteCardUseCase,
     ExportCardsToPDFUseCase,
     GenerateCardsUseCase,
+    GenerateSpeechPracticeUseCase,
     GetCardPageUseCase,
     GetNextCardsUseCase,
+    GetSpeechPracticePageUseCase,
     GetTrackPageUseCase,
     RepairCurrentBatchUseCase,
 )
-from src.backend.use_case.onboarding import CompleteOnboardingUseCase
+from src.backend.use_case.onboarding import (
+    CompleteOnboardingUseCase,
+    GetOnboardingPageUseCase,
+)
 from src.backend.use_case.profile import (
     BuildProgressReportUseCase,
     GenerateAIAdviceUseCase,
@@ -260,6 +265,27 @@ class RequestContainer:
         )
 
     @cached_property
+    def get_speech_practice_page_use_case(self) -> GetSpeechPracticePageUseCase:
+        return GetSpeechPracticePageUseCase(
+            self.user_repository,
+            self.content_repository,
+            self.session_repository,
+        )
+
+    @cached_property
+    def generate_speech_practice_use_case(self) -> GenerateSpeechPracticeUseCase:
+        return GenerateSpeechPracticeUseCase(
+            self.user_repository,
+            self.get_speech_practice_page_use_case,
+            self.root.llm_client,
+            self.root.rate_limiter,
+        )
+
+    @cached_property
+    def get_onboarding_page_use_case(self) -> GetOnboardingPageUseCase:
+        return GetOnboardingPageUseCase()
+
+    @cached_property
     def complete_onboarding_use_case(self) -> CompleteOnboardingUseCase:
         return CompleteOnboardingUseCase(
             self.user_repository,
@@ -272,6 +298,7 @@ class RequestContainer:
             self.content_repository,
             self.progress_repository,
             self.session_repository,
+            self.user_repository,
         )
 
     @cached_property
@@ -297,7 +324,10 @@ class RequestContainer:
 
     @cached_property
     def onboarding_service(self) -> OnboardingService:
-        return OnboardingService(self.complete_onboarding_use_case)
+        return OnboardingService(
+            self.complete_onboarding_use_case,
+            self.get_onboarding_page_use_case,
+        )
 
     @cached_property
     def learning_service(self) -> LearningService:
@@ -308,6 +338,8 @@ class RequestContainer:
             self.complete_card_use_case,
             self.get_next_cards_use_case,
             self.export_cards_to_pdf_use_case,
+            self.get_speech_practice_page_use_case,
+            self.generate_speech_practice_use_case,
         )
 
     @cached_property

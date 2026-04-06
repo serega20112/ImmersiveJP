@@ -1,11 +1,19 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.backend.domain.content import LearningCard
 from src.backend.domain.progress import TrackProgressSnapshot
-from src.backend.domain.user import User
+from src.backend.domain.user import SkillAssessment, User
 from src.backend.dto.auth_dto import UserViewDTO
 from src.backend.dto.learning_dto import CardExampleDTO, TrackCardDTO
 from src.backend.dto.profile_dto import TrackProgressDTO
+from src.backend.dto.skill_dto import SkillAssessmentDTO
+
+
+_LEVEL_TITLES = {
+    "zero": "Стартовый",
+    "basic": "Базовый",
+    "intermediate": "Уверенный",
+}
 
 
 def to_user_view_dto(user: User) -> UserViewDTO:
@@ -44,6 +52,21 @@ def to_track_progress_dto(snapshot: TrackProgressSnapshot) -> TrackProgressDTO:
         generated_cards=snapshot.generated_cards,
         current_batch=snapshot.current_batch,
         completion_rate=snapshot.completion_rate,
+    )
+
+
+def to_skill_assessment_dto(
+    assessment: SkillAssessment | None,
+) -> SkillAssessmentDTO | None:
+    if assessment is None or assessment.estimated_level is None:
+        return None
+    return SkillAssessmentDTO(
+        score=assessment.score,
+        estimated_level=assessment.estimated_level.value,
+        estimated_level_title=_LEVEL_TITLES.get(assessment.estimated_level.value),
+        summary=assessment.summary,
+        strengths=list(assessment.strengths),
+        weak_points=list(assessment.weak_points),
     )
 
 

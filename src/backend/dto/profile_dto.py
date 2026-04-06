@@ -1,6 +1,8 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+from src.backend.dto.skill_dto import SkillAssessmentDTO
 
 
 class TrackProgressDTO(BaseModel):
@@ -22,6 +24,7 @@ class ProgressReportDTO(BaseModel):
     completion_rate: float
     next_step: str
     tracks: list[TrackProgressDTO]
+    skill_assessment: SkillAssessmentDTO | None = None
 
 
 class AIAdviceDTO(BaseModel):
@@ -50,3 +53,5 @@ class DashboardDTO(BaseModel):
     user_display_name: str
     recommendation: str
     sections: list[DashboardSectionDTO]
+    skill_assessment: SkillAssessmentDTO | None = None
+    speech_practice_href: str

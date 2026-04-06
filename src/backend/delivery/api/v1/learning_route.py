@@ -20,10 +20,46 @@ from src.backend.infrastructure.web import render_template
 from src.backend.use_case.learning.complete_card import CardOwnershipError
 from src.backend.use_case.learning.export_cards_to_pdf import NoCompletedCardsError
 from src.backend.use_case.learning.generate_cards import LlmRateLimitExceededError
+from src.backend.use_case.learning.generate_speech_practice import (
+    InvalidSpeechWordsError,
+    SpeechRateLimitExceededError,
+)
 from src.backend.use_case.learning.get_card_page import CardNotFoundError
 from src.backend.use_case.learning.get_next_cards import CurrentBatchNotCompletedError
 
 learning_router = APIRouter(prefix="/learn")
+
+
+@learning_router.get("/speech", name="learning.speech_page")
+async def speech_page(request: Request):
+    current_user = get_current_user(request)
+    if current_user is None:
+        return redirect_to_route(request, "auth.login_page")
+    if not current_user.onboarding_completed:
+        return redirect_to_route(request, "onboarding.page")
+    page = await get_learning_service(request).get_speech_practice_page(current_user.id)
+    return render_template(request, "learn/speech.html", page=page)
+
+
+@learning_router.post("/speech", name="learning.speech_generate")
+async def speech_generate(
+    request: Request,
+    words_text: Annotated[str, Form()],
+):
+    current_user = get_current_user(request)
+    if current_user is None:
+        return redirect_to_route(request, "auth.login_page")
+    if not current_user.onboarding_completed:
+        return redirect_to_route(request, "onboarding.page")
+    try:
+        page = await get_learning_service(request).generate_speech_practice(
+            current_user.id,
+            words_text,
+        )
+        return render_template(request, "learn/speech.html", page=page)
+    except (InvalidSpeechWordsError, SpeechRateLimitExceededError) as error:
+        flash(request, str(error), "error")
+        return RedirectResponse(url="/learn/speech", status_code=303)
 
 
 @learning_router.get("/language", name="learning.language")

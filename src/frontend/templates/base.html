@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}?v={{ asset_version }}" />
@@ -21,7 +21,7 @@
           <span class="brand-mark__seal">浸</span>
           <span class="brand-mark__copy">
             <strong>ImmersJP</strong>
-            <small>language + culture + history</small>
+            <small>язык, культура, история</small>
           </span>
         </a>
 
@@ -31,8 +31,22 @@
             href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}"
             class="nav-link {% if request.url.path.startswith('/dashboard') or request.url.path.startswith('/onboarding') %}is-active{% endif %}"
           >
-            Маршрут
+            Обзор
           </a>
+          {% if current_user.onboarding_completed %}
+          <a
+            href="/learn/language"
+            class="nav-link {% if request.url.path.startswith('/learn/language') or request.url.path.startswith('/learn/culture') or request.url.path.startswith('/learn/history') %}is-active{% endif %}"
+          >
+            Треки
+          </a>
+          <a
+            href="/learn/speech"
+            class="nav-link {% if request.url.path.startswith('/learn/speech') %}is-active{% endif %}"
+          >
+            Практика
+          </a>
+          {% endif %}
           <a
             href="/profile"
             class="nav-link {% if request.url.path.startswith('/profile') %}is-active{% endif %}"
@@ -41,18 +55,8 @@
           </a>
           {% else %}
           <a href="/" class="nav-link {% if request.url.path == '/' %}is-active{% endif %}">Главная</a>
-          <a
-            href="/auth/login"
-            class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}"
-          >
-            Вход
-          </a>
-          <a
-            href="/auth/register"
-            class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}"
-          >
-            Начать
-          </a>
+          <a href="/auth/login" class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}">Вход</a>
+          <a href="/auth/register" class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}">Начать</a>
           {% endif %}
 
           <button type="button" class="ghost-button" data-theme-toggle>Тема</button>

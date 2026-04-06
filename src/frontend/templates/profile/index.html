@@ -2,11 +2,11 @@
 {% block title %}Профиль - ImmersJP{% endblock %}
 {% block body_class %}page--profile{% endblock %}
 {% block content %}
-<section class="profile-shell reveal">
-  <article class="panel panel--hero profile-overview">
+<section class="page-hero reveal">
+  <div class="page-hero__copy panel panel--hero">
     <p class="section-kicker">Профиль</p>
-    <h1>Прогресс по маршруту и следующий фокус.</h1>
-    <p>{{ report.next_step }}</p>
+    <h1>Здесь собран текущий прогресс.</h1>
+    <p class="page-lead">{{ report.next_step }}</p>
     <ul class="metric-strip metric-strip--compact">
       <li>
         <strong>{{ report.total_completed }}</strong>
@@ -18,51 +18,83 @@
       </li>
       <li>
         <strong>{{ report.completion_rate|round(0)|int }}%</strong>
-        <span>общий темп</span>
+        <span>общий прогресс</span>
       </li>
+    </ul>
+  </div>
+
+  <aside class="panel page-hero__side">
+    <p class="section-kicker">Общий темп</p>
+    <div class="progress-bar progress-bar--large">
+      <span style="width: {{ report.completion_rate }}%"></span>
+    </div>
+    <p>{{ report.completion_rate|round(0)|int }}% материалов уже пройдено.</p>
+  </aside>
+</section>
+
+<section class="profile-grid reveal">
+  <article class="panel advice-card">
+    <p class="section-kicker">Рекомендация</p>
+    <h2>{{ advice.headline }}</h2>
+    <p>{{ advice.summary }}</p>
+    <ul class="plain-list">
+      {% for point in advice.focus_points %}
+      <li>{{ point }}</li>
+      {% endfor %}
     </ul>
   </article>
 
-  <section class="profile-grid">
-    <article class="panel advice-card">
-      <p class="section-kicker">Совет от ИИ</p>
-      <h2>{{ advice.headline }}</h2>
-      <p>{{ advice.summary }}</p>
-      <ul class="plain-list">
-        {% for point in advice.focus_points %}
-        <li>{{ point }}</li>
-        {% endfor %}
-      </ul>
-    </article>
+  {% if report.skill_assessment %}
+  <article class="panel skill-summary-card">
+    <p class="section-kicker">Диагностика</p>
+    <h2>{{ report.skill_assessment.estimated_level_title }} старт</h2>
+    <p>{{ report.skill_assessment.summary }}</p>
+    <div class="skill-columns">
+      <div>
+        <strong>Получается лучше</strong>
+        <ul class="plain-list skill-list">
+          {% for item in report.skill_assessment.strengths %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <strong>Нужно подтянуть</strong>
+        <ul class="plain-list skill-list">
+          {% for item in report.skill_assessment.weak_points %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </article>
+  {% else %}
+  <article class="panel skill-summary-card">
+    <p class="section-kicker">Диагностика</p>
+    <h2>Исходные данные пока не собраны.</h2>
+    <p>Если нужно, можно заново пройти онбординг и обновить стартовые настройки.</p>
+  </article>
+  {% endif %}
+</section>
 
-    <article class="panel progress-card">
-      <p class="section-kicker">Общий прогресс</p>
-      <div class="progress-bar progress-bar--large">
-        <span style="width: {{ report.completion_rate }}%"></span>
+<section class="dashboard-grid reveal">
+  {% for track in report.tracks %}
+  <article class="panel track-panel track-panel--{{ track.track }}">
+    <div class="track-panel__head">
+      <div>
+        <p class="section-kicker">{{ track.title }}</p>
+        <h2>Партия {{ track.current_batch }}</h2>
       </div>
-      <p>{{ report.completion_rate|round(0)|int }}% пути уже закрыто.</p>
-    </article>
-  </section>
-
-  <section class="dashboard-grid">
-    {% for track in report.tracks %}
-    <article class="panel track-panel track-panel--{{ track.track }}">
-      <div class="track-panel__head">
-        <div>
-          <p class="section-kicker">{{ track.title }}</p>
-          <h2>Партия {{ track.current_batch }}</h2>
-        </div>
-        <span class="track-panel__percent">{{ track.completion_rate|round(0)|int }}%</span>
-      </div>
-      <div class="progress-meta">
-        <strong>{{ track.completed_cards }} / {{ track.generated_cards }}</strong>
-        <span>карточек завершено</span>
-      </div>
-      <div class="progress-bar progress-bar--track">
-        <span style="width: {{ track.completion_rate }}%"></span>
-      </div>
-    </article>
-    {% endfor %}
-  </section>
+      <span class="track-panel__percent">{{ track.completion_rate|round(0)|int }}%</span>
+    </div>
+    <div class="progress-meta">
+      <strong>{{ track.completed_cards }} / {{ track.generated_cards }}</strong>
+      <span>карточек завершено</span>
+    </div>
+    <div class="progress-bar progress-bar--track">
+      <span style="width: {{ track.completion_rate }}%"></span>
+    </div>
+  </article>
+  {% endfor %}
 </section>
 {% endblock %}

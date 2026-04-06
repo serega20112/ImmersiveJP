@@ -1,7 +1,8 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.backend.dto.profile_dto import DashboardDTO, DashboardSectionDTO
 from src.backend.infrastructure.repositories import AbstractUserRepository
+from src.backend.use_case.mappers import to_skill_assessment_dto
 from src.backend.use_case.profile.build_progress_report import (
     BuildProgressReportUseCase,
 )
@@ -36,19 +37,21 @@ class GetDashboardUseCase:
         recommendation = (
             report.next_step
             if user.onboarding_completed
-            else "Сначала заверши онбординг. После этого система соберет стартовые карточки по трем блокам."
+            else "Сначала пройди онбординг. После этого сервис подготовит стартовые карточки по трем разделам."
         )
         return DashboardDTO(
             user_display_name=user.display_name,
             recommendation=recommendation,
             sections=sections,
+            skill_assessment=to_skill_assessment_dto(user.skill_assessment),
+            speech_practice_href="/learn/speech",
         )
 
     @staticmethod
     def _subtitle_for_track(track: str) -> str:
         subtitles = {
-            "language": "Живая речь, фразы и грамматический ритм",
-            "culture": "Быт, ритуалы и культурные коды",
-            "history": "Эпохи, конфликты и длинные последствия",
+            "language": "Фразы, грамматика и примеры",
+            "culture": "Быт, нормы и повседневные сцены",
+            "history": "Периоды, события и последствия",
         }
         return subtitles[track]

@@ -1,4 +1,4 @@
-﻿from .auth_dto import (
+from .auth_dto import (
     AuthResultDTO,
     LoginDTO,
     RegistrationDTO,
@@ -6,12 +6,25 @@
     VerificationDTO,
 )
 from .learning_dto import (
-    CardExampleDTO,
     CardCompletionResultDTO,
+    CardExampleDTO,
+    GeneratedCardDraftDTO,
     PdfDocumentDTO,
+    SpeechDialogueDTO,
+    SpeechDialogueTurnDTO,
+    SpeechLineDTO,
+    SpeechPracticeDTO,
+    SpeechPracticePageDTO,
     TrackCardDTO,
     TrackCardPageDTO,
     TrackPageDTO,
 )
-from .onboarding_dto import OnboardingDTO, OnboardingResultDTO
+from .onboarding_dto import (
+    DiagnosticOptionDTO,
+    DiagnosticQuestionDTO,
+    OnboardingDTO,
+    OnboardingPageDTO,
+    OnboardingResultDTO,
+)
 from .profile_dto import AIAdviceDTO, DashboardDTO, ProgressReportDTO
+from .skill_dto import SkillAssessmentDTO

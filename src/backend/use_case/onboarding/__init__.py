@@ -1,1 +1,2 @@
-﻿from .complete_onboarding import CompleteOnboardingUseCase
+from .complete_onboarding import CompleteOnboardingUseCase
+from .get_onboarding_page import GetOnboardingPageUseCase

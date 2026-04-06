@@ -1,10 +1,14 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.backend.domain.content import TrackType
 from src.backend.domain.user import LanguageLevel, LearningGoal
 from src.backend.dto.onboarding_dto import OnboardingDTO, OnboardingResultDTO
 from src.backend.infrastructure.repositories import AbstractUserRepository
 from src.backend.use_case.learning.generate_cards import GenerateCardsUseCase
+from src.backend.use_case.mappers import to_skill_assessment_dto
+from src.backend.use_case.onboarding.diagnostic_questions import (
+    evaluate_diagnostic_answers,
+)
 
 
 class InvalidOnboardingDataError(Exception):
@@ -31,18 +35,30 @@ class CompleteOnboardingUseCase:
         interests = self._parse_interests(payload.interests_text)
         if not interests:
             raise InvalidOnboardingDataError("Нужно указать хотя бы один интерес")
+        try:
+            skill_assessment = evaluate_diagnostic_answers(
+                payload.diagnostic_answers,
+                language_level,
+            )
+        except ValueError as error:
+            raise InvalidOnboardingDataError(str(error)) from error
 
         await self._user_repository.update_learning_profile(
             user_id=user_id,
             goal=goal,
             language_level=language_level,
             interests=interests,
+            skill_assessment=skill_assessment,
         )
         generated_batches: dict[str, int] = {}
         for track in TrackType:
             await self._generate_cards_use_case.execute(user_id, track)
             generated_batches[track.value] = 1
-        return OnboardingResultDTO(user_id=user_id, generated_batches=generated_batches)
+        return OnboardingResultDTO(
+            user_id=user_id,
+            generated_batches=generated_batches,
+            skill_assessment=to_skill_assessment_dto(skill_assessment),
+        )
 
     @staticmethod
     def _parse_interests(raw_value: str) -> list[str]:

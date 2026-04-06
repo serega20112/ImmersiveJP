@@ -1,9 +1,9 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.backend.domain.user import LanguageLevel, LearningGoal, User
+from src.backend.domain.user import LanguageLevel, LearningGoal, SkillAssessment, User
 from src.backend.infrastructure.models import UserModel
 from src.backend.infrastructure.repositories import AbstractUserRepository
 
@@ -22,6 +22,27 @@ class UserRepository(AbstractUserRepository):
             language_level=user.language_level.value if user.language_level else None,
             interests_json=user.interests,
             onboarding_completed=user.onboarding_completed,
+            diagnostic_score=(
+                user.skill_assessment.score if user.skill_assessment is not None else None
+            ),
+            diagnostic_level=(
+                user.skill_assessment.estimated_level.value
+                if user.skill_assessment and user.skill_assessment.estimated_level
+                else None
+            ),
+            diagnostic_summary=(
+                user.skill_assessment.summary if user.skill_assessment is not None else None
+            ),
+            strengths_json=(
+                list(user.skill_assessment.strengths)
+                if user.skill_assessment is not None
+                else None
+            ),
+            weak_points_json=(
+                list(user.skill_assessment.weak_points)
+                if user.skill_assessment is not None
+                else None
+            ),
         )
         self._session.add(model)
         await self._session.flush()
@@ -59,6 +80,7 @@ class UserRepository(AbstractUserRepository):
         goal: LearningGoal,
         language_level: LanguageLevel,
         interests: list[str],
+        skill_assessment: SkillAssessment,
     ) -> User:
         result = await self._session.execute(
             select(UserModel).where(UserModel.id == user_id)
@@ -68,6 +90,15 @@ class UserRepository(AbstractUserRepository):
         model.language_level = language_level.value
         model.interests_json = interests
         model.onboarding_completed = True
+        model.diagnostic_score = skill_assessment.score
+        model.diagnostic_level = (
+            skill_assessment.estimated_level.value
+            if skill_assessment.estimated_level is not None
+            else None
+        )
+        model.diagnostic_summary = skill_assessment.summary
+        model.strengths_json = list(skill_assessment.strengths)
+        model.weak_points_json = list(skill_assessment.weak_points)
         await self._session.commit()
         await self._session.refresh(model)
         return self._to_entity(model)
@@ -88,6 +119,27 @@ class UserRepository(AbstractUserRepository):
             ),
             interests=list(model.interests_json or []),
             onboarding_completed=model.onboarding_completed,
+            skill_assessment=_to_skill_assessment(model),
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
+
+
+def _to_skill_assessment(model: UserModel) -> SkillAssessment | None:
+    if (
+        model.diagnostic_score is None
+        and model.diagnostic_level is None
+        and not model.diagnostic_summary
+        and not model.strengths_json
+        and not model.weak_points_json
+    ):
+        return None
+    return SkillAssessment(
+        score=int(model.diagnostic_score or 0),
+        estimated_level=(
+            LanguageLevel(model.diagnostic_level) if model.diagnostic_level else None
+        ),
+        summary=model.diagnostic_summary or "",
+        strengths=list(model.strengths_json or []),
+        weak_points=list(model.weak_points_json or []),
+    )

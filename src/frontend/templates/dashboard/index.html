@@ -2,18 +2,61 @@
 {% block title %}Dashboard - ImmersJP{% endblock %}
 {% block body_class %}page--dashboard{% endblock %}
 {% block content %}
-<section class="dashboard-hero reveal">
-  <article class="panel panel--hero dashboard-hero__main">
-    <p class="section-kicker">Личный маршрут</p>
-    <h1>{{ dashboard.user_display_name }}, у тебя три линии погружения.</h1>
-    <p>{{ dashboard.recommendation }}</p>
+<section class="page-hero reveal">
+  <div class="page-hero__copy panel panel--hero">
+    <p class="section-kicker">Обзор</p>
+    <h1>{{ dashboard.user_display_name }}, здесь текущие разделы и прогресс.</h1>
+    <p class="page-lead">{{ dashboard.recommendation }}</p>
+    <div class="hero-facts">
+      <span class="hero-fact">язык</span>
+      <span class="hero-fact">культура</span>
+      <span class="hero-fact">история</span>
+    </div>
+  </div>
+
+  <aside class="panel panel--tone page-hero__side">
+    <p class="section-kicker">Речевая практика</p>
+    <h2>Практика по словам из языкового трека.</h2>
+    <p>Можно взять слова из последней партии и получить предложения с короткими диалогами.</p>
+    <a href="{{ dashboard.speech_practice_href }}" class="primary-button">Открыть практику</a>
+  </aside>
+</section>
+
+<section class="dashboard-topline reveal">
+  {% if dashboard.skill_assessment %}
+  <article class="panel skill-summary-card">
+    <p class="section-kicker">Диагностика</p>
+    <h2>{{ dashboard.skill_assessment.estimated_level_title }} старт</h2>
+    <p>{{ dashboard.skill_assessment.summary }}</p>
+    <div class="skill-columns">
+      <div>
+        <strong>Получается лучше</strong>
+        <ul class="plain-list skill-list">
+          {% for item in dashboard.skill_assessment.strengths %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <strong>Нужно подтянуть</strong>
+        <ul class="plain-list skill-list">
+          {% for item in dashboard.skill_assessment.weak_points %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
   </article>
-  <article class="panel dashboard-hero__side">
-    <p class="section-kicker">Структура</p>
-    <p>
-      Язык дает форму, культура дает среду, история дает причинность. Вместе они собирают более
-      устойчивое понимание страны.
-    </p>
+  {% endif %}
+
+  <article class="panel skill-summary-card">
+    <p class="section-kicker">Порядок работы</p>
+    <h2>Лучше закрывать по одной партии.</h2>
+    <ul class="plain-list">
+      <li>сначала закрывай текущую партию</li>
+      <li>после языкового блока переходи в речевую практику</li>
+      <li>к культуре и истории возвращайся как к дополнительному блоку</li>
+    </ul>
   </article>
 </section>
 
@@ -29,7 +72,7 @@
     </div>
     <div class="progress-meta">
       <strong>{{ section.completed_cards }} / {{ section.generated_cards }}</strong>
-      <span>карточек уже закрыто</span>
+      <span>карточек завершено</span>
     </div>
     <div class="progress-bar progress-bar--track">
       <span style="width: {{ section.completion_rate }}%"></span>

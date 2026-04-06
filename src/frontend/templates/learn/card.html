@@ -2,103 +2,98 @@
 {% block title %}{{ page.card.topic }} - ImmersJP{% endblock %}
 {% block body_class %}page--learn page--card{% endblock %}
 {% block content %}
-<section class="card-shell reveal">
-  <header class="panel panel--hero card-hero">
-    <div>
-      <a href="{{ '/learn/' ~ page.track }}" class="back-link">Назад к сетке</a>
-      <p class="section-kicker">{{ page.title }} / Карточка {{ page.card.position }}</p>
-      <h1>{{ page.card.topic }}</h1>
-      <p>
-        Партия {{ page.card.batch_number }}. Завершено {{ page.completed_total }} из {{ page.generated_total }} карточек по этому треку.
-      </p>
+<section class="page-hero reveal">
+  <div class="page-hero__copy panel panel--hero">
+    <a href="{{ '/learn/' ~ page.track }}" class="back-link">Назад к сетке</a>
+    <p class="section-kicker">{{ page.title }} / Карточка {{ page.card.position }}</p>
+    <h1>{{ page.card.topic }}</h1>
+    <p class="page-lead">
+      Партия {{ page.card.batch_number }}. Завершено {{ page.completed_total }} из {{ page.generated_total }} карточек по этому треку.
+    </p>
+    <div class="hero-facts">
+      <span class="hero-fact">{{ page.card.position }} / {{ page.batch_cards|length }} в партии</span>
+      <span class="hero-fact">{% if page.card.is_completed %}карточка завершена{% else %}карточка в работе{% endif %}</span>
+      <span class="hero-fact">{% if page.all_current_batch_completed %}партия завершена{% else %}партия еще не закрыта{% endif %}</span>
     </div>
-    <div class="track-hero__actions">
-      <a href="{{ url_for('learning.download_pdf') }}?track={{ page.track }}" class="ghost-button">Скачать PDF</a>
-      <a
-        href="{{ url_for('learning.next_cards') }}?track={{ page.track }}"
-        class="primary-button {% if not page.can_generate_next %}is-disabled{% endif %}"
-      >
-        Следующая партия
-      </a>
-    </div>
-  </header>
-
-  <div class="card-layout">
-    <article class="panel card-article">
-      <section class="note-block">
-        <p class="section-kicker">Коротко</p>
-        <p class="note-summary">{{ page.card.preview }}</p>
-      </section>
-
-      <section class="note-block">
-        <p class="section-kicker">Полный конспект</p>
-        <p class="note-paragraph">{{ page.card.explanation }}</p>
-      </section>
-
-      <section class="note-block">
-        <p class="section-kicker">Примеры</p>
-        <div class="example-grid">
-          {% for example in page.card.examples %}
-          <article class="example-card">
-            <strong>{{ example.japanese }}</strong>
-            {% if example.romaji %}
-            <span>{{ example.romaji }}</span>
-            {% endif %}
-            {% if example.translation %}
-            <p>{{ example.translation }}</p>
-            {% endif %}
-          </article>
-          {% endfor %}
-        </div>
-      </section>
-
-      <section class="note-block">
-        <p class="section-kicker">Ключевые слова</p>
-        <div class="tag-row">
-          {% for term in page.card.key_terms %}
-          <span class="tag">{{ term }}</span>
-          {% endfor %}
-        </div>
-      </section>
-    </article>
-
-    <aside class="card-aside">
-      <section class="panel side-panel">
-        <p class="section-kicker">Статус</p>
-        {% if page.card.is_completed %}
-        <div class="status-chip status-chip--done">Карточка уже завершена</div>
-        {% else %}
-        <form action="{{ url_for('learning.complete_card') }}" method="post" class="side-panel__form">
-          <input type="hidden" name="card_id" value="{{ page.card.id }}" />
-          <input type="hidden" name="track" value="{{ page.track }}" />
-          <input type="hidden" name="return_to" value="{{ request.url.path }}" />
-          <button type="submit" class="primary-button">Отметить как пройденную</button>
-        </form>
-        {% endif %}
-        <p class="side-panel__hint">
-          {% if page.all_current_batch_completed %}
-          Текущая партия уже закрыта. Можно строить следующую.
-          {% else %}
-          Следующая партия откроется, когда будет завершена вся текущая десятка.
-          {% endif %}
-        </p>
-      </section>
-
-      <section class="panel side-panel">
-        <p class="section-kicker">Навигация по партии</p>
-        <div class="batch-nav">
-          {% for item in page.batch_cards %}
-          <a
-            href="{{ url_for('learning.card_page', track=page.track, card_id=item.id) }}"
-            class="batch-nav__item {% if item.id == page.card.id %}is-active{% endif %} {% if item.is_completed %}is-done{% endif %}"
-          >
-            <span>{{ item.position }}</span>
-            <strong>{{ item.topic }}</strong>
-          </a>
-          {% endfor %}
-        </div>
-      </section>
-    </aside>
   </div>
+
+  <aside class="panel page-hero__side">
+    <div class="utility-stack">
+      <a href="{{ url_for('learning.download_pdf') }}?track={{ page.track }}" class="ghost-button">Скачать PDF</a>
+      <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="primary-button {% if not page.can_generate_next %}is-disabled{% endif %}">Следующая партия</a>
+      {% if not page.card.is_completed %}
+      <form action="{{ url_for('learning.complete_card') }}" method="post" class="side-panel__form">
+        <input type="hidden" name="card_id" value="{{ page.card.id }}" />
+        <input type="hidden" name="track" value="{{ page.track }}" />
+        <input type="hidden" name="return_to" value="{{ request.url.path }}" />
+        <button type="submit" class="ghost-button">Отметить как пройденную</button>
+      </form>
+      {% endif %}
+    </div>
+    <p class="utility-card__note">
+      {% if page.all_current_batch_completed %}
+      Партия уже завершена. При необходимости можно запросить новую.
+      {% else %}
+      Новая партия станет доступна после завершения всех карточек в текущем наборе.
+      {% endif %}
+    </p>
+  </aside>
+</section>
+
+<section class="card-layout reveal">
+  <article class="panel card-article">
+    <section class="note-block">
+      <p class="section-kicker">Коротко</p>
+      <p class="note-summary">{{ page.card.preview }}</p>
+    </section>
+
+    <section class="note-block">
+      <p class="section-kicker">Полный конспект</p>
+      <p class="note-paragraph">{{ page.card.explanation }}</p>
+    </section>
+
+    <section class="note-block">
+      <p class="section-kicker">Примеры</p>
+      <div class="example-grid">
+        {% for example in page.card.examples %}
+        <article class="example-card">
+          <strong>{{ example.japanese }}</strong>
+          {% if example.romaji %}
+          <span>{{ example.romaji }}</span>
+          {% endif %}
+          {% if example.translation %}
+          <p>{{ example.translation }}</p>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="note-block">
+      <p class="section-kicker">Ключевые слова</p>
+      <div class="tag-row">
+        {% for term in page.card.key_terms %}
+        <span class="tag">{{ term }}</span>
+        {% endfor %}
+      </div>
+    </section>
+  </article>
+
+  <aside class="card-aside">
+    <section class="panel side-panel">
+      <p class="section-kicker">Навигация по партии</p>
+      <div class="batch-nav">
+        {% for item in page.batch_cards %}
+        <a
+          href="{{ url_for('learning.card_page', track=page.track, card_id=item.id) }}"
+          class="batch-nav__item {% if item.id == page.card.id %}is-active{% endif %} {% if item.is_completed %}is-done{% endif %}"
+        >
+          <span>{{ item.position }}</span>
+          <strong>{{ item.topic }}</strong>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+  </aside>
 </section>
 {% endblock %}
