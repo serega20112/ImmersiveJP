@@ -26,6 +26,7 @@ from src.backend.use_case.learning.generate_speech_practice import (
 )
 from src.backend.use_case.learning.get_card_page import CardNotFoundError
 from src.backend.use_case.learning.get_next_cards import CurrentBatchNotCompletedError
+from src.backend.use_case.learning.get_track_work_page import TrackWorkUnavailableError
 
 learning_router = APIRouter(prefix="/learn")
 
@@ -96,6 +97,59 @@ async def card_page(
         )
         return render_template(request, "learn/card.html", page=page)
     except CardNotFoundError as error:
+        flash(request, str(error), "error")
+        return RedirectResponse(url=track_href(track.value), status_code=303)
+
+
+@learning_router.get("/{track}/work/{batch_number}", name="learning.work_page")
+async def work_page(
+    request: Request,
+    track: TrackType,
+    batch_number: int,
+):
+    current_user = get_current_user(request)
+    if current_user is None:
+        return redirect_to_route(request, "auth.login_page")
+    if not current_user.onboarding_completed:
+        return redirect_to_route(request, "onboarding.page")
+    try:
+        page = await get_learning_service(request).get_track_work_page(
+            current_user.id,
+            track,
+            batch_number,
+        )
+        return render_template(request, "learn/work.html", page=page)
+    except TrackWorkUnavailableError as error:
+        flash(request, str(error), "error")
+        return RedirectResponse(url=track_href(track.value), status_code=303)
+
+
+@learning_router.post("/{track}/work/{batch_number}", name="learning.work_submit")
+async def work_submit(
+    request: Request,
+    track: TrackType,
+    batch_number: int,
+):
+    current_user = get_current_user(request)
+    if current_user is None:
+        return redirect_to_route(request, "auth.login_page")
+    if not current_user.onboarding_completed:
+        return redirect_to_route(request, "onboarding.page")
+    form = await request.form()
+    answers = {
+        key.removeprefix("answer_"): str(value)
+        for key, value in form.items()
+        if key.startswith("answer_")
+    }
+    try:
+        page = await get_learning_service(request).submit_track_work(
+            current_user.id,
+            track,
+            batch_number,
+            answers,
+        )
+        return render_template(request, "learn/work.html", page=page)
+    except TrackWorkUnavailableError as error:
         flash(request, str(error), "error")
         return RedirectResponse(url=track_href(track.value), status_code=303)
 

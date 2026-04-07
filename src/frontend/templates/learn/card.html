@@ -3,7 +3,7 @@
 {% block body_class %}page--learn page--card{% endblock %}
 {% block content %}
 <section class="page-hero reveal">
-  <div class="page-hero__copy panel panel--hero">
+  <div class="page-hero__copy panel panel--hero hero-stack">
     <a href="{{ '/learn/' ~ page.track }}" class="back-link">Назад к сетке</a>
     <p class="section-kicker">{{ page.title }} / Карточка {{ page.card.position }}</p>
     <h1>{{ page.card.topic }}</h1>
@@ -12,15 +12,20 @@
     </p>
     <div class="hero-facts">
       <span class="hero-fact">{{ page.card.position }} / {{ page.batch_cards|length }} в партии</span>
-      <span class="hero-fact">{% if page.card.is_completed %}карточка завершена{% else %}карточка в работе{% endif %}</span>
-      <span class="hero-fact">{% if page.all_current_batch_completed %}партия завершена{% else %}партия еще не закрыта{% endif %}</span>
+      <span class="hero-fact">{% if page.card.is_completed %}карточка закрыта{% else %}карточка в работе{% endif %}</span>
+      {% if page.work_ready_batch %}
+      <span class="hero-fact">работа по партии {{ page.work_ready_batch }} доступна</span>
+      {% endif %}
     </div>
   </div>
 
   <aside class="panel page-hero__side">
     <div class="utility-stack">
+      {% if page.work_href %}
+      <a href="{{ page.work_href }}" class="primary-button">Работа по партии</a>
+      {% endif %}
       <a href="{{ url_for('learning.download_pdf') }}?track={{ page.track }}" class="ghost-button">Скачать PDF</a>
-      <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="primary-button {% if not page.can_generate_next %}is-disabled{% endif %}">Следующая партия</a>
+      <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}">Следующая партия</a>
       {% if not page.card.is_completed %}
       <form action="{{ url_for('learning.complete_card') }}" method="post" class="side-panel__form">
         <input type="hidden" name="card_id" value="{{ page.card.id }}" />
@@ -32,9 +37,9 @@
     </div>
     <p class="utility-card__note">
       {% if page.all_current_batch_completed %}
-      Партия уже завершена. При необходимости можно запросить новую.
+      Партия закрыта. Теперь можно идти в работу по батчу или запускать следующую генерацию.
       {% else %}
-      Новая партия станет доступна после завершения всех карточек в текущем наборе.
+      Сначала закрой весь батч. Работа откроется только по полностью завершенной партии.
       {% endif %}
     </p>
   </aside>
@@ -57,12 +62,12 @@
       <div class="example-grid">
         {% for example in page.card.examples %}
         <article class="example-card">
-          <strong>{{ example.japanese }}</strong>
+          <div class="example-card__jp">{{ example.japanese }}</div>
           {% if example.romaji %}
-          <span>{{ example.romaji }}</span>
+          <div class="example-card__romaji">{{ example.romaji }}</div>
           {% endif %}
           {% if example.translation %}
-          <p>{{ example.translation }}</p>
+          <p class="example-card__translation">{{ example.translation }}</p>
           {% endif %}
         </article>
         {% endfor %}
@@ -71,9 +76,14 @@
 
     <section class="note-block">
       <p class="section-kicker">Ключевые слова</p>
-      <div class="tag-row">
-        {% for term in page.card.key_terms %}
-        <span class="tag">{{ term }}</span>
+      <div class="tag-row tag-row--terms">
+        {% for term in page.card.key_term_items %}
+        <article class="term-chip">
+          <strong class="term-chip__label">{{ term.label }}</strong>
+          {% if term.translation %}
+          <span class="term-chip__translation">{{ term.translation }}</span>
+          {% endif %}
+        </article>
         {% endfor %}
       </div>
     </section>

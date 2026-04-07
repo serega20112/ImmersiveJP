@@ -6,4 +6,6 @@ from .get_card_page import GetCardPageUseCase
 from .get_next_cards import GetNextCardsUseCase
 from .get_speech_practice_page import GetSpeechPracticePageUseCase
 from .get_track_page import GetTrackPageUseCase
+from .get_track_work_page import GetTrackWorkPageUseCase
 from .repair_current_batch import RepairCurrentBatchUseCase
+from .submit_track_work import SubmitTrackWorkUseCase

@@ -21,3 +21,12 @@ async def profile_page(request: Request):
         current_user.id, report
     )
     return render_template(request, "profile/index.html", report=report, advice=advice)
+
+
+@profile_router.get("/plan", name="profile.plan_page")
+async def plan_page(request: Request):
+    current_user = get_current_user(request)
+    if current_user is None:
+        return redirect_to_route(request, "auth.login_page")
+    page = await get_profile_service(request).build_learning_plan(current_user.id)
+    return render_template(request, "profile/plan.html", page=page)

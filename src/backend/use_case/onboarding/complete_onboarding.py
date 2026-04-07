@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.backend.domain.content import TrackType
-from src.backend.domain.user import LanguageLevel, LearningGoal
+from src.backend.domain.user import LanguageLevel, LearningGoal, StudyTimeline
 from src.backend.dto.onboarding_dto import OnboardingDTO, OnboardingResultDTO
 from src.backend.infrastructure.repositories import AbstractUserRepository
 from src.backend.use_case.learning.generate_cards import GenerateCardsUseCase
@@ -30,8 +30,11 @@ class CompleteOnboardingUseCase:
         try:
             goal = LearningGoal(payload.goal)
             language_level = LanguageLevel(payload.language_level)
+            study_timeline = StudyTimeline(payload.study_timeline)
         except ValueError as error:
-            raise InvalidOnboardingDataError("Некорректная цель или уровень") from error
+            raise InvalidOnboardingDataError(
+                "Некорректная цель, уровень или срок обучения"
+            ) from error
         interests = self._parse_interests(payload.interests_text)
         if not interests:
             raise InvalidOnboardingDataError("Нужно указать хотя бы один интерес")
@@ -39,6 +42,7 @@ class CompleteOnboardingUseCase:
             skill_assessment = evaluate_diagnostic_answers(
                 payload.diagnostic_answers,
                 language_level,
+                payload.diagnostic_hints_used,
             )
         except ValueError as error:
             raise InvalidOnboardingDataError(str(error)) from error
@@ -47,6 +51,7 @@ class CompleteOnboardingUseCase:
             user_id=user_id,
             goal=goal,
             language_level=language_level,
+            study_timeline=study_timeline,
             interests=interests,
             skill_assessment=skill_assessment,
         )

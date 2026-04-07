@@ -20,12 +20,31 @@ class DiagnosticQuestionDTO(BaseModel):
     prompt: str
     skill_label: str
     options: list[DiagnosticOptionDTO]
+    hints: list[str] = Field(default_factory=list)
+
+
+class DiagnosticQuestionGroupDTO(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    level: str
+    title: str
+    description: str
+    questions: list[DiagnosticQuestionDTO] = Field(default_factory=list)
+
+
+class StudyTimelineOptionDTO(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    value: str
+    title: str
+    description: str
 
 
 class OnboardingPageDTO(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    diagnostic_questions: list[DiagnosticQuestionDTO] = Field(default_factory=list)
+    diagnostic_groups: list[DiagnosticQuestionGroupDTO] = Field(default_factory=list)
+    study_timeline_options: list[StudyTimelineOptionDTO] = Field(default_factory=list)
 
 
 class OnboardingDTO(BaseModel):
@@ -33,8 +52,10 @@ class OnboardingDTO(BaseModel):
 
     goal: str
     language_level: str
+    study_timeline: str
     interests_text: str
     diagnostic_answers: dict[str, str] = Field(default_factory=dict)
+    diagnostic_hints_used: int = 0
 
 
 class OnboardingResultDTO(BaseModel):

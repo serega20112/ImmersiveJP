@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}План - ImmersJP{% endblock %}
+{% block body_class %}page--plan{% endblock %}
+{% block content %}
+<section class="page-hero reveal">
+  <div class="page-hero__copy panel panel--hero hero-stack">
+    <p class="section-kicker">{{ page.title }}</p>
+    <h1>{{ page.subtitle }}</h1>
+    <p class="page-lead">{{ page.next_action }}</p>
+    <div class="hero-facts">
+      <span class="hero-fact">{{ page.current_stage_title }}</span>
+      <span class="hero-fact">{{ page.current_stage_timeframe }}</span>
+      <span class="hero-fact">{{ page.content_mode.title }}</span>
+      <span class="hero-fact">{{ page.pace_mode.title }}</span>
+    </div>
+  </div>
+
+  <aside class="panel plan-mode-card">
+    <p class="section-kicker">Режим контента</p>
+    <h2>{{ page.content_mode.title }}</h2>
+    <p>{{ page.content_mode.summary }}</p>
+    <ul class="plain-list">
+      {% for rule in page.content_mode.rules %}
+      <li>{{ rule }}</li>
+      {% endfor %}
+    </ul>
+    <div class="aside-callout">
+      <strong>Следующий переход</strong>
+      <p>{{ page.content_mode.next_shift_note }}</p>
+    </div>
+    {% if page.content_mode.dictionary_links %}
+    <div class="plan-dictionary-grid">
+      {% for link in page.content_mode.dictionary_links %}
+      <a href="{{ link.href }}" target="_blank" rel="noreferrer" class="plan-dictionary">
+        <strong>{{ link.label }}</strong>
+        <span>{{ link.note }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </aside>
+</section>
+
+<section class="plan-topline reveal">
+  <article class="panel plan-focus-card">
+    <p class="section-kicker">Текущий этап</p>
+    <h2>{{ page.current_stage_title }}</h2>
+    <p class="plan-focus-card__time">{{ page.current_stage_timeframe }}</p>
+    <p>{{ page.current_stage_summary }}</p>
+    {% if page.recovery_note %}
+    <p class="aside-callout">{{ page.recovery_note }}</p>
+    {% endif %}
+  </article>
+
+  <article class="panel plan-focus-card">
+    <p class="section-kicker">Как читать план</p>
+    <p>{{ page.parallel_note }}</p>
+    <ul class="plain-list">
+      <li>новые темы не приоритет, если база еще проседает</li>
+      <li>после закрытой партии идет работа, а не сразу новая генерация</li>
+      <li>режим контента сдвигается вместе с уровнем, а не по таймеру</li>
+    </ul>
+  </article>
+
+  <article class="panel plan-focus-card">
+    <p class="section-kicker">Темп под твой срок</p>
+    <h2>{{ page.pace_mode.title }}</h2>
+    <p>{{ page.pace_mode.summary }}</p>
+    <p class="aside-callout">{{ page.pace_mode.detail_note }}</p>
+    <ul class="plain-list">
+      {% for item in page.pace_mode.guidance %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </article>
+</section>
+
+<section class="plan-roadmap reveal">
+  {% for stage in page.stages %}
+  <article class="panel plan-stage plan-stage--{{ stage.status }}">
+    <div class="plan-stage__head">
+      <div>
+        <p class="section-kicker">Этап {{ stage.index }} / {{ stage.timeframe }}</p>
+        <h2>{{ stage.title }}</h2>
+      </div>
+      <span class="status-chip plan-stage__status plan-stage__status--{{ stage.status }}">{{ stage.status_label }}</span>
+    </div>
+    <p class="plan-stage__summary">{{ stage.summary }}</p>
+    {% if stage.focus_note %}
+    <p class="aside-callout">{{ stage.focus_note }}</p>
+    {% endif %}
+    <div class="plan-stage__modules">
+      {% for module in stage.modules %}
+      <section class="plan-module">
+        <strong>{{ module.title }}</strong>
+        <ul class="plain-list skill-list">
+          {% for item in module.items %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endfor %}
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

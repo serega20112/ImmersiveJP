@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from src.backend.domain.user.enums import LanguageLevel, LearningGoal
+from src.backend.domain.user.enums import LanguageLevel, LearningGoal, StudyTimeline
 from src.backend.domain.user.skill_assessment import SkillAssessment
 
 
@@ -15,6 +15,7 @@ class User:
     is_email_verified: bool = False
     learning_goal: LearningGoal | None = None
     language_level: LanguageLevel | None = None
+    study_timeline: StudyTimeline | None = None
     interests: list[str] = field(default_factory=list)
     onboarding_completed: bool = False
     skill_assessment: SkillAssessment | None = None

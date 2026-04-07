@@ -2,27 +2,82 @@
 {% block title %}Dashboard - ImmersJP{% endblock %}
 {% block body_class %}page--dashboard{% endblock %}
 {% block content %}
-<section class="page-hero reveal">
-  <div class="page-hero__copy panel panel--hero">
+<section class="page-hero page-hero--dashboard reveal">
+  <div class="page-hero__copy panel panel--hero hero-stack">
     <p class="section-kicker">Обзор</p>
-    <h1>{{ dashboard.user_display_name }}, здесь текущие разделы и прогресс.</h1>
+    <h1>{{ dashboard.user_display_name }}, система сейчас видит такой рабочий контур.</h1>
     <p class="page-lead">{{ dashboard.recommendation }}</p>
     <div class="hero-facts">
-      <span class="hero-fact">язык</span>
-      <span class="hero-fact">культура</span>
-      <span class="hero-fact">история</span>
+      <span class="hero-fact">3 трека</span>
+      <span class="hero-fact">контрольные после партий</span>
+      <span class="hero-fact">уровень доверия может падать</span>
     </div>
   </div>
-
-  <aside class="panel panel--tone page-hero__side">
-    <p class="section-kicker">Речевая практика</p>
-    <h2>Практика по словам из языкового трека.</h2>
-    <p>Можно взять слова из последней партии и получить предложения с короткими диалогами.</p>
-    <a href="{{ dashboard.speech_practice_href }}" class="primary-button">Открыть практику</a>
-  </aside>
 </section>
 
-<section class="dashboard-topline reveal">
+<section class="dashboard-grid reveal">
+  {% for section in dashboard.sections %}
+  <article class="panel track-panel track-panel--{{ section.track }}">
+    <div class="track-panel__head">
+      <div>
+        <p class="section-kicker">{{ section.title }}</p>
+        <h2>{{ section.subtitle }}</h2>
+      </div>
+      <span class="track-panel__percent">{{ section.completed_batches }} батчей</span>
+    </div>
+    <div class="track-panel__stats">
+      <div class="stat-chip">
+        <strong>{{ section.completed_cards }}</strong>
+        <span>пройдено</span>
+      </div>
+      <div class="stat-chip">
+        <strong>{{ section.generated_cards }}</strong>
+        <span>всего</span>
+      </div>
+      <div class="stat-chip">
+        <strong>{{ section.completion_rate|round(0)|int }}%</strong>
+        <span>закрыто</span>
+      </div>
+    </div>
+    <p class="track-panel__note">
+      {% if section.work_ready_batch %}
+      Работа по партии {{ section.work_ready_batch }} уже доступна.
+      {% else %}
+      Работа откроется после первой полностью завершенной партии.
+      {% endif %}
+    </p>
+    <div class="panel-actions">
+      <a href="{{ section.href }}" class="primary-button">Открыть трек</a>
+      {% if section.work_ready_batch %}
+      <a href="{{ '/learn/' ~ section.track ~ '/work/' ~ section.work_ready_batch }}" class="ghost-button">Работа</a>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="dashboard-topline dashboard-topline--insights reveal">
+  <article class="panel skill-summary-card">
+    <p class="section-kicker">Trust Score</p>
+    <div class="trust-score__ring trust-score__ring--{{ dashboard.trust_score.band_key }}">
+      <strong>{{ dashboard.trust_score.score }}</strong>
+      <span>/ 100</span>
+    </div>
+    <div class="trust-score__copy">
+      <h2>{{ dashboard.trust_score.band_title }}</h2>
+      <p>{{ dashboard.trust_score.summary }}</p>
+    </div>
+    <div class="trust-components">
+      {% for component in dashboard.trust_score.components %}
+      <article class="trust-component">
+        <strong>{{ component.label }}</strong>
+        <span>{{ component.score }}</span>
+      </article>
+      {% endfor %}
+    </div>
+    <p class="trust-note">{{ dashboard.trust_score.note }}</p>
+  </article>
+
   {% if dashboard.skill_assessment %}
   <article class="panel skill-summary-card">
     <p class="section-kicker">Диагностика</p>
@@ -30,7 +85,7 @@
     <p>{{ dashboard.skill_assessment.summary }}</p>
     <div class="skill-columns">
       <div>
-        <strong>Получается лучше</strong>
+        <strong>Сильнее всего</strong>
         <ul class="plain-list skill-list">
           {% for item in dashboard.skill_assessment.strengths %}
           <li>{{ item }}</li>
@@ -38,7 +93,7 @@
         </ul>
       </div>
       <div>
-        <strong>Нужно подтянуть</strong>
+        <strong>Проседает</strong>
         <ul class="plain-list skill-list">
           {% for item in dashboard.skill_assessment.weak_points %}
           <li>{{ item }}</li>
@@ -50,35 +105,14 @@
   {% endif %}
 
   <article class="panel skill-summary-card">
-    <p class="section-kicker">Порядок работы</p>
-    <h2>Лучше закрывать по одной партии.</h2>
+    <p class="section-kicker">Как идти дальше</p>
+    <h2>Партия -> работа -> следующая партия.</h2>
     <ul class="plain-list">
-      <li>сначала закрывай текущую партию</li>
-      <li>после языкового блока переходи в речевую практику</li>
-      <li>к культуре и истории возвращайся как к дополнительному блоку</li>
+      <li>закрывай текущий батч до конца</li>
+      <li>после завершения открывай работу по этой партии</li>
+      <li>если trust score падает, вернись к старому материалу до новой генерации</li>
     </ul>
+    <a href="{{ dashboard.speech_practice_href }}" class="ghost-button">Открыть речевую практику</a>
   </article>
-</section>
-
-<section class="dashboard-grid reveal">
-  {% for section in dashboard.sections %}
-  <article class="panel track-panel track-panel--{{ section.track }}">
-    <div class="track-panel__head">
-      <div>
-        <p class="section-kicker">{{ section.title }}</p>
-        <h2>{{ section.subtitle }}</h2>
-      </div>
-      <span class="track-panel__percent">{{ section.completion_rate|round(0)|int }}%</span>
-    </div>
-    <div class="progress-meta">
-      <strong>{{ section.completed_cards }} / {{ section.generated_cards }}</strong>
-      <span>карточек завершено</span>
-    </div>
-    <div class="progress-bar progress-bar--track">
-      <span style="width: {{ section.completion_rate }}%"></span>
-    </div>
-    <a href="{{ section.href }}" class="primary-button">Открыть трек</a>
-  </article>
-  {% endfor %}
 </section>
 {% endblock %}

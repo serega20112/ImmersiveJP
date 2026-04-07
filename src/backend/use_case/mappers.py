@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from src.backend.domain.content import LearningCard
 from src.backend.domain.progress import TrackProgressSnapshot
 from src.backend.domain.user import SkillAssessment, User
@@ -7,6 +9,7 @@ from src.backend.dto.auth_dto import UserViewDTO
 from src.backend.dto.learning_dto import CardExampleDTO, TrackCardDTO
 from src.backend.dto.profile_dto import TrackProgressDTO
 from src.backend.dto.skill_dto import SkillAssessmentDTO
+from src.backend.use_case.key_terms import build_key_term_dtos
 
 
 _LEVEL_TITLES = {
@@ -25,19 +28,22 @@ def to_user_view_dto(user: User) -> UserViewDTO:
         onboarding_completed=user.onboarding_completed,
         learning_goal=user.learning_goal.value if user.learning_goal else None,
         language_level=user.language_level.value if user.language_level else None,
+        study_timeline=user.study_timeline.value if user.study_timeline else None,
         interests=list(user.interests),
     )
 
 
 def to_track_card_dto(card: LearningCard, completed_ids: set[int]) -> TrackCardDTO:
+    cleaned_explanation = _sanitize_generated_note(card.explanation)
     return TrackCardDTO(
         id=int(card.id or 0),
         track=card.track.value,
         topic=card.topic,
-        preview=_build_preview(card.explanation),
-        explanation=card.explanation,
+        preview=_build_preview(cleaned_explanation),
+        explanation=cleaned_explanation,
         examples=[_to_card_example_dto(example) for example in card.examples],
         key_terms=list(card.key_terms),
+        key_term_items=build_key_term_dtos(card.key_terms),
         batch_number=card.batch_number,
         position=card.position,
         is_completed=int(card.id or 0) in completed_ids,
@@ -52,6 +58,8 @@ def to_track_progress_dto(snapshot: TrackProgressSnapshot) -> TrackProgressDTO:
         generated_cards=snapshot.generated_cards,
         current_batch=snapshot.current_batch,
         completion_rate=snapshot.completion_rate,
+        completed_batches=snapshot.completed_batches,
+        work_ready_batch=snapshot.work_ready_batch,
     )
 
 
@@ -78,6 +86,68 @@ def _build_preview(text: str, max_length: int = 170) -> str:
     if not truncated:
         truncated = compact[: max_length - 1].strip()
     return f"{truncated}..."
+
+
+def _sanitize_generated_note(text: str) -> str:
+    compact = " ".join((text or "").split())
+    if not compact:
+        return ""
+
+    replacements = {
+        "'tourism'": "'туризм'",
+        "'relocation'": "'переезд'",
+        "'work'": "'работа'",
+        "'university'": "'университет'",
+        "'zero'": "'стартовый'",
+        "'basic'": "'базовый'",
+        "'intermediate'": "'уверенный'",
+        "trust score": "оценка прогресса",
+    }
+    for source, target in replacements.items():
+        compact = compact.replace(source, target)
+
+    word_replacements = {
+        r"\btourism\b": "туризм",
+        r"\brelocation\b": "переезд",
+        r"\bwork\b": "работа",
+        r"\buniversity\b": "университет",
+        r"\bzero\b": "стартовый",
+        r"\bbasic\b": "базовый",
+        r"\bintermediate\b": "уверенный",
+        r"\btrust score\b": "оценка прогресса",
+    }
+    for pattern, replacement in word_replacements.items():
+        compact = re.sub(pattern, replacement, compact, flags=re.IGNORECASE)
+
+    compact = re.sub(r"Эта карточка про тему '[^']+'\.\s*", "", compact, flags=re.IGNORECASE)
+
+    sentences = re.split(r"(?<=[.!?])\s+", compact)
+    filtered = [sentence.strip() for sentence in sentences if not _is_noise_sentence(sentence)]
+    normalized = " ".join(filtered).strip()
+    return normalized or compact
+
+
+def _is_noise_sentence(sentence: str) -> bool:
+    normalized = sentence.casefold()
+    noise_fragments = (
+        "смотри на тему",
+        "эта карточка про тему",
+        "диагностика пользователя",
+        "быстрый тест:",
+        "самооценка:",
+        "текущий старт",
+        "в расчет",
+        "лучше всего держатся",
+        "проседают",
+        "под цель",
+        "для уровня",
+        "оценка прогресса",
+        "цель:",
+        "уровень:",
+        "сильные стороны",
+        "слабые стороны",
+    )
+    return any(fragment in normalized for fragment in noise_fragments)
 
 
 def _to_card_example_dto(example: str) -> CardExampleDTO:

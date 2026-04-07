@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}{{ page.title }} - ImmersJP{% endblock %}
+{% block body_class %}page--learn page--work{% endblock %}
+{% block content %}
+<section class="page-hero reveal">
+  <div class="page-hero__copy panel panel--hero hero-stack">
+    <a href="{{ '/learn/' ~ page.track }}" class="back-link">Назад к треку</a>
+    <p class="section-kicker">{{ page.title }}</p>
+    <h1>{{ page.subtitle }}</h1>
+    <p class="page-lead">
+      Работа строится строго по уже закрытому батчу. Здесь нет нового материала, только проверка того, насколько он реально закрепился.
+    </p>
+    <div class="hero-facts">
+      <span class="hero-fact">партия {{ page.batch_number }}</span>
+      <span class="hero-fact">{{ page.tasks|length }} заданий</span>
+      <span class="hero-fact">проходной балл {{ page.pass_score }}</span>
+    </div>
+  </div>
+
+  <aside class="panel page-hero__side">
+    <p class="section-kicker">Темы партии</p>
+    <div class="tag-row">
+      {% for topic in page.source_topics %}
+      <span class="tag">{{ topic }}</span>
+      {% endfor %}
+    </div>
+    <p class="utility-card__note">
+      Работа собрана только из уже пройденного материала. Здесь важнее точность и устойчивость, а не скорость.
+      {% if page.track == 'language' %}
+      Для языкового трека можно отвечать в ромадзи. Японская раскладка не обязательна.
+      {% endif %}
+    </p>
+  </aside>
+</section>
+
+{% if page.result %}
+<section class="panel work-result reveal">
+  <div class="work-result__head">
+    <p class="section-kicker">Результат</p>
+    <h2>{{ page.result.score }} / 100</h2>
+    <span class="status-chip {% if page.result.passed %}status-chip--done{% endif %}">
+      {% if page.result.passed %}Работа зачтена{% else %}Работа не зачтена{% endif %}
+    </span>
+  </div>
+  <p>{{ page.result.summary }}</p>
+  <p>{{ page.result.verdict }}</p>
+  {% if page.result.certificate_statement %}
+  <div class="certificate-card">
+    <p class="section-kicker">Заключение</p>
+    <p>{{ page.result.certificate_statement }}</p>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+<form method="post" class="work-sheet reveal" data-pending-form data-pending-label="Проверяем работу...">
+  <div class="work-grid">
+    {% for task in page.tasks %}
+    <article class="panel work-task">
+      <div class="work-task__head">
+        <div class="work-task__intro">
+          <p class="section-kicker">{{ task.title }}</p>
+          <h2>{{ task.title }}</h2>
+          <p class="work-task__topic">Опора: {{ task.source_topic }}</p>
+        </div>
+        <span class="task-format">{{ task.expected_format }}</span>
+      </div>
+      <p class="work-task__prompt">{{ task.prompt }}</p>
+      {% if task.required_terms %}
+      <div class="tag-row">
+        {% for term in task.required_terms %}
+        <span class="tag">{{ term }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <label class="field-stack">
+        <span>Ответ</span>
+        {% if task.kind in ['production', 'immersion'] %}
+        <textarea name="answer_{{ task.id }}" rows="4" placeholder="{{ task.placeholder }}">{{ task.submitted_answer or '' }}</textarea>
+        {% else %}
+        <input type="text" name="answer_{{ task.id }}" value="{{ task.submitted_answer or '' }}" placeholder="{{ task.placeholder }}" />
+        {% endif %}
+      </label>
+      {% if page.result %}
+        {% for item in page.result.task_results %}
+          {% if item.task_id == task.id %}
+          <div class="task-review {% if item.is_correct %}task-review--ok{% else %}task-review--bad{% endif %}">
+            <strong>{% if item.is_correct %}Задание зачтено{% else %}Нужно доработать{% endif %}</strong>
+            <p>{{ item.feedback }}</p>
+            {% if item.revealed_answer %}
+            <span>Ориентир: {{ item.revealed_answer }}</span>
+            {% endif %}
+          </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="primary-button" data-pending-button>Проверить работу</button>
+    <p class="pending-note" data-pending-note hidden>Проверяем ответы и сверяем их с пройденным материалом.</p>
+  </div>
+</form>
+{% endblock %}

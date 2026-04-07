@@ -2,27 +2,28 @@
 {% block title %}Онбординг - ImmersJP{% endblock %}
 {% block body_class %}page--onboarding{% endblock %}
 {% block content %}
-<section class="page-hero reveal">
-  <div class="page-hero__copy panel panel--hero">
+<section class="page-hero page-hero--dashboard reveal">
+  <div class="page-hero__copy panel panel--hero hero-stack">
     <p class="section-kicker">Онбординг</p>
-    <h1>Нужно заполнить несколько полей и пройти короткий тест.</h1>
+    <h1>Сначала цель и интересы, потом короткий адаптивный срез.</h1>
     <p class="page-lead">
-      Здесь указываются цель, примерный уровень и интересы. Потом идет короткий тест из пяти
-      вопросов, чтобы точнее определить стартовую точку.
+      Вопросы в диагностике меняются от выбранного уровня. По этому блоку система оценивает стартовую точку перед первой партией карточек.
     </p>
     <div class="hero-facts">
-      <span class="hero-fact">3 трека</span>
       <span class="hero-fact">5 вопросов</span>
-      <span class="hero-fact">сразу откроется язык</span>
+      <span class="hero-fact">3 уровня сложности</span>
+      <span class="hero-fact">учет срока обучения</span>
+      <span class="hero-fact">сразу после генерации откроется язык</span>
     </div>
   </div>
 
   <aside class="panel panel--tone page-hero__side">
-    <p class="section-kicker">Что будет дальше</p>
+    <p class="section-kicker">Что изменилось</p>
     <ul class="plain-list">
-      <li>сервис подготовит первую партию карточек по языку, культуре и истории</li>
-      <li>языковой трек откроется сразу после генерации</li>
-      <li>результат теста сохранится в профиле и повлияет на следующие партии</li>
+      <li>уровень вопросов теперь зависит от твоей самооценки</li>
+      <li>срок обучения влияет на темп и глубину объяснений</li>
+      <li>вопросы стали короче и чище по структуре</li>
+      <li>результат уходит в trust score и влияет на следующие партии</li>
     </ul>
   </aside>
 </section>
@@ -37,33 +38,33 @@
   <section class="panel form-section">
     <div class="section-head">
       <p class="section-kicker">Шаг 1</p>
-      <h2>Цель обучения</h2>
-      <p>Это влияет на темы, ситуации и лексику в первых партиях.</p>
+      <h2>Зачем тебе японский</h2>
+      <p>От этого зависят сцены, словарь и контекст первых батчей.</p>
     </div>
     <div class="choice-grid" data-choice-group>
       <input type="hidden" name="goal" value="" data-choice-input />
       <button type="button" class="choice-button" data-choice-value="tourism" aria-pressed="false">
         <span class="choice-button__body">
           <strong>Туризм</strong>
-          <small>Навигация, кафе, транспорт и базовые диалоги.</small>
+          <small>Навигация, кафе, транспорт и короткие диалоги.</small>
         </span>
       </button>
       <button type="button" class="choice-button" data-choice-value="relocation" aria-pressed="false">
         <span class="choice-button__body">
           <strong>Переезд</strong>
-          <small>Жилье, документы, районы и повседневный быт.</small>
+          <small>Жилье, документы, быт и городская среда.</small>
         </span>
       </button>
       <button type="button" class="choice-button" data-choice-value="work" aria-pressed="false">
         <span class="choice-button__body">
           <strong>Работа</strong>
-          <small>Деловой язык, рабочие сцены и офисное общение.</small>
+          <small>Офисные сцены, деловой язык и рабочая переписка.</small>
         </span>
       </button>
       <button type="button" class="choice-button" data-choice-value="university" aria-pressed="false">
         <span class="choice-button__body">
           <strong>Университет</strong>
-          <small>Учебная среда, кампус и академическая коммуникация.</small>
+          <small>Учебная среда, кампус и академические диалоги.</small>
         </span>
       </button>
     </div>
@@ -72,27 +73,27 @@
   <section class="panel form-section">
     <div class="section-head">
       <p class="section-kicker">Шаг 2</p>
-      <h2>Уровень по ощущениям</h2>
-      <p>Это самооценка. Ниже будет короткая проверка, которая поможет уточнить старт.</p>
+      <h2>Какой уровень ближе всего сейчас</h2>
+      <p>Диагностика ниже перестроится под этот выбор. Это стартовая гипотеза, а не приговор.</p>
     </div>
-    <div class="choice-grid choice-grid--compact" data-choice-group>
-      <input type="hidden" name="language_level" value="" data-choice-input />
-      <button type="button" class="choice-button" data-choice-value="zero" aria-pressed="false">
+    <div class="choice-grid choice-grid--compact" data-choice-group data-diagnostic-level-group>
+      <input type="hidden" name="language_level" value="zero" data-choice-input data-diagnostic-level-input />
+      <button type="button" class="choice-button is-pressed" data-choice-value="zero" aria-pressed="true">
         <span class="choice-button__body">
           <strong>Ноль</strong>
-          <small>Только начинаю.</small>
+          <small>Только начинаю, нужна опора на базу.</small>
         </span>
       </button>
       <button type="button" class="choice-button" data-choice-value="basic" aria-pressed="false">
         <span class="choice-button__body">
           <strong>Базовый</strong>
-          <small>Уже узнаю часть слов и конструкций.</small>
+          <small>Узнаю слова и простые конструкции.</small>
         </span>
       </button>
       <button type="button" class="choice-button" data-choice-value="intermediate" aria-pressed="false">
         <span class="choice-button__body">
           <strong>Средний</strong>
-          <small>Нужен более содержательный материал.</small>
+          <small>Нужны связность, регистр и более сложные сцены.</small>
         </span>
       </button>
     </div>
@@ -101,15 +102,39 @@
   <section class="panel form-section">
     <div class="section-head">
       <p class="section-kicker">Шаг 3</p>
+      <h2>Какой у тебя горизонт по времени</h2>
+      <p>Это влияет на темп: сколько теории давать за раз, как быстро убирать опоры и насколько агрессивно двигать дальше.</p>
+    </div>
+    <div class="choice-grid choice-grid--timeline" data-choice-group>
+      <input type="hidden" name="study_timeline" value="one_year" data-choice-input />
+      {% for option in page.study_timeline_options %}
+      <button
+        type="button"
+        class="choice-button {% if option.value == 'one_year' %}is-pressed{% endif %}"
+        data-choice-value="{{ option.value }}"
+        aria-pressed="{% if option.value == 'one_year' %}true{% else %}false{% endif %}"
+      >
+        <span class="choice-button__body">
+          <strong>{{ option.title }}</strong>
+          <small>{{ option.description }}</small>
+        </span>
+      </button>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel form-section">
+    <div class="section-head">
+      <p class="section-kicker">Шаг 4</p>
       <h2>Интересы</h2>
-      <p>Пиши свободно. Это нужно, чтобы сделать материалы ближе к твоим темам.</p>
+      <p>Можно писать свободно: темы, медиа, профессии, хобби, исторические периоды.</p>
     </div>
     <label class="field-stack">
       <span>Интересы</span>
       <textarea
         name="interests_text"
         rows="5"
-        placeholder="anime, архитектура, programming, история, кино, политика, бизнес"
+        placeholder="anime, архитектура, программирование, история, бизнес, литература"
         required
       ></textarea>
     </label>
@@ -117,27 +142,37 @@
 
   <section class="panel form-section">
     <div class="section-head">
-      <p class="section-kicker">Шаг 4</p>
-      <h2>Короткий тест</h2>
-      <p>Пять быстрых вопросов, чтобы система видела не только самооценку, но и фактическую базу.</p>
+      <p class="section-kicker">Шаг 5</p>
+      <h2>Диагностика</h2>
+      <p>Пять вопросов под текущий уровень. Здесь проверяется, насколько уверенно держится база без дополнительных опор.</p>
     </div>
-    <div class="diagnostic-grid">
-      {% for question in page.diagnostic_questions %}
-      <article class="diagnostic-block">
-        <div class="diagnostic-block__head">
-          <p class="section-kicker">Вопрос {{ loop.index }}</p>
-          <h3>{{ question.prompt }}</h3>
-          <p>{{ question.skill_label }}</p>
+
+    <div class="diagnostic-groups">
+      {% for group in page.diagnostic_groups %}
+      <article class="diagnostic-group {% if group.level == 'zero' %}is-active{% endif %}" data-diagnostic-panel="{{ group.level }}" {% if group.level != 'zero' %}hidden{% endif %}>
+        <div class="diagnostic-group__head">
+          <p class="section-kicker">{{ group.title }}</p>
+          <h3>{{ group.description }}</h3>
         </div>
-        <div class="choice-grid choice-grid--triple" data-choice-group>
-          <input type="hidden" name="diagnostic_{{ question.key }}" value="" data-choice-input />
-          {% for option in question.options %}
-          <button type="button" class="choice-button choice-button--dense" data-choice-value="{{ option.value }}" aria-pressed="false">
-            <span class="choice-button__body">
-              <strong>{{ option.label }}</strong>
-              <small>{{ option.description }}</small>
-            </span>
-          </button>
+        <div class="diagnostic-grid">
+          {% for question in group.questions %}
+          <article class="diagnostic-block">
+            <div class="diagnostic-block__head">
+              <p class="section-kicker">Вопрос {{ loop.index }}</p>
+              <h3>{{ question.prompt }}</h3>
+              <p>{{ question.skill_label }}</p>
+            </div>
+            <div class="choice-grid choice-grid--triple" data-choice-group>
+              <input type="hidden" name="diagnostic_{{ question.key }}" value="" data-choice-input />
+              {% for option in question.options %}
+              <button type="button" class="choice-button choice-button--dense" data-choice-value="{{ option.value }}" aria-pressed="false">
+                <span class="choice-button__body">
+                  <strong>{{ option.label }}</strong>
+                </span>
+              </button>
+              {% endfor %}
+            </div>
+          </article>
           {% endfor %}
         </div>
       </article>

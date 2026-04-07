@@ -9,6 +9,7 @@ from .learning_dto import (
     CardCompletionResultDTO,
     CardExampleDTO,
     GeneratedCardDraftDTO,
+    KeyTermDTO,
     PdfDocumentDTO,
     SpeechDialogueDTO,
     SpeechDialogueTurnDTO,
@@ -18,13 +19,26 @@ from .learning_dto import (
     TrackCardDTO,
     TrackCardPageDTO,
     TrackPageDTO,
+    TrackWorkPageDTO,
+    TrackWorkResultDTO,
+    TrackWorkTaskDTO,
+    TrackWorkTaskResultDTO,
+    WorkHintDTO,
 )
 from .onboarding_dto import (
+    DiagnosticQuestionGroupDTO,
     DiagnosticOptionDTO,
     DiagnosticQuestionDTO,
     OnboardingDTO,
     OnboardingPageDTO,
     OnboardingResultDTO,
+    StudyTimelineOptionDTO,
 )
-from .profile_dto import AIAdviceDTO, DashboardDTO, ProgressReportDTO
+from .profile_dto import (
+    AIAdviceDTO,
+    DashboardDTO,
+    ProgressReportDTO,
+    TrustComponentDTO,
+    TrustScoreDTO,
+)
 from .skill_dto import SkillAssessmentDTO

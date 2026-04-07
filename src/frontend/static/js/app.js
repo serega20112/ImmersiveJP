@@ -4,6 +4,8 @@ const savedTheme = localStorage.getItem('immersjp-theme');
 const choiceGroups = document.querySelectorAll('[data-choice-group]');
 const pendingForms = document.querySelectorAll('[data-pending-form]');
 const wordChips = document.querySelectorAll('[data-word-chip]');
+const diagnosticPanels = document.querySelectorAll('[data-diagnostic-panel]');
+const hintButtons = document.querySelectorAll('[data-hint-toggle]');
 
 if (savedTheme) {
   root.setAttribute('data-theme', savedTheme);
@@ -16,6 +18,14 @@ if (themeToggle) {
     localStorage.setItem('immersjp-theme', nextTheme);
   });
 }
+
+const setDiagnosticLevel = (level) => {
+  diagnosticPanels.forEach((panel) => {
+    const isActive = panel.dataset.diagnosticPanel === level;
+    panel.hidden = !isActive;
+    panel.classList.toggle('is-active', isActive);
+  });
+};
 
 choiceGroups.forEach((group) => {
   const hiddenInput = group.querySelector('[data-choice-input]');
@@ -34,9 +44,18 @@ choiceGroups.forEach((group) => {
         item.classList.toggle('is-pressed', isPressed);
         item.setAttribute('aria-pressed', isPressed ? 'true' : 'false');
       });
+
+      if (group.hasAttribute('data-diagnostic-level-group')) {
+        setDiagnosticLevel(selectedValue);
+      }
     });
   });
 });
+
+const initialDiagnosticLevel = document.querySelector('[data-diagnostic-level-input]')?.value;
+if (initialDiagnosticLevel) {
+  setDiagnosticLevel(initialDiagnosticLevel);
+}
 
 pendingForms.forEach((form) => {
   form.addEventListener('submit', () => {
@@ -82,5 +101,35 @@ wordChips.forEach((chip) => {
 
     chip.classList.add('is-used');
     target.focus();
+  });
+});
+
+hintButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const targetKey = button.dataset.hintTarget;
+    const hintIndex = button.dataset.hintIndex;
+    const hintItem = document.querySelector(
+      `[data-hint-item="${targetKey}"][data-hint-index="${hintIndex}"]`
+    );
+
+    if (!hintItem) {
+      return;
+    }
+
+    const wasHidden = hintItem.hidden;
+    hintItem.hidden = !hintItem.hidden;
+    button.classList.toggle('is-open', !hintItem.hidden);
+
+    if (wasHidden && !button.dataset.hintUsed) {
+      const counterId = button.dataset.hintCounter;
+      const counterInput = counterId ? document.getElementById(counterId) : null;
+
+      if (counterInput) {
+        const current = Number(counterInput.value || '0');
+        counterInput.value = String(current + 1);
+      }
+
+      button.dataset.hintUsed = 'true';
+    }
   });
 });

@@ -21,9 +21,9 @@ from src.backend.infrastructure.cache import KeyValueStore
 
 
 class HuggingFaceLLMClient:
-    _CARDS_CACHE_VERSION = "cards-v2"
-    _SPEECH_CACHE_VERSION = "speech-v2"
-    _ADVICE_CACHE_VERSION = "advice-v2"
+    _CARDS_CACHE_VERSION = "cards-v3"
+    _SPEECH_CACHE_VERSION = "speech-v3"
+    _ADVICE_CACHE_VERSION = "advice-v3"
 
     def __init__(self, store: KeyValueStore):
         self._store = store
@@ -47,6 +47,9 @@ class HuggingFaceLLMClient:
             "goal": user.learning_goal.value if user.learning_goal else None,
             "language_level": (
                 user.language_level.value if user.language_level else None
+            ),
+            "study_timeline": (
+                user.study_timeline.value if user.study_timeline else None
             ),
             "interests": user.interests,
             "previous_topics": previous_topics,
@@ -91,6 +94,9 @@ class HuggingFaceLLMClient:
             "language_level": (
                 user.language_level.value if user.language_level else None
             ),
+            "study_timeline": (
+                user.study_timeline.value if user.study_timeline else None
+            ),
             "interests": user.interests,
             "report": report.model_dump(),
             "diagnostic_level": (
@@ -133,6 +139,9 @@ class HuggingFaceLLMClient:
             "goal": user.learning_goal.value if user.learning_goal else None,
             "language_level": (
                 user.language_level.value if user.language_level else None
+            ),
+            "study_timeline": (
+                user.study_timeline.value if user.study_timeline else None
             ),
             "interests": user.interests,
             "words": words,
@@ -295,6 +304,7 @@ class HuggingFaceLLMClient:
     ) -> list[GeneratedCardDraftDTO]:
         normalized: list[GeneratedCardDraftDTO] = []
         seen_topics: set[str] = set()
+        seen_example_signatures: set[tuple[str, ...]] = set()
         for item in parsed[: payload["batch_size"]]:
             topic = str(item.get("topic") or "Тема без названия").strip()
             normalized_topic = topic.casefold()
@@ -302,38 +312,56 @@ class HuggingFaceLLMClient:
                 continue
             if HuggingFaceLLMClient._is_placeholder_topic(topic):
                 continue
-            normalized_examples = []
-            for example in item.get("examples") or []:
-                if isinstance(example, dict):
-                    japanese = str(example.get("japanese") or "").strip()
-                    romaji = str(example.get("romaji") or "").strip()
-                    translation = str(
-                        example.get("translation") or example.get("russian") or ""
-                    ).strip()
-                    pieces = [piece for piece in (japanese, romaji, translation) if piece]
-                    normalized_examples.append(" | ".join(pieces))
-                    continue
-                normalized_examples.append(str(example).strip())
+            key_terms = HuggingFaceLLMClient._normalize_key_terms(
+                item.get("key_terms") or [],
+                track=str(payload["track"]),
+            )[:5]
+            normalized_examples = HuggingFaceLLMClient._normalize_card_examples(
+                item.get("examples") or []
+            )
+            if len(normalized_examples) < 3:
+                normalized_examples = HuggingFaceLLMClient._build_dynamic_examples(
+                    track=str(payload["track"]),
+                    context_title=topic,
+                    angle_title=topic,
+                    base_terms=key_terms,
+                )
+            example_signature = HuggingFaceLLMClient._example_signature(
+                normalized_examples
+            )
+            if example_signature and example_signature in seen_example_signatures:
+                continue
             seen_topics.add(normalized_topic)
+            if example_signature:
+                seen_example_signatures.add(example_signature)
             normalized.append(
                 GeneratedCardDraftDTO(
                     topic=topic,
                     explanation=str(item.get("explanation") or "").strip(),
                     examples=normalized_examples[:3],
-                    key_terms=[
-                        str(term).strip() for term in item.get("key_terms") or []
-                    ][:5],
+                    key_terms=key_terms,
                 )
             )
         if len(normalized) < payload["batch_size"]:
-            fallback = HuggingFaceLLMClient._fallback_cards(payload, seen_topics)
+            fallback = HuggingFaceLLMClient._fallback_cards(
+                payload,
+                seen_topics,
+                seen_example_signatures,
+            )
             for draft in fallback:
                 if len(normalized) == payload["batch_size"]:
                     break
                 topic_key = draft.topic.casefold()
                 if topic_key in seen_topics:
                     continue
+                example_signature = HuggingFaceLLMClient._example_signature(
+                    draft.examples
+                )
+                if example_signature and example_signature in seen_example_signatures:
+                    continue
                 seen_topics.add(topic_key)
+                if example_signature:
+                    seen_example_signatures.add(example_signature)
                 normalized.append(draft)
         return normalized
 
@@ -344,16 +372,25 @@ class HuggingFaceLLMClient:
         return (
             "Сгенерируй карточки-конспекты по Японии.\n"
             f"Трек: {payload['track']}\n"
-            f"Цель: {payload['goal']}\n"
-            f"Уровень: {payload['language_level']}\n"
+            f"Цель: {HuggingFaceLLMClient._goal_label(payload.get('goal'))}\n"
+            f"Уровень: {HuggingFaceLLMClient._level_label(payload.get('language_level'))}\n"
+            f"Горизонт обучения: {HuggingFaceLLMClient._timeline_label(payload.get('study_timeline'))}\n"
             f"Интересы: {interests}\n"
             f"Номер партии: {payload['batch_number']}\n"
             f"Размер партии: {payload['batch_size']}\n"
             f"Избегай повторов тем: {previous}\n"
-            f"{HuggingFaceLLMClient._build_skill_context(payload)}\n"
+            f"{HuggingFaceLLMClient._build_generation_context(payload)}\n"
             "Верни JSON-массив, где у каждой карточки есть topic, explanation, examples, key_terms.\n"
-            "Explanation делай плотным конспектом длиной около 160-220 слов.\n"
+            f"{HuggingFaceLLMClient._explanation_length_instruction(payload)}\n"
             "Examples возвращай массивом строк в формате: Japanese | Romaji | Русский перевод.\n"
+            "key_terms возвращай массивом из 4-6 строк. Если термин японский, формат каждой строки: Термин | Русский перевод.\n"
+            "Если термин уже русский, можно вернуть его как есть или дать короткое пояснение через |.\n"
+            "Пиши естественным русским языком без канцелярита и рекламного тона.\n"
+            "Не используй английские слова, если есть нормальный русский эквивалент.\n"
+            "Не упоминай диагностику пользователя, trust score, тесты, сильные или слабые стороны.\n"
+            "Не начинай explanation с формул вроде 'эта карточка про тему', 'смотри на тему', 'для уровня'.\n"
+            "Темы внутри партии должны отличаться не только названием, но и сценой применения.\n"
+            "Examples должны быть уникальными для карточки и прямо отражать ее тему. Не повторяй один и тот же набор примеров в соседних карточках.\n"
             "Если трек не языковой, все равно давай примеры в удобном формате для быстрого чтения."
         )
 
@@ -363,8 +400,10 @@ class HuggingFaceLLMClient:
             f"Пользователь: {user.display_name}.\n"
             f"Цель: {user.learning_goal.value if user.learning_goal else 'не указана'}.\n"
             f"Уровень: {user.language_level.value if user.language_level else 'не указан'}.\n"
+            f"Горизонт обучения: {HuggingFaceLLMClient._timeline_label(user.study_timeline.value if user.study_timeline else None)}.\n"
             f"Интересы: {', '.join(user.interests) or 'не указаны'}.\n"
             f"{HuggingFaceLLMClient._build_skill_context_from_user(user)}\n"
+            f"{HuggingFaceLLMClient._timeline_advice_context(user.study_timeline.value if user.study_timeline else None)}\n"
             f"Отчет: {report.model_dump_json()}\n"
             "Верни JSON-объект с полями headline, summary, focus_points.\n"
             "headline: до 5 слов.\n"
@@ -450,11 +489,12 @@ class HuggingFaceLLMClient:
         interests = ", ".join(payload["interests"]) or "не указаны"
         return (
             "Собери разговорную тренировку для ImmersJP.\n"
-            f"Цель: {payload['goal']}\n"
-            f"Самооценка уровня: {payload['language_level']}\n"
+            f"Цель: {HuggingFaceLLMClient._goal_label(payload.get('goal'))}\n"
+            f"Самооценка уровня: {HuggingFaceLLMClient._level_label(payload.get('language_level'))}\n"
+            f"Горизонт обучения: {HuggingFaceLLMClient._timeline_label(payload.get('study_timeline'))}\n"
             f"Интересы: {interests}\n"
             f"Слова: {words}\n"
-            f"{HuggingFaceLLMClient._build_skill_context(payload)}\n"
+            f"{HuggingFaceLLMClient._build_generation_context(payload)}\n"
             "Верни JSON-объект.\n"
             "sentences: массив из 10 объектов с полями japanese, romaji, translation.\n"
             "dialogues: массив из 5 объектов с полями title, scenario, turns.\n"
@@ -468,13 +508,8 @@ class HuggingFaceLLMClient:
     def _build_skill_context(payload: dict) -> str:
         details = [
             (
-                f"Диагностический уровень: {payload['diagnostic_level']}"
+                f"Диагностический уровень: {HuggingFaceLLMClient._level_label(payload.get('diagnostic_level'))}"
                 if payload.get("diagnostic_level")
-                else None
-            ),
-            (
-                f"Диагностическая сводка: {payload['diagnostic_summary']}"
-                if payload.get("diagnostic_summary")
                 else None
             ),
             (
@@ -511,6 +546,7 @@ class HuggingFaceLLMClient:
     def _fallback_cards(
         payload: dict,
         excluded_topics: set[str] | None = None,
+        excluded_example_signatures: set[tuple[str, ...]] | None = None,
     ) -> list[GeneratedCardDraftDTO]:
         interests = ", ".join(payload.get("interests") or []) or "живой контекст"
         library = {
@@ -824,12 +860,16 @@ class HuggingFaceLLMClient:
         previous_topics = {item.casefold() for item in payload.get("previous_topics") or []}
         if excluded_topics:
             previous_topics.update(topic.casefold() for topic in excluded_topics)
+        seen_example_signatures = set(excluded_example_signatures or set())
         selected: list[GeneratedCardDraftDTO] = []
         for topic, explanation, examples, key_terms in library.get(
             payload["track"], []
         ):
             normalized_topic = topic.casefold()
             if normalized_topic in previous_topics:
+                continue
+            example_signature = HuggingFaceLLMClient._example_signature(examples)
+            if example_signature and example_signature in seen_example_signatures:
                 continue
             selected.append(
                 GeneratedCardDraftDTO(
@@ -841,13 +881,19 @@ class HuggingFaceLLMClient:
                         interests=interests,
                         goal=str(payload.get("goal") or "погружение"),
                         language_level=str(payload.get("language_level") or "без уровня"),
+                        study_timeline=str(payload.get("study_timeline") or "flexible"),
                         skill_summary=str(payload.get("diagnostic_summary") or ""),
                     ),
                     examples=examples,
-                    key_terms=key_terms,
+                    key_terms=HuggingFaceLLMClient._normalize_key_terms(
+                        key_terms,
+                        track=str(payload["track"]),
+                    ),
                 )
             )
             previous_topics.add(normalized_topic)
+            if example_signature:
+                seen_example_signatures.add(example_signature)
             if len(selected) == payload["batch_size"]:
                 break
         if len(selected) < payload["batch_size"]:
@@ -855,6 +901,7 @@ class HuggingFaceLLMClient:
                 payload=payload,
                 interests=interests,
                 excluded_topics=set(previous_topics),
+                excluded_example_signatures=set(seen_example_signatures),
             )
             for draft in dynamic_cards:
                 if len(selected) == payload["batch_size"]:
@@ -862,7 +909,14 @@ class HuggingFaceLLMClient:
                 normalized_topic = draft.topic.casefold()
                 if normalized_topic in previous_topics:
                     continue
+                example_signature = HuggingFaceLLMClient._example_signature(
+                    draft.examples
+                )
+                if example_signature and example_signature in seen_example_signatures:
+                    continue
                 previous_topics.add(normalized_topic)
+                if example_signature:
+                    seen_example_signatures.add(example_signature)
                 selected.append(draft)
         return selected
 
@@ -876,11 +930,13 @@ class HuggingFaceLLMClient:
         payload: dict,
         interests: str,
         excluded_topics: set[str],
+        excluded_example_signatures: set[tuple[str, ...]],
     ) -> list[GeneratedCardDraftDTO]:
         track = str(payload["track"])
         goal = str(payload.get("goal") or "погружение")
         language_level = str(payload.get("language_level") or "без уровня")
         candidates: list[GeneratedCardDraftDTO] = []
+        seen_example_signatures = set(excluded_example_signatures)
 
         if track == "language":
             contexts = [
@@ -1160,6 +1216,17 @@ class HuggingFaceLLMClient:
                 normalized_topic = topic.casefold()
                 if normalized_topic in excluded_topics:
                     continue
+                generated_examples = HuggingFaceLLMClient._build_dynamic_examples(
+                    track=track,
+                    context_title=context_title,
+                    angle_title=angle_title,
+                    base_terms=base_terms,
+                )
+                example_signature = HuggingFaceLLMClient._example_signature(
+                    generated_examples
+                )
+                if example_signature and example_signature in seen_example_signatures:
+                    continue
                 explanation = HuggingFaceLLMClient._expand_fallback_note(
                     track=track,
                     topic=topic,
@@ -1167,17 +1234,23 @@ class HuggingFaceLLMClient:
                     interests=interests,
                     goal=goal,
                     language_level=language_level,
+                    study_timeline=str(payload.get("study_timeline") or "flexible"),
                     skill_summary=str(payload.get("diagnostic_summary") or ""),
                 )
-                key_terms = list(dict.fromkeys([*base_terms, angle_title, track]))[:5]
+                key_terms = HuggingFaceLLMClient._normalize_key_terms(
+                    list(dict.fromkeys([*base_terms, angle_title, track]))[:5],
+                    track=track,
+                )
                 candidates.append(
                     GeneratedCardDraftDTO(
                         topic=topic,
                         explanation=explanation,
-                        examples=examples,
+                        examples=generated_examples,
                         key_terms=key_terms,
                     )
                 )
+                if example_signature:
+                    seen_example_signatures.add(example_signature)
         return candidates
 
     @staticmethod
@@ -1188,42 +1261,33 @@ class HuggingFaceLLMClient:
         interests: str,
         goal: str,
         language_level: str,
+        study_timeline: str,
         skill_summary: str,
     ) -> str:
         contextual_blocks = {
             "language": (
-                "Смотри на тему не как на отдельную формулу, а как на часть живого разговора. "
-                "В японском важно не только само слово, но и дистанция между людьми, мягкость реплики, "
-                "уровень вежливости и место, где эта фраза звучит естественно. "
-                "Если ты учишь язык под цель "
-                f"'{goal}', то полезно сразу представлять конкретную сцену: касса, улица, учебная аудитория, рабочий чат. "
-                f"Для уровня '{language_level}' лучше не пытаться запомнить все сразу, а вытащить каркас: когда использовать, "
-                "какой у фразы тон и какие части можно переставлять. После чтения проговори пример вслух и попробуй заменить одно слово своим."
+                "Здесь важнее всего сцена: кто говорит, зачем говорит и насколько мягко должна звучать реплика. "
+                "После чтения полезно проговорить пример вслух и заменить один элемент на свой."
             ),
             "culture": (
-                "Эту тему лучше читать как описание правила среды, а не как абстрактный факт из статьи. "
-                "Японская культура часто проявляется в мелких жестах, в ритме пространства, в том, как люди распределяют внимание и дистанцию. "
-                "Поэтому важно не просто понять определение, а увидеть, как этот код работает в магазине, поезде, офисе, доме или на фестивале. "
-                f"Твои интересы сейчас: {interests}. Попробуй связать эту тему с тем, что уже видел в аниме, фильмах, блогах или новостях, "
-                "и выпиши один момент, который меняет твое восприятие повседневной Японии."
+                "Эту тему лучше держать как правило повседневной среды. Полезно сразу привязать конспект к одной конкретной сцене: магазин, транспорт, дом, офис или улица."
             ),
             "history": (
-                "Историческую тему полезно держать как цепочку причин и последствий. "
-                "Важно не только что произошло, но и почему этот поворот до сих пор чувствуется в языке, городе, институтах, массовой культуре и социальных привычках. "
-                "Когда читаешь конспект, попробуй задавать себе три вопроса: что было до этого, что изменилось после, и какой след тема оставила в современной Японии. "
-                f"С учетом интересов '{interests}' ищи мост между прошлым и настоящим: бизнес, поп-культура, городская жизнь, образование или повседневный этикет."
+                "Историческую тему полезно читать как цепочку причин и последствий. Важно понять, что было до события, что изменилось после него и почему это заметно в современной Японии."
             ),
         }
-        diagnostic_note = (
-            f" Диагностика пользователя: {skill_summary}"
-            if skill_summary
-            else ""
-        )
+        timeline_blocks = {
+            "three_months": "Держи фокус на одной практической задаче и быстро привязывай тему к реальной ситуации.",
+            "six_months": "Сразу связывай правило с действием: как сказать, как понять, где применить.",
+            "one_year": "После базового смысла полезно заметить, где тема чаще всего ломается у новичка и как этого избежать.",
+            "two_years": "Полезно не только выучить форму, но и увидеть, как тема связана с соседними конструкциями и контекстом.",
+            "flexible": "Если тема пока держится слабо, полезно прочитать пример вслух и проверить, что именно в ней было непонятно.",
+        }
         return (
-            f"{base_text} Эта карточка про тему '{topic}'. "
-            f"{contextual_blocks.get(track, contextual_blocks['culture'])}"
-            f"{diagnostic_note}"
-        )
+            f"{base_text} "
+            f"{contextual_blocks.get(track, contextual_blocks['culture'])} "
+            f"{timeline_blocks.get(study_timeline, timeline_blocks['flexible'])}"
+        ).strip()
 
     @staticmethod
     def _fallback_speech_practice(payload: dict) -> SpeechPracticeDTO:
@@ -1347,6 +1411,469 @@ class HuggingFaceLLMClient:
         }
 
     @staticmethod
+    def _normalize_card_examples(raw_examples: list[dict | str]) -> list[str]:
+        normalized_examples: list[str] = []
+        seen_signatures: set[str] = set()
+        for example in raw_examples:
+            if isinstance(example, dict):
+                japanese = str(example.get("japanese") or "").strip()
+                romaji = str(example.get("romaji") or "").strip()
+                translation = str(
+                    example.get("translation") or example.get("russian") or ""
+                ).strip()
+                pieces = [piece for piece in (japanese, romaji, translation) if piece]
+                normalized = " | ".join(pieces)
+            else:
+                normalized = str(example).strip()
+            if not normalized:
+                continue
+            signature = HuggingFaceLLMClient._normalize_example_signature(normalized)
+            if signature in seen_signatures:
+                continue
+            seen_signatures.add(signature)
+            normalized_examples.append(normalized)
+        return normalized_examples[:3]
+
+    @staticmethod
+    def _normalize_key_terms(raw_terms: list[dict | str], track: str) -> list[str]:
+        translation_map = {
+            "挨拶": "приветствие",
+            "丁寧": "вежливая форма",
+            "会話": "разговор",
+            "自己紹介": "самопрезентация",
+            "名前": "имя",
+            "よろしく": "вежливая завершающая формула",
+            "注文": "заказ",
+            "お願い": "просьба",
+            "おすすめ": "рекомендация",
+            "会計": "счет",
+            "メニュー": "меню",
+            "水": "вода",
+            "電車": "поезд",
+            "駅": "станция",
+            "移動": "перемещение",
+            "質問": "вопрос",
+            "買い物": "покупки",
+            "店": "магазин",
+            "大学": "университет",
+            "勉強": "учеба",
+            "確認": "уточнение",
+            "仕事": "работа",
+            "共有": "обмен информацией",
+            "住まい": "жилье",
+            "契約": "договор",
+            "生活": "быт",
+            "歴史": "история",
+            "文化": "культура",
+            "時代": "эпоха",
+            "変化": "изменение",
+            "伝統": "традиция",
+            "習慣": "привычка",
+            "礼儀": "этикет",
+            "空気": "атмосфера общения",
+            "city": "город",
+            "memory": "память",
+            "place": "место",
+            "language": "язык",
+            "history": "история",
+            "culture": "культура",
+            "work": "работа",
+        }
+        normalized_terms: list[str] = []
+        seen: set[str] = set()
+        for raw_term in raw_terms:
+            cleaned = " ".join(str(raw_term or "").split()).strip(" ,.;")
+            if not cleaned:
+                continue
+            label = cleaned
+            translation = None
+
+            for separator in ("|", " - ", " — ", " – ", ":", " -> "):
+                if separator not in cleaned:
+                    continue
+                parts = [
+                    part.strip(" ,.;")
+                    for part in cleaned.split(separator)
+                    if part.strip(" ,.;")
+                ]
+                if len(parts) >= 2:
+                    label = parts[0]
+                    translation = parts[-1]
+                    break
+
+            if translation is None:
+                translation = translation_map.get(label) or translation_map.get(
+                    label.casefold()
+                )
+
+            if translation and translation != label:
+                prepared = f"{label} | {translation}"
+            else:
+                prepared = label
+
+            signature = HuggingFaceLLMClient._normalize_example_signature(prepared)
+            if signature in seen:
+                continue
+            seen.add(signature)
+            normalized_terms.append(prepared)
+        if track != "language":
+            return normalized_terms[:5]
+        return normalized_terms[:5]
+
+    @staticmethod
+    def _key_term_focus_text(term: str) -> str:
+        cleaned = " ".join(str(term or "").split()).strip(" ,.;")
+        if "|" in cleaned:
+            parts = [part.strip() for part in cleaned.split("|") if part.strip()]
+            if len(parts) >= 2:
+                return parts[-1]
+        if " - " in cleaned:
+            parts = [part.strip() for part in cleaned.split(" - ") if part.strip()]
+            if len(parts) >= 2:
+                return parts[-1]
+        return cleaned
+
+    @staticmethod
+    def _normalize_example_signature(example: str) -> str:
+        compact = " ".join(str(example).split()).casefold()
+        return compact.replace("ё", "е")
+
+    @staticmethod
+    def _example_signature(examples: list[str]) -> tuple[str, ...]:
+        signatures = [
+            HuggingFaceLLMClient._normalize_example_signature(example)
+            for example in examples
+            if str(example).strip()
+        ]
+        return tuple(dict.fromkeys(signatures))
+
+    @staticmethod
+    def _build_dynamic_examples(
+        *,
+        track: str,
+        context_title: str,
+        angle_title: str,
+        base_terms: list[str],
+    ) -> list[str]:
+        if track == "language":
+            return HuggingFaceLLMClient._build_language_dynamic_examples(
+                context_title=context_title,
+                angle_title=angle_title,
+            )
+
+        focus_term = (
+            HuggingFaceLLMClient._key_term_focus_text(base_terms[0])
+            if base_terms
+            else context_title
+        )
+        return [
+            f"{context_title}: здесь {angle_title} читается через конкретное поведение, а не через абстрактное правило.",
+            f"{focus_term} помогает быстро заметить, как тема проявляется в живой ситуации и почему это важно для контекста.",
+            f"Если перенести тему в реальную сцену, становится видно, как {angle_title} меняет восприятие всей ситуации.",
+        ]
+
+    @staticmethod
+    def _build_language_dynamic_examples(
+        *,
+        context_title: str,
+        angle_title: str,
+    ) -> list[str]:
+        scene = HuggingFaceLLMClient._language_scene_parts(context_title)
+        angle = angle_title.casefold()
+
+        if "мягкие просьбы" in angle:
+            return [
+                f"{scene['request_jp']}をお願いします。 | {scene['request_ro']} o onegaishimasu. | {scene['request_ru']}, пожалуйста.",
+                f"{scene['option_jp']}を見せてもらえますか。 | {scene['option_ro']} o misete moraemasu ka. | Можно посмотреть {scene['option_ru']}?",
+                "少しゆっくりお願いします。 | sukoshi yukkuri onegaishimasu. | Пожалуйста, чуть медленнее.",
+            ]
+        if "короткие уточнения" in angle:
+            return [
+                f"{scene['option_jp']}はどれですか。 | {scene['option_ro']} wa dore desu ka. | Какой вариант здесь нужен?",
+                "ここで合っていますか。 | koko de atteimasu ka. | Я правильно понял место или вариант?",
+                f"いつ{scene['action_jp']}しますか。 | itsu {scene['action_ro']} shimasu ka. | Когда происходит {scene['action_ru']}?",
+            ]
+        if "переспрос" in angle:
+            return [
+                f"すみません、{scene['option_jp']}をもう一度言ってください。 | sumimasen, {scene['option_ro']} o mou ichido itte kudasai. | Извините, повторите это еще раз.",
+                "今の言い方で合っていますか。 | ima no iikata de atteimasu ka. | Я правильно понял, как это было сказано?",
+                f"{scene['place_jp']}はどこでしたか。 | {scene['place_ro']} wa doko deshita ka. | Напомните, где здесь {scene['place_ru']}?",
+            ]
+        if "естественные реакции" in angle:
+            return [
+                f"わかりました。{scene['request_jp']}にします。 | wakarimashita. {scene['request_ro']} ni shimasu. | Понял, тогда беру {scene['request_ru']}.",
+                "ありがとうございます。それで大丈夫です。 | arigatou gozaimasu. sore de daijoubu desu. | Спасибо, так подойдет.",
+                "いいですね。では、そうします。 | ii desu ne. dewa, sou shimasu. | Хорошо, тогда так и сделаю.",
+            ]
+        if "вежливые отказы" in angle:
+            return [
+                f"今日は{scene['request_jp']}はやめておきます。 | kyou wa {scene['request_ro']} wa yamete okimasu. | Сегодня я пока откажусь от {scene['request_ru']}.",
+                "今回は大丈夫です。ありがとうございます。 | konkai wa daijoubu desu. arigatou gozaimasu. | В этот раз не нужно, спасибо.",
+                "また後でお願いします。 | mata ato de onegaishimasu. | Давайте чуть позже.",
+            ]
+        return [
+            f"初めてなので、{scene['place_jp']}で少し緊張しています。 | hajimete na node, {scene['place_ro']} de sukoshi kinchou shiteimasu. | Я здесь впервые, поэтому немного волнуюсь.",
+            f"{scene['place_jp']}では簡単な日本語で話します。 | {scene['place_ro']} de wa kantan na nihongo de hanashimasu. | В этой ситуации я говорю простым японским.",
+            f"今日は{scene['action_jp']}のために来ました。 | kyou wa {scene['action_ro']} no tame ni kimashita. | Сегодня я пришел по поводу этого вопроса.",
+        ]
+
+    @staticmethod
+    def _language_scene_parts(context_title: str) -> dict[str, str]:
+        normalized = context_title.casefold()
+        scenes = [
+            (
+                "кафе",
+                {
+                    "request_jp": "メニュー",
+                    "request_ro": "menyuu",
+                    "request_ru": "меню",
+                    "option_jp": "おすすめ",
+                    "option_ro": "osusume",
+                    "option_ru": "рекомендация",
+                    "action_jp": "注文",
+                    "action_ro": "chuumon",
+                    "action_ru": "заказ",
+                    "place_jp": "カフェ",
+                    "place_ro": "kafe",
+                    "place_ru": "кафе",
+                },
+            ),
+            (
+                "стан",
+                {
+                    "request_jp": "路線図",
+                    "request_ro": "rosenzu",
+                    "request_ru": "схема линий",
+                    "option_jp": "乗り場",
+                    "option_ro": "noriba",
+                    "option_ru": "нужная платформа",
+                    "action_jp": "乗り換え",
+                    "action_ro": "norikae",
+                    "action_ru": "пересадка",
+                    "place_jp": "駅",
+                    "place_ro": "eki",
+                    "place_ru": "станция",
+                },
+            ),
+            (
+                "магаз",
+                {
+                    "request_jp": "これ",
+                    "request_ro": "kore",
+                    "request_ru": "этот товар",
+                    "option_jp": "別のサイズ",
+                    "option_ro": "betsu no saizu",
+                    "option_ru": "другой размер",
+                    "action_jp": "支払い",
+                    "action_ro": "shiharai",
+                    "action_ru": "оплата",
+                    "place_jp": "店内",
+                    "place_ro": "tennai",
+                    "place_ru": "магазин",
+                },
+            ),
+            (
+                "универс",
+                {
+                    "request_jp": "資料",
+                    "request_ro": "shiryou",
+                    "request_ru": "материалы",
+                    "option_jp": "この課題",
+                    "option_ro": "kono kadai",
+                    "option_ru": "это задание",
+                    "action_jp": "確認",
+                    "action_ro": "kakunin",
+                    "action_ru": "уточнение",
+                    "place_jp": "教室",
+                    "place_ro": "kyoushitsu",
+                    "place_ru": "аудитория",
+                },
+            ),
+            (
+                "офис",
+                {
+                    "request_jp": "資料",
+                    "request_ro": "shiryou",
+                    "request_ru": "документ",
+                    "option_jp": "進捗",
+                    "option_ro": "shinchoku",
+                    "option_ru": "статус задачи",
+                    "action_jp": "共有",
+                    "action_ro": "kyouyuu",
+                    "action_ru": "обновление для команды",
+                    "place_jp": "会議",
+                    "place_ro": "kaigi",
+                    "place_ru": "рабочая встреча",
+                },
+            ),
+            (
+                "жиль",
+                {
+                    "request_jp": "契約書",
+                    "request_ro": "keiyakusho",
+                    "request_ru": "договор",
+                    "option_jp": "更新料",
+                    "option_ro": "koushinryou",
+                    "option_ru": "плата за продление",
+                    "action_jp": "確認",
+                    "action_ro": "kakunin",
+                    "action_ru": "уточнение условий",
+                    "place_jp": "不動産屋",
+                    "place_ro": "fudousanya",
+                    "place_ru": "агентство жилья",
+                },
+            ),
+            (
+                "клиник",
+                {
+                    "request_jp": "薬",
+                    "request_ro": "kusuri",
+                    "request_ru": "лекарство",
+                    "option_jp": "症状",
+                    "option_ro": "shoujou",
+                    "option_ru": "симптом",
+                    "action_jp": "説明",
+                    "action_ro": "setsumei",
+                    "action_ru": "объяснение состояния",
+                    "place_jp": "受付",
+                    "place_ro": "uketsuke",
+                    "place_ru": "регистратура",
+                },
+            ),
+            (
+                "улиц",
+                {
+                    "request_jp": "地図",
+                    "request_ro": "chizu",
+                    "request_ru": "карта",
+                    "option_jp": "近い道",
+                    "option_ro": "chikai michi",
+                    "option_ru": "ближайший путь",
+                    "action_jp": "案内",
+                    "action_ro": "annai",
+                    "action_ru": "подсказка по маршруту",
+                    "place_jp": "この道",
+                    "place_ro": "kono michi",
+                    "place_ru": "эта дорога",
+                },
+            ),
+        ]
+        for marker, scene in scenes:
+            if marker in normalized:
+                return scene
+        return {
+            "request_jp": "言い方",
+            "request_ro": "iikata",
+            "request_ru": "эту формулировку",
+            "option_jp": "表現",
+            "option_ro": "hyougen",
+            "option_ru": "выражение",
+            "action_jp": "会話",
+            "action_ro": "kaiwa",
+            "action_ru": "разговор",
+            "place_jp": "場面",
+            "place_ro": "bamen",
+            "place_ru": "сцену",
+        }
+
+    @staticmethod
+    def _goal_label(goal: str | None) -> str:
+        labels = {
+            "tourism": "туризм",
+            "relocation": "переезд",
+            "work": "работа",
+            "university": "университет",
+        }
+        return labels.get(str(goal), "не указана")
+
+    @staticmethod
+    def _level_label(level: str | None) -> str:
+        labels = {
+            "zero": "стартовый",
+            "basic": "базовый",
+            "intermediate": "уверенный",
+        }
+        return labels.get(str(level), "не указан")
+
+    @staticmethod
+    def _timeline_label(timeline: str | None) -> str:
+        labels = {
+            "three_months": "3 месяца",
+            "six_months": "6 месяцев",
+            "one_year": "1 год",
+            "two_years": "2 года и дольше",
+            "flexible": "без жесткого дедлайна",
+        }
+        return labels.get(str(timeline), "гибкий темп")
+
+    @staticmethod
+    def _timeline_generation_instruction(timeline: str | None) -> str:
+        instructions = {
+            "three_months": (
+                "Темп сжатый: давай только самые частые и прикладные объяснения, меньше обходной теории, "
+                "быстрее переходи к сцене применения."
+            ),
+            "six_months": (
+                "Темп интенсивный: объясняй по делу, держи материал плотным и сразу закрепляй его через практику."
+            ),
+            "one_year": (
+                "Темп сбалансированный: объясняй подробно, но без затяжных отступлений, чтобы теория сразу работала в практике."
+            ),
+            "two_years": (
+                "Темп глубокий: можно объяснять шире, показывать связи между темами и не спешить с убиранием опор без необходимости."
+            ),
+            "flexible": (
+                "Темп гибкий: подробность объяснения подстраивай под сложность темы и слабые места пользователя."
+            ),
+        }
+        return instructions.get(str(timeline), instructions["flexible"])
+
+    @staticmethod
+    def _timeline_advice_context(timeline: str | None) -> str:
+        contexts = {
+            "three_months": "Советы должны быть жестко приоритизированы: сначала то, что дает быстрый практический эффект.",
+            "six_months": "Советы должны держать интенсивный, но реалистичный темп без лишних ответвлений.",
+            "one_year": "Советы должны удерживать баланс между подробным разбором и нормальным темпом.",
+            "two_years": "Советы могут включать больше контекста, чтения и постепенного усложнения.",
+            "flexible": "Советы должны подстраиваться под реальные просадки, а не под искусственный дедлайн.",
+        }
+        return contexts.get(str(timeline), contexts["flexible"])
+
+    @staticmethod
+    def _explanation_length_instruction(payload: dict) -> str:
+        timeline = str(payload.get("study_timeline") or "flexible")
+        instructions = {
+            "three_months": "Explanation делай плотным конспектом длиной около 130-170 слов.",
+            "six_months": "Explanation делай плотным конспектом длиной около 150-190 слов.",
+            "one_year": "Explanation делай плотным конспектом длиной около 170-220 слов.",
+            "two_years": "Explanation делай подробным конспектом длиной около 190-240 слов.",
+            "flexible": "Explanation делай подробным, но прикладным конспектом длиной около 180-230 слов.",
+        }
+        return instructions.get(timeline, instructions["flexible"])
+
+    @staticmethod
+    def _build_generation_context(payload: dict) -> str:
+        level = HuggingFaceLLMClient._level_label(
+            payload.get("diagnostic_level") or payload.get("language_level")
+        )
+        lines = [
+            f"Адаптируй сложность под уровень: {level}.",
+            HuggingFaceLLMClient._timeline_generation_instruction(
+                payload.get("study_timeline")
+            ),
+        ]
+
+        weak_points = ", ".join(payload.get("weak_points") or [])
+        if weak_points:
+            lines.append(f"Упрощай материал там, где обычно проседают: {weak_points}.")
+
+        strengths = ", ".join(payload.get("strengths") or [])
+        if strengths:
+            lines.append(f"Можно быстрее опираться на: {strengths}.")
+
+        return " ".join(lines)
+
+    @staticmethod
     def _speech_difficulty_label(payload: dict) -> str:
         level = payload.get("diagnostic_level") or payload.get("language_level")
         labels = {
@@ -1358,6 +1885,7 @@ class HuggingFaceLLMClient:
 
     @staticmethod
     def _speech_coaching_tip(payload: dict) -> str:
+        timeline = str(payload.get("study_timeline") or "flexible")
         weak_points = set(payload.get("weak_points") or [])
         if "Хирагана" in weak_points:
             return "Сначала прочитай строки по ромадзи, потом повтори без подсказки."
@@ -1365,6 +1893,10 @@ class HuggingFaceLLMClient:
             return "Проговаривай предложения с акцентом на частицы и меняй одно существительное."
         if "Базовый порядок предложения" in weak_points:
             return "Читай диалоги по ролям и отдельно отмечай тему, действие и объект."
+        if timeline == "three_months":
+            return "Говори короткими циклами: предложение, пауза, повтор без чтения."
+        if timeline == "two_years":
+            return "Проговаривай сначала медленно, потом еще раз без опоры на перевод и отмечай, где смысл собирается из контекста."
         return "Сначала прочитай предложения, потом проговори диалоги."
 
     @staticmethod
@@ -1378,11 +1910,14 @@ class HuggingFaceLLMClient:
             if user.skill_assessment and user.skill_assessment.weak_points
             else "заметных слабых мест пока нет"
         )
+        timeline_note = HuggingFaceLLMClient._timeline_advice_context(
+            user.study_timeline.value if user.study_timeline else None
+        )
         return AIAdviceDTO(
             headline="Следующий шаг",
             summary=(
                 f"Сейчас лучше закончить текущую партию в разделе '{weakest_track.title}'. "
-                f"Отдельно стоит следить за темами: {weak_points}."
+                f"Отдельно стоит следить за темами: {weak_points}. {timeline_note}"
             ),
             focus_points=[
                 f"Закрой текущую партию в разделе '{weakest_track.title}'.",

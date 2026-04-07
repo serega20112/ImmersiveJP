@@ -7,6 +7,7 @@ from src.backend.infrastructure.repositories import (
     AbstractSessionRepository,
     AbstractUserRepository,
 )
+from src.backend.use_case.key_terms import key_term_input_value
 
 
 class GetSpeechPracticePageUseCase:
@@ -60,11 +61,12 @@ class GetSpeechPracticePageUseCase:
         for card in cards:
             latest_topics.append(card.topic)
             for term in card.key_terms:
-                normalized = term.casefold()
+                prepared_term = key_term_input_value(term)
+                normalized = prepared_term.casefold()
                 if normalized in seen_words:
                     continue
                 seen_words.add(normalized)
-                suggested_words.append(term)
+                suggested_words.append(prepared_term)
                 if len(suggested_words) == 12:
                     return suggested_words, latest_topics[:5]
         return suggested_words, latest_topics[:5]

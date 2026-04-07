@@ -10,6 +10,7 @@ from src.backend.infrastructure.repositories import (
     AbstractUserRepository,
 )
 from src.backend.use_case.mappers import to_skill_assessment_dto, to_track_progress_dto
+from src.backend.use_case.profile.trust_score import build_trust_score
 
 
 class BuildProgressReportUseCase:
@@ -57,6 +58,12 @@ class BuildProgressReportUseCase:
             if total_generated
             else 0.0
         )
+        trust_score = build_trust_score(
+            assessment=user.skill_assessment,
+            snapshots=snapshots,
+            total_completed=total_completed,
+            total_generated=total_generated,
+        )
         return ProgressReportDTO(
             total_completed=total_completed,
             total_generated=total_generated,
@@ -67,5 +74,6 @@ class BuildProgressReportUseCase:
                 else "Сначала пройди онбординг, чтобы получить стартовые карточки."
             ),
             tracks=[to_track_progress_dto(snapshot) for snapshot in snapshots],
+            trust_score=trust_score,
             skill_assessment=to_skill_assessment_dto(user.skill_assessment),
         )

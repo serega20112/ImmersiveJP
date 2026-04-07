@@ -42,6 +42,8 @@ class GetTrackPageUseCase:
         all_current_batch_completed = bool(cards) and all(
             int(card.id or 0) in completed_ids for card in cards
         )
+        completed_batches = completed_total // 10
+        work_ready_batch = completed_batches if completed_batches > 0 else None
         return TrackPageDTO(
             track=track.value,
             title=track.title,
@@ -52,4 +54,11 @@ class GetTrackPageUseCase:
             generated_total=generated_total,
             all_current_batch_completed=all_current_batch_completed,
             can_generate_next=all_current_batch_completed,
+            completed_batches=completed_batches,
+            work_ready_batch=work_ready_batch,
+            work_href=(
+                f"/learn/{track.value}/work/{work_ready_batch}"
+                if work_ready_batch is not None
+                else None
+            ),
         )

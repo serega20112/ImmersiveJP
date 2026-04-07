@@ -56,6 +56,8 @@ class GetCardPageUseCase:
             batch_cards=batch_cards,
             batch_completed_ids=batch_completed_ids,
         )
+        completed_batches = completed_total // 10
+        work_ready_batch = completed_batches if completed_batches > 0 else None
 
         return TrackCardPageDTO(
             track=track.value,
@@ -71,6 +73,13 @@ class GetCardPageUseCase:
             generated_total=generated_total,
             all_current_batch_completed=all_current_batch_completed,
             can_generate_next=all_current_batch_completed,
+            completed_batches=completed_batches,
+            work_ready_batch=work_ready_batch,
+            work_href=(
+                f"/learn/{track.value}/work/{work_ready_batch}"
+                if work_ready_batch is not None
+                else None
+            ),
         )
 
     async def _get_completed_ids(

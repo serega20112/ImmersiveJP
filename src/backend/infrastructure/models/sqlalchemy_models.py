@@ -46,6 +46,7 @@ class UserModel(TimestampMixin, Base):
     )
     learning_goal: Mapped[str | None] = mapped_column(String(32), nullable=True)
     language_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    study_timeline: Mapped[str | None] = mapped_column(String(32), nullable=True)
     interests_json: Mapped[list[str]] = mapped_column(
         JSON, default=list, nullable=False
     )

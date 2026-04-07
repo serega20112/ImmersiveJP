@@ -35,6 +35,7 @@ class UserViewDTO(BaseModel):
     onboarding_completed: bool
     learning_goal: str | None = None
     language_level: str | None = None
+    study_timeline: str | None = None
     interests: list[str] = Field(default_factory=list)
 
 

@@ -45,8 +45,10 @@ async def complete_onboarding(request: Request):
             OnboardingDTO(
                 goal=str(form.get("goal", "")),
                 language_level=str(form.get("language_level", "")),
+                study_timeline=str(form.get("study_timeline", "")),
                 interests_text=str(form.get("interests_text", "")),
                 diagnostic_answers=diagnostic_answers,
+                diagnostic_hints_used=int(str(form.get("diagnostic_hints_used", "0")) or 0),
             ),
         )
         flash(request, result.skill_assessment.summary, "success")

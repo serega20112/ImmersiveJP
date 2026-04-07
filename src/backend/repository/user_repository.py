@@ -3,7 +3,13 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.backend.domain.user import LanguageLevel, LearningGoal, SkillAssessment, User
+from src.backend.domain.user import (
+    LanguageLevel,
+    LearningGoal,
+    SkillAssessment,
+    StudyTimeline,
+    User,
+)
 from src.backend.infrastructure.models import UserModel
 from src.backend.infrastructure.repositories import AbstractUserRepository
 
@@ -20,6 +26,7 @@ class UserRepository(AbstractUserRepository):
             is_email_verified=user.is_email_verified,
             learning_goal=user.learning_goal.value if user.learning_goal else None,
             language_level=user.language_level.value if user.language_level else None,
+            study_timeline=user.study_timeline.value if user.study_timeline else None,
             interests_json=user.interests,
             onboarding_completed=user.onboarding_completed,
             diagnostic_score=(
@@ -79,6 +86,7 @@ class UserRepository(AbstractUserRepository):
         user_id: int,
         goal: LearningGoal,
         language_level: LanguageLevel,
+        study_timeline: StudyTimeline,
         interests: list[str],
         skill_assessment: SkillAssessment,
     ) -> User:
@@ -88,6 +96,7 @@ class UserRepository(AbstractUserRepository):
         model = result.scalar_one()
         model.learning_goal = goal.value
         model.language_level = language_level.value
+        model.study_timeline = study_timeline.value
         model.interests_json = interests
         model.onboarding_completed = True
         model.diagnostic_score = skill_assessment.score
@@ -116,6 +125,9 @@ class UserRepository(AbstractUserRepository):
             ),
             language_level=(
                 LanguageLevel(model.language_level) if model.language_level else None
+            ),
+            study_timeline=(
+                StudyTimeline(model.study_timeline) if model.study_timeline else None
             ),
             interests=list(model.interests_json or []),
             onboarding_completed=model.onboarding_completed,

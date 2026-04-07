@@ -2,33 +2,42 @@
 {% block title %}Профиль - ImmersJP{% endblock %}
 {% block body_class %}page--profile{% endblock %}
 {% block content %}
-<section class="page-hero reveal">
-  <div class="page-hero__copy panel panel--hero">
+<section class="page-hero page-hero--dashboard reveal">
+  <div class="page-hero__copy panel panel--hero hero-stack">
     <p class="section-kicker">Профиль</p>
-    <h1>Здесь собран текущий прогресс.</h1>
+    <h1>Здесь видно, насколько система тебе доверяет на практике.</h1>
     <p class="page-lead">{{ report.next_step }}</p>
-    <ul class="metric-strip metric-strip--compact">
-      <li>
-        <strong>{{ report.total_completed }}</strong>
-        <span>карточек завершено</span>
-      </li>
-      <li>
-        <strong>{{ report.total_generated }}</strong>
-        <span>всего сгенерировано</span>
-      </li>
-      <li>
-        <strong>{{ report.completion_rate|round(0)|int }}%</strong>
-        <span>общий прогресс</span>
-      </li>
-    </ul>
+    <div class="hero-facts">
+      <span class="hero-fact">{{ report.total_completed }} карточек закрыто</span>
+      <span class="hero-fact">{{ report.total_generated }} карточек всего</span>
+      <span class="hero-fact">{{ report.trust_score.band_title }}</span>
+    </div>
+    <div class="panel-actions">
+      <a href="/plan" class="ghost-button">Открыть план</a>
+    </div>
   </div>
 
-  <aside class="panel page-hero__side">
-    <p class="section-kicker">Общий темп</p>
-    <div class="progress-bar progress-bar--large">
-      <span style="width: {{ report.completion_rate }}%"></span>
+  <aside class="panel trust-card">
+    <p class="section-kicker">Trust Score</p>
+    <div class="trust-score__ring trust-score__ring--{{ report.trust_score.band_key }}">
+      <strong>{{ report.trust_score.score }}</strong>
+      <span>/ 100</span>
     </div>
-    <p>{{ report.completion_rate|round(0)|int }}% материалов уже пройдено.</p>
+    <div class="trust-score__copy">
+      <h2>{{ report.trust_score.band_title }}</h2>
+      <p>{{ report.trust_score.summary }}</p>
+    </div>
+    <div class="trust-components trust-components--stacked">
+      {% for component in report.trust_score.components %}
+      <article class="trust-component trust-component--detailed">
+        <div>
+          <strong>{{ component.label }}</strong>
+          <p>{{ component.note }}</p>
+        </div>
+        <span>{{ component.score }}</span>
+      </article>
+      {% endfor %}
+    </div>
   </aside>
 </section>
 
@@ -51,7 +60,7 @@
     <p>{{ report.skill_assessment.summary }}</p>
     <div class="skill-columns">
       <div>
-        <strong>Получается лучше</strong>
+        <strong>Сильнее всего</strong>
         <ul class="plain-list skill-list">
           {% for item in report.skill_assessment.strengths %}
           <li>{{ item }}</li>
@@ -59,7 +68,7 @@
         </ul>
       </div>
       <div>
-        <strong>Нужно подтянуть</strong>
+        <strong>Проседает</strong>
         <ul class="plain-list skill-list">
           {% for item in report.skill_assessment.weak_points %}
           <li>{{ item }}</li>
@@ -71,8 +80,8 @@
   {% else %}
   <article class="panel skill-summary-card">
     <p class="section-kicker">Диагностика</p>
-    <h2>Исходные данные пока не собраны.</h2>
-    <p>Если нужно, можно заново пройти онбординг и обновить стартовые настройки.</p>
+    <h2>Стартовый срез пока не собран.</h2>
+    <p>Пройди онбординг заново, если нужно обновить стартовые настройки и уровень вопросов.</p>
   </article>
   {% endif %}
 </section>
@@ -85,15 +94,39 @@
         <p class="section-kicker">{{ track.title }}</p>
         <h2>Партия {{ track.current_batch }}</h2>
       </div>
-      <span class="track-panel__percent">{{ track.completion_rate|round(0)|int }}%</span>
+      <span class="track-panel__percent">{{ track.completed_batches }} батчей</span>
     </div>
-    <div class="progress-meta">
-      <strong>{{ track.completed_cards }} / {{ track.generated_cards }}</strong>
-      <span>карточек завершено</span>
+    <div class="track-panel__stats">
+      <div class="stat-chip">
+        <strong>{{ track.completed_cards }}</strong>
+        <span>пройдено</span>
+      </div>
+      <div class="stat-chip">
+        <strong>{{ track.generated_cards }}</strong>
+        <span>всего</span>
+      </div>
+      <div class="stat-chip">
+        <strong>{{ track.completion_rate|round(0)|int }}%</strong>
+        <span>закрыто</span>
+      </div>
     </div>
-    <div class="progress-bar progress-bar--track">
-      <span style="width: {{ track.completion_rate }}%"></span>
+    <p class="track-panel__note">
+      {% if track.work_ready_batch %}
+      Работа по партии {{ track.work_ready_batch }} доступна.
+      {% else %}
+      После первой закрытой партии здесь появится работа для проверки материала.
+      {% endif %}
+    </p>
+    {% if track.work_ready_batch %}
+    <div class="panel-actions">
+      <a href="{{ '/learn/' ~ track.track ~ '/work/' ~ track.work_ready_batch }}" class="ghost-button">Открыть работу</a>
+      <a href="{{ '/learn/' ~ track.track }}" class="primary-button">Открыть трек</a>
     </div>
+    {% else %}
+    <div class="panel-actions">
+      <a href="{{ '/learn/' ~ track.track }}" class="primary-button">Открыть трек</a>
+    </div>
+    {% endif %}
   </article>
   {% endfor %}
 </section>

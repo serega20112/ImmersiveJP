@@ -5,6 +5,7 @@ from src.backend.dto.learning_dto import (
     CardCompletionResultDTO,
     PdfDocumentDTO,
     SpeechPracticePageDTO,
+    TrackWorkPageDTO,
     TrackCardPageDTO,
     TrackPageDTO,
 )
@@ -16,7 +17,9 @@ from src.backend.use_case.learning import (
     GetNextCardsUseCase,
     GetSpeechPracticePageUseCase,
     GetTrackPageUseCase,
+    GetTrackWorkPageUseCase,
     RepairCurrentBatchUseCase,
+    SubmitTrackWorkUseCase,
 )
 
 
@@ -31,6 +34,8 @@ class LearningService:
         export_cards_to_pdf_use_case: ExportCardsToPDFUseCase,
         get_speech_practice_page_use_case: GetSpeechPracticePageUseCase,
         generate_speech_practice_use_case: GenerateSpeechPracticeUseCase,
+        get_track_work_page_use_case: GetTrackWorkPageUseCase,
+        submit_track_work_use_case: SubmitTrackWorkUseCase,
     ):
         self._get_track_page_use_case = get_track_page_use_case
         self._get_card_page_use_case = get_card_page_use_case
@@ -40,6 +45,8 @@ class LearningService:
         self._export_cards_to_pdf_use_case = export_cards_to_pdf_use_case
         self._get_speech_practice_page_use_case = get_speech_practice_page_use_case
         self._generate_speech_practice_use_case = generate_speech_practice_use_case
+        self._get_track_work_page_use_case = get_track_work_page_use_case
+        self._submit_track_work_use_case = submit_track_work_use_case
 
     async def get_track_page(self, user_id: int, track: TrackType) -> TrackPageDTO:
         await self._repair_current_batch_use_case.execute(user_id, track)
@@ -76,3 +83,29 @@ class LearningService:
         words_text: str,
     ) -> SpeechPracticePageDTO:
         return await self._generate_speech_practice_use_case.execute(user_id, words_text)
+
+    async def get_track_work_page(
+        self,
+        user_id: int,
+        track: TrackType,
+        batch_number: int,
+    ) -> TrackWorkPageDTO:
+        return await self._get_track_work_page_use_case.execute(
+            user_id,
+            track,
+            batch_number,
+        )
+
+    async def submit_track_work(
+        self,
+        user_id: int,
+        track: TrackType,
+        batch_number: int,
+        answers: dict[str, str],
+    ) -> TrackWorkPageDTO:
+        return await self._submit_track_work_use_case.execute(
+            user_id,
+            track,
+            batch_number,
+            answers,
+        )

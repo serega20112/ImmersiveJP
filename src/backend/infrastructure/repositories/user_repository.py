@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from src.backend.domain.user import LanguageLevel, LearningGoal, SkillAssessment, User
+from src.backend.domain.user import (
+    LanguageLevel,
+    LearningGoal,
+    SkillAssessment,
+    StudyTimeline,
+    User,
+)
 
 
 class AbstractUserRepository(ABC):
@@ -28,6 +34,7 @@ class AbstractUserRepository(ABC):
         user_id: int,
         goal: LearningGoal,
         language_level: LanguageLevel,
+        study_timeline: StudyTimeline,
         interests: list[str],
         skill_assessment: SkillAssessment,
     ) -> User:

@@ -33,7 +33,21 @@ class RepairCurrentBatchUseCase:
             track,
             current_batch,
         )
-        broken_cards = [card for card in batch_cards if self._is_placeholder(card.topic)]
+        broken_cards: list[LearningCard] = []
+        broken_ids: set[int] = set()
+
+        for card in batch_cards:
+            if self._is_placeholder(card.topic):
+                broken_cards.append(card)
+                broken_ids.add(int(card.id or 0))
+
+        for card in self._find_duplicate_example_cards(batch_cards):
+            card_id = int(card.id or 0)
+            if card_id in broken_ids:
+                continue
+            broken_cards.append(card)
+            broken_ids.add(card_id)
+
         if not broken_cards:
             return
 
@@ -78,3 +92,28 @@ class RepairCurrentBatchUseCase:
     @staticmethod
     def _is_placeholder(topic: str) -> bool:
         return topic.strip().casefold().startswith("резервная тема")
+
+    @staticmethod
+    def _find_duplicate_example_cards(
+        batch_cards: list[LearningCard],
+    ) -> list[LearningCard]:
+        seen_signatures: set[tuple[str, ...]] = set()
+        duplicates: list[LearningCard] = []
+        for card in sorted(batch_cards, key=lambda item: item.position):
+            signature = RepairCurrentBatchUseCase._example_signature(card)
+            if not signature:
+                continue
+            if signature in seen_signatures:
+                duplicates.append(card)
+                continue
+            seen_signatures.add(signature)
+        return duplicates
+
+    @staticmethod
+    def _example_signature(card: LearningCard) -> tuple[str, ...]:
+        normalized = [
+            " ".join(str(example).split()).casefold()
+            for example in card.examples
+            if str(example).strip()
+        ]
+        return tuple(dict.fromkeys(normalized))

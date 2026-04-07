@@ -45,13 +45,16 @@ from src.backend.use_case.learning import (
     GetNextCardsUseCase,
     GetSpeechPracticePageUseCase,
     GetTrackPageUseCase,
+    GetTrackWorkPageUseCase,
     RepairCurrentBatchUseCase,
+    SubmitTrackWorkUseCase,
 )
 from src.backend.use_case.onboarding import (
     CompleteOnboardingUseCase,
     GetOnboardingPageUseCase,
 )
 from src.backend.use_case.profile import (
+    BuildLearningPlanUseCase,
     BuildProgressReportUseCase,
     GenerateAIAdviceUseCase,
 )
@@ -282,6 +285,20 @@ class RequestContainer:
         )
 
     @cached_property
+    def get_track_work_page_use_case(self) -> GetTrackWorkPageUseCase:
+        return GetTrackWorkPageUseCase(
+            self.content_repository,
+            self.progress_repository,
+        )
+
+    @cached_property
+    def submit_track_work_use_case(self) -> SubmitTrackWorkUseCase:
+        return SubmitTrackWorkUseCase(
+            self.content_repository,
+            self.progress_repository,
+        )
+
+    @cached_property
     def get_onboarding_page_use_case(self) -> GetOnboardingPageUseCase:
         return GetOnboardingPageUseCase()
 
@@ -299,6 +316,13 @@ class RequestContainer:
             self.progress_repository,
             self.session_repository,
             self.user_repository,
+        )
+
+    @cached_property
+    def build_learning_plan_use_case(self) -> BuildLearningPlanUseCase:
+        return BuildLearningPlanUseCase(
+            self.user_repository,
+            self.build_progress_report_use_case,
         )
 
     @cached_property
@@ -340,11 +364,14 @@ class RequestContainer:
             self.export_cards_to_pdf_use_case,
             self.get_speech_practice_page_use_case,
             self.generate_speech_practice_use_case,
+            self.get_track_work_page_use_case,
+            self.submit_track_work_use_case,
         )
 
     @cached_property
     def profile_service(self) -> ProfileService:
         return ProfileService(
+            self.build_learning_plan_use_case,
             self.build_progress_report_use_case,
             self.generate_ai_advice_use_case,
         )

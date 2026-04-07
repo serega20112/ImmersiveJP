@@ -30,6 +30,8 @@ class GetDashboardUseCase:
                 completed_cards=item.completed_cards,
                 generated_cards=item.generated_cards,
                 completion_rate=item.completion_rate,
+                completed_batches=item.completed_batches,
+                work_ready_batch=item.work_ready_batch,
                 href=f"/learn/{item.track}",
             )
             for item in report.tracks
@@ -43,6 +45,7 @@ class GetDashboardUseCase:
             user_display_name=user.display_name,
             recommendation=recommendation,
             sections=sections,
+            trust_score=report.trust_score,
             skill_assessment=to_skill_assessment_dto(user.skill_assessment),
             speech_practice_href="/learn/speech",
         )

@@ -3,17 +3,22 @@
 {% block body_class %}page--learn{% endblock %}
 {% block content %}
 <section class="page-hero reveal">
-  <div class="page-hero__copy panel panel--hero">
+  <div class="page-hero__copy panel panel--hero hero-stack">
     <p class="section-kicker">{{ page.title }}</p>
     <h1>{{ page.subtitle }}</h1>
     <p class="page-lead">
-      Партия {{ page.current_batch if page.current_batch else 'еще не создана' }}.
-      Завершено {{ page.completed_total }} из {{ page.generated_total }} карточек по этому треку.
+      Партия {{ page.current_batch if page.current_batch else 'еще не создана' }}. 
+      Закрыто {{ page.completed_total }} из {{ page.generated_total }} карточек. 
+      Полностью завершено батчей: {{ page.completed_batches }}.
     </p>
     <div class="hero-facts">
       <span class="hero-fact">{{ page.completed_total }} пройдено</span>
       <span class="hero-fact">{{ page.generated_total }} всего</span>
-      <span class="hero-fact">{% if page.can_generate_next %}можно открыть следующую партию{% else %}сначала закрой текущую{% endif %}</span>
+      {% if page.work_ready_batch %}
+      <span class="hero-fact">работа по партии {{ page.work_ready_batch }} готова</span>
+      {% else %}
+      <span class="hero-fact">сначала закрой 10 карточек</span>
+      {% endif %}
     </div>
   </div>
 
@@ -22,14 +27,17 @@
       {% if page.track == 'language' %}
       <a href="{{ url_for('learning.speech_page') }}" class="ghost-button">Речевая практика</a>
       {% endif %}
+      {% if page.work_href %}
+      <a href="{{ page.work_href }}" class="primary-button">Открыть работу</a>
+      {% endif %}
       <a href="{{ url_for('learning.download_pdf') }}?track={{ page.track }}" class="ghost-button">Скачать PDF</a>
-      <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="primary-button {% if not page.can_generate_next %}is-disabled{% endif %}">Следующая партия</a>
+      <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}">Следующая партия</a>
     </div>
     <p class="utility-card__note">
       {% if page.can_generate_next %}
-      Текущая партия завершена. Можно запускать новую.
+      Текущая партия закрыта. Сначала можно пройти работу, потом открывать новый батч.
       {% else %}
-      Новая партия станет доступна после завершения текущей десятки.
+      Новая партия откроется после завершения текущей десятки. Работа строится только по завершенным батчам.
       {% endif %}
     </p>
   </aside>
@@ -39,8 +47,8 @@
 <section class="panel speech-inline-card reveal">
   <div>
     <p class="section-kicker">Речевая практика</p>
-    <h2>Практика по словам из этого блока.</h2>
-    <p>Можно взять слова из текущей партии и собрать предложения с короткими диалогами.</p>
+    <h2>Повтори слова из этого батча в живом ответе.</h2>
+    <p>Секция собирает предложения и короткие диалоги по словам из уже пройденного материала.</p>
   </div>
   <a href="{{ url_for('learning.speech_page') }}" class="primary-button">Открыть практику</a>
 </section>
@@ -62,16 +70,21 @@
     </div>
     <h2>{{ card.topic }}</h2>
     <p class="preview-card__excerpt">{{ card.preview }}</p>
-    <div class="tag-row">
-      {% for term in card.key_terms %}
-      <span class="tag">{{ term }}</span>
+    <div class="tag-row tag-row--terms">
+      {% for term in card.key_term_items[:3] %}
+      <article class="term-chip term-chip--compact">
+        <strong class="term-chip__label">{{ term.label }}</strong>
+        {% if term.translation %}
+        <span class="term-chip__translation">{{ term.translation }}</span>
+        {% endif %}
+      </article>
       {% endfor %}
     </div>
     <div class="preview-card__footer">
       {% if card.is_completed %}
       <span class="status-chip status-chip--done">Пройдено</span>
       {% else %}
-      <span class="status-chip">Открыть</span>
+      <span class="status-chip">Открыть конспект</span>
       {% endif %}
     </div>
   </a>
