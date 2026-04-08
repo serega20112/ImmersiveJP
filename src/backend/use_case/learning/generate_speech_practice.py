@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+import logging
+
 from src.backend.dependencies.settings import Settings
 from src.backend.dto.learning_dto import SpeechPracticePageDTO
 from src.backend.infrastructure.external import HuggingFaceLLMClient
+from src.backend.infrastructure.observability import get_logger, log_event
 from src.backend.infrastructure.repositories import AbstractUserRepository
 from src.backend.infrastructure.security import RateLimiter
 from src.backend.use_case.learning.get_speech_practice_page import (
     GetSpeechPracticePageUseCase,
 )
+
+logger = get_logger(__name__)
 
 
 class InvalidSpeechWordsError(Exception):
@@ -32,6 +37,10 @@ class GenerateSpeechPracticeUseCase:
         self._rate_limiter = rate_limiter
 
     async def execute(self, user_id: int, words_text: str) -> SpeechPracticePageDTO:
+        if len(words_text.strip()) > Settings.text_input_limit:
+            raise InvalidSpeechWordsError(
+                f"Поле со словами ограничено {Settings.text_input_limit} символами"
+            )
         is_allowed = await self._rate_limiter.is_allowed(
             scope="llm-generation",
             key=f"speech:{user_id}",
@@ -55,6 +64,14 @@ class GenerateSpeechPracticeUseCase:
             )
 
         practice = await self._llm_client.generate_speech_practice(user, words[:40])
+        log_event(
+            logger,
+            logging.INFO,
+            "learning.speech_generated",
+            "Generated speech practice",
+            user_id=user_id,
+            words_count=len(words[:40]),
+        )
         return page.model_copy(
             update={
                 "words_text": ", ".join(words[:40]),

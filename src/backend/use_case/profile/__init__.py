@@ -1,3 +1,5 @@
 from .build_learning_plan import BuildLearningPlanUseCase
 from .build_progress_report import BuildProgressReportUseCase
 from .generate_ai_advice import GenerateAIAdviceUseCase
+from .get_mentor_page import GetMentorPageUseCase
+from .send_mentor_message import InvalidMentorMessageError, SendMentorMessageUseCase

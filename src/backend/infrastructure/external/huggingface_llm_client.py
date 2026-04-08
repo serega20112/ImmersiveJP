@@ -1,6 +1,10 @@
 ﻿from __future__ import annotations
 
+import asyncio
 import json
+import logging
+import time
+from collections.abc import Mapping
 from hashlib import sha256
 from json import JSONDecoder
 
@@ -8,6 +12,7 @@ import httpx
 
 from src.backend.dependencies.settings import Settings
 from src.backend.domain.content import TrackType
+from src.backend.domain.mentor import MentorFocus, MentorMessage
 from src.backend.domain.user import User
 from src.backend.dto.learning_dto import (
     GeneratedCardDraftDTO,
@@ -16,8 +21,12 @@ from src.backend.dto.learning_dto import (
     SpeechLineDTO,
     SpeechPracticeDTO,
 )
-from src.backend.dto.profile_dto import AIAdviceDTO, ProgressReportDTO
+from src.backend.dto.mentor_dto import MentorReplyDTO
+from src.backend.dto.profile_dto import AIAdviceDTO, LearningPlanPageDTO, ProgressReportDTO
 from src.backend.infrastructure.cache import KeyValueStore
+from src.backend.infrastructure.observability import get_logger, log_event
+
+logger = get_logger(__name__)
 
 
 class HuggingFaceLLMClient:
@@ -27,7 +36,7 @@ class HuggingFaceLLMClient:
 
     def __init__(self, store: KeyValueStore):
         self._store = store
-        self._http_client = httpx.AsyncClient(timeout=8.0)
+        self._http_client = httpx.AsyncClient(timeout=Settings.hf_timeout_seconds)
 
     async def generate_cards(
         self,
@@ -36,6 +45,7 @@ class HuggingFaceLLMClient:
         batch_number: int,
         batch_size: int,
         previous_topics: list[str],
+        mentor_focus: str | None = None,
     ) -> list[GeneratedCardDraftDTO]:
         payload = {
             "kind": "cards",
@@ -69,12 +79,15 @@ class HuggingFaceLLMClient:
                 if user.skill_assessment
                 else []
             ),
+            "mentor_focus": mentor_focus,
         }
         cache_key = self._cache_key(payload)
         cached = await self._store.get_json(cache_key)
         if cached is not None:
+            self._log_cache_hit(payload)
             return [GeneratedCardDraftDTO.model_validate(item) for item in cached]
 
+        self._log_cache_miss(payload)
         generated = await self._request_cards(payload)
         await self._store.set_json(
             cache_key,
@@ -119,8 +132,10 @@ class HuggingFaceLLMClient:
         cache_key = self._cache_key(payload)
         cached = await self._store.get_json(cache_key)
         if cached is not None:
+            self._log_cache_hit(payload)
             return AIAdviceDTO.model_validate(cached)
 
+        self._log_cache_miss(payload)
         advice = await self._request_advice(user, report)
         await self._store.set_json(
             cache_key, advice.model_dump(), expire_seconds=6 * 60 * 60
@@ -165,124 +180,341 @@ class HuggingFaceLLMClient:
         cache_key = self._cache_key(payload)
         cached = await self._store.get_json(cache_key)
         if cached is not None:
+            self._log_cache_hit(payload)
             return SpeechPracticeDTO.model_validate(cached)
 
+        self._log_cache_miss(payload)
         practice = await self._request_speech_practice(payload)
         await self._store.set_json(
             cache_key, practice.model_dump(), expire_seconds=12 * 60 * 60
         )
         return practice
 
+    async def generate_mentor_reply(
+        self,
+        *,
+        user: User,
+        report: ProgressReportDTO,
+        plan: LearningPlanPageDTO,
+        message: str,
+        history: list[MentorMessage],
+        active_focus: MentorFocus | None,
+    ) -> MentorReplyDTO:
+        payload = {
+            "kind": "mentor",
+            "user_id": user.id,
+            "focus_key": active_focus.key if active_focus else None,
+        }
+        if not Settings.hf_api_token:
+            self._log_fallback(payload, reason="missing_token")
+            return self._fallback_mentor_reply(report, plan, message, active_focus)
+        try:
+            parsed = await self._request_llm_json(
+                payload=payload,
+                temperature=0.5,
+                system_content=(
+                    "Ты наставник ImmersJP. Отвечай только JSON-объектом с полями reply, action_steps, suggested_prompts. "
+                    "Тон спокойный, конкретный, без воды и без обещаний невозможного."
+                ),
+                user_content=self._build_mentor_prompt(
+                    user=user,
+                    report=report,
+                    plan=plan,
+                    message=message,
+                    history=history,
+                    active_focus=active_focus,
+                ),
+            )
+            return self._normalize_mentor_reply(parsed, report, plan, active_focus)
+        except Exception as error:
+            self._log_fallback(
+                payload,
+                reason=self._fallback_reason_from_error(error),
+            )
+            return self._fallback_mentor_reply(report, plan, message, active_focus)
+
     async def close(self) -> None:
         await self._http_client.aclose()
 
     async def _request_cards(self, payload: dict) -> list[GeneratedCardDraftDTO]:
         if not Settings.hf_api_token:
+            self._log_fallback(payload, reason="missing_token")
             return self._fallback_cards(payload)
         prompt = self._build_cards_prompt(payload)
         try:
-            response = await self._http_client.post(
-                Settings.hf_api_url,
-                headers={
-                    "Authorization": f"Bearer {Settings.hf_api_token}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": Settings.hf_model,
-                    "provider": Settings.hf_provider,
-                    "temperature": 0.8,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": "Ты методист по Японии. Отвечай только JSON-массивом без текста вне JSON.",
-                        },
-                        {"role": "user", "content": prompt},
-                    ],
-                },
+            parsed = await self._request_llm_json(
+                payload=payload,
+                temperature=0.8,
+                system_content=(
+                    "Ты методист по Японии. Отвечай только JSON-массивом без текста вне JSON."
+                ),
+                user_content=prompt,
             )
-            response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"]
-            return self._normalize_cards(self._extract_json(content), payload)
-        except Exception:
+            return self._normalize_cards(parsed, payload)
+        except Exception as error:
+            self._log_fallback(
+                payload,
+                reason=self._fallback_reason_from_error(error),
+            )
             return self._fallback_cards(payload)
 
     async def _request_advice(
         self, user: User, report: ProgressReportDTO
     ) -> AIAdviceDTO:
         if not Settings.hf_api_token:
+            self._log_fallback({"kind": "advice", "user_id": user.id}, reason="missing_token")
             return self._fallback_advice(user, report)
         try:
-            response = await self._http_client.post(
-                Settings.hf_api_url,
-                headers={
-                    "Authorization": f"Bearer {Settings.hf_api_token}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": Settings.hf_model,
-                    "provider": Settings.hf_provider,
-                    "temperature": 0.6,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": (
-                                "Ты редактор учебных рекомендаций ImmersJP. "
-                                "Верни только JSON-объект с полями headline, summary, focus_points. "
-                                "Тон спокойный, короткий, практический."
-                            ),
-                        },
-                        {
-                            "role": "user",
-                            "content": self._build_advice_prompt(user, report),
-                        },
-                    ],
-                },
+            parsed = await self._request_llm_json(
+                payload={"kind": "advice", "user_id": user.id},
+                temperature=0.6,
+                system_content=(
+                    "Ты редактор учебных рекомендаций ImmersJP. "
+                    "Верни только JSON-объект с полями headline, summary, focus_points. "
+                    "Тон спокойный, короткий, практический."
+                ),
+                user_content=self._build_advice_prompt(user, report),
             )
-            response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"]
-            return AIAdviceDTO.model_validate(self._extract_json(content))
-        except Exception:
+            return self._normalize_advice_payload(parsed, user, report)
+        except Exception as error:
+            self._log_fallback(
+                {"kind": "advice", "user_id": user.id},
+                reason=self._fallback_reason_from_error(error),
+            )
             return self._fallback_advice(user, report)
 
     async def _request_speech_practice(self, payload: dict) -> SpeechPracticeDTO:
         if not Settings.hf_api_token:
+            self._log_fallback(payload, reason="missing_token")
             return self._fallback_speech_practice(payload)
         try:
-            response = await self._http_client.post(
-                Settings.hf_api_url,
-                headers={
-                    "Authorization": f"Bearer {Settings.hf_api_token}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": Settings.hf_model,
-                    "provider": Settings.hf_provider,
-                    "temperature": 0.7,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": (
-                                "Верни только JSON-объект с полями sentences, dialogues, coaching_tip, difficulty_label. "
-                                "Тон короткий и практический."
-                            ),
-                        },
-                        {
-                            "role": "user",
-                            "content": self._build_speech_prompt(payload),
-                        },
-                    ],
-                },
+            parsed = await self._request_llm_json(
+                payload=payload,
+                temperature=0.7,
+                system_content=(
+                    "Верни только JSON-объект с полями sentences, dialogues, coaching_tip, difficulty_label. "
+                    "Тон короткий и практический."
+                ),
+                user_content=self._build_speech_prompt(payload),
             )
-            response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"]
-            return self._normalize_speech_practice(self._extract_json(content), payload)
-        except Exception:
+            return self._normalize_speech_practice(parsed, payload)
+        except Exception as error:
+            self._log_fallback(
+                payload,
+                reason=self._fallback_reason_from_error(error),
+            )
             return self._fallback_speech_practice(payload)
+
+    async def _request_llm_json(
+        self,
+        *,
+        payload: dict,
+        temperature: float,
+        system_content: str,
+        user_content: str,
+    ):
+        last_error: Exception | None = None
+        request_model, timeout_seconds, retry_attempts = self._request_runtime(payload)
+        request_body = {
+            "model": request_model,
+            "temperature": temperature,
+            "messages": [
+                {"role": "system", "content": system_content},
+                {"role": "user", "content": user_content},
+            ],
+        }
+
+        for attempt in range(1, retry_attempts + 1):
+            started_at = time.perf_counter()
+            try:
+                response = await self._http_client.post(
+                    Settings.hf_api_url,
+                    headers={
+                        "Authorization": f"Bearer {Settings.hf_api_token}",
+                        "Content-Type": "application/json",
+                    },
+                    json=request_body,
+                    timeout=timeout_seconds,
+                )
+                response.raise_for_status()
+                content = response.json()["choices"][0]["message"]["content"]
+                parsed = self._extract_json(content)
+                log_event(
+                    logger,
+                    logging.INFO,
+                    "llm.request_succeeded",
+                    "LLM request succeeded",
+                    attempt=attempt,
+                    duration_ms=round((time.perf_counter() - started_at) * 1000, 2),
+                    status_code=response.status_code,
+                    model=request_model,
+                    provider=Settings.hf_provider,
+                    parsed_type=type(parsed).__name__,
+                    parsed_keys=(
+                        list(parsed.keys())[:8] if isinstance(parsed, Mapping) else None
+                    ),
+                    **self._payload_log_fields(payload),
+                )
+                return parsed
+            except Exception as error:
+                last_error = error
+                log_event(
+                    logger,
+                    logging.WARNING,
+                    "llm.request_failed",
+                    "LLM request failed",
+                    attempt=attempt,
+                    duration_ms=round((time.perf_counter() - started_at) * 1000, 2),
+                    error_type=type(error).__name__,
+                    error_message=str(error),
+                    model=request_model,
+                    provider=Settings.hf_provider,
+                    fallback_reason=self._fallback_reason_from_error(error),
+                    **self._response_error_log_fields(error),
+                    **self._payload_log_fields(payload),
+                )
+                if (
+                    attempt < retry_attempts
+                    and self._should_retry_request(error)
+                ):
+                    await asyncio.sleep(Settings.hf_retry_backoff_seconds * attempt)
+                else:
+                    break
+
+        if last_error is None:
+            raise RuntimeError("LLM request failed without a captured exception")
+        raise last_error
 
     @staticmethod
     def _cache_key(payload: dict) -> str:
         dumped = json.dumps(payload, ensure_ascii=False, sort_keys=True)
         return f"llm:{sha256(dumped.encode('utf-8')).hexdigest()}"
+
+    def _log_cache_hit(self, payload: dict) -> None:
+        log_event(
+            logger,
+            logging.INFO,
+            "llm.cache_hit",
+            "LLM cache hit",
+            **self._payload_log_fields(payload),
+        )
+
+    def _log_cache_miss(self, payload: dict) -> None:
+        log_event(
+            logger,
+            logging.INFO,
+            "llm.cache_miss",
+            "LLM cache miss",
+            **self._payload_log_fields(payload),
+        )
+
+    def _log_fallback(self, payload: dict, *, reason: str) -> None:
+        log_event(
+            logger,
+            logging.WARNING,
+            "llm.fallback_used",
+            "LLM fallback used",
+            reason=reason,
+            **self._payload_log_fields(payload),
+        )
+
+    @staticmethod
+    def _request_runtime(payload: dict) -> tuple[str, float, int]:
+        kind = str(payload.get("kind") or "")
+        if kind == "mentor":
+            model = Settings.hf_mentor_model.strip() or Settings.hf_model.strip()
+            timeout_seconds = Settings.hf_mentor_timeout_seconds
+            retry_attempts = Settings.hf_mentor_retry_attempts
+        else:
+            model = Settings.hf_model.strip()
+            timeout_seconds = Settings.hf_timeout_seconds
+            retry_attempts = Settings.hf_retry_attempts
+        return (
+            HuggingFaceLLMClient._resolve_request_model(model),
+            timeout_seconds,
+            max(retry_attempts, 1),
+        )
+
+    @staticmethod
+    def _resolve_request_model(model: str) -> str:
+        provider = (Settings.hf_provider or "").strip()
+        if not model:
+            return model
+        if ":" in model or not provider:
+            return model
+        if HuggingFaceLLMClient._uses_openai_compatible_endpoint():
+            return f"{model}:{provider}"
+        return model
+
+    @staticmethod
+    def _uses_openai_compatible_endpoint() -> bool:
+        return Settings.hf_api_url.rstrip("/").endswith("/v1/chat/completions")
+
+    @staticmethod
+    def _should_retry_request(error: Exception) -> bool:
+        if isinstance(error, httpx.TimeoutException):
+            return True
+        if isinstance(error, httpx.TransportError):
+            return True
+        if isinstance(error, httpx.HTTPStatusError):
+            status_code = error.response.status_code
+            return status_code == 429 or 500 <= status_code < 600
+        return True
+
+    @staticmethod
+    def _fallback_reason_from_error(error: Exception) -> str:
+        if isinstance(error, httpx.TimeoutException):
+            return "timeout"
+        if isinstance(error, httpx.HTTPStatusError):
+            status_code = error.response.status_code
+            if status_code == 401:
+                return "auth_failed"
+            if status_code == 403:
+                return "permission_denied"
+            if status_code == 404:
+                return "model_not_available"
+            if status_code == 422:
+                return "invalid_request"
+            if status_code == 429:
+                return "rate_limited"
+            if 500 <= status_code < 600:
+                return f"provider_http_{status_code}"
+            return f"http_{status_code}"
+        if isinstance(error, httpx.TransportError):
+            return "transport_error"
+        return "request_failed"
+
+    @staticmethod
+    def _response_error_log_fields(error: Exception) -> dict[str, object]:
+        if not isinstance(error, httpx.HTTPStatusError):
+            return {}
+        response = error.response
+        body = response.text.strip()
+        if len(body) > 300:
+            body = f"{body[:297]}..."
+        return {
+            "response_status_code": response.status_code,
+            "response_body": body,
+        }
+
+    @staticmethod
+    def _payload_log_fields(payload: dict) -> dict[str, object]:
+        fields: dict[str, object] = {"kind": payload.get("kind")}
+        for key in (
+            "user_id",
+            "track",
+            "batch_number",
+            "batch_size",
+            "diagnostic_level",
+            "focus_key",
+        ):
+            if key in payload:
+                fields[key] = payload.get(key)
+        if "mentor_focus" in payload and payload.get("mentor_focus"):
+            fields["mentor_focus"] = payload.get("mentor_focus")
+        if "words" in payload:
+            fields["words_count"] = len(payload.get("words") or [])
+        return fields
 
     @staticmethod
     def _extract_json(raw_content: str):
@@ -299,13 +531,64 @@ class HuggingFaceLLMClient:
         raise ValueError("JSON payload was not found in model response")
 
     @staticmethod
+    def _coerce_object(parsed: object) -> dict:
+        if isinstance(parsed, Mapping):
+            parsed_dict = dict(parsed)
+            for key in ("response", "result", "data", "payload", "message"):
+                nested = parsed_dict.get(key)
+                if isinstance(nested, Mapping):
+                    return dict(nested)
+            return parsed_dict
+        if isinstance(parsed, list):
+            for item in parsed:
+                if isinstance(item, Mapping):
+                    return dict(item)
+        if isinstance(parsed, str):
+            nested = HuggingFaceLLMClient._extract_json(parsed)
+            return HuggingFaceLLMClient._coerce_object(nested)
+        raise TypeError(f"Expected object-like payload, got {type(parsed).__name__}")
+
+    @staticmethod
+    def _coerce_list(parsed: object) -> list:
+        if isinstance(parsed, list):
+            return parsed
+        if isinstance(parsed, Mapping):
+            parsed_dict = dict(parsed)
+            for key in ("cards", "items", "results", "data", "topics"):
+                nested = parsed_dict.get(key)
+                if isinstance(nested, list):
+                    return nested
+            return [parsed_dict]
+        if isinstance(parsed, str):
+            nested = HuggingFaceLLMClient._extract_json(parsed)
+            return HuggingFaceLLMClient._coerce_list(nested)
+        raise TypeError(f"Expected list-like payload, got {type(parsed).__name__}")
+
+    @staticmethod
+    def _coerce_text_list(value: object, *, limit: int) -> list[str]:
+        if isinstance(value, str):
+            separators = ("\n", ";", "•", "—", "-", ",")
+            for separator in separators:
+                if separator in value:
+                    parts = [part.strip(" -—•\t") for part in value.split(separator)]
+                    return [part for part in parts if part][:limit]
+            return [value.strip()] if value.strip() else []
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()][:limit]
+        return []
+
+    @staticmethod
     def _normalize_cards(
-        parsed: list[dict], payload: dict
+        parsed: object, payload: dict
     ) -> list[GeneratedCardDraftDTO]:
+        parsed_items = HuggingFaceLLMClient._coerce_list(parsed)
         normalized: list[GeneratedCardDraftDTO] = []
         seen_topics: set[str] = set()
         seen_example_signatures: set[tuple[str, ...]] = set()
-        for item in parsed[: payload["batch_size"]]:
+        for raw_item in parsed_items[: payload["batch_size"]]:
+            if not isinstance(raw_item, Mapping):
+                continue
+            item = dict(raw_item)
             topic = str(item.get("topic") or "Тема без названия").strip()
             normalized_topic = topic.casefold()
             if not topic or normalized_topic in seen_topics:
@@ -369,6 +652,11 @@ class HuggingFaceLLMClient:
     def _build_cards_prompt(payload: dict) -> str:
         interests = ", ".join(payload["interests"]) or "не указаны"
         previous = ", ".join(payload["previous_topics"]) or "нет"
+        mentor_focus_note = (
+            f"Особый запрос пользователя на ближайшие партии: {payload.get('mentor_focus')}\n"
+            if payload.get("mentor_focus")
+            else ""
+        )
         return (
             "Сгенерируй карточки-конспекты по Японии.\n"
             f"Трек: {payload['track']}\n"
@@ -380,6 +668,7 @@ class HuggingFaceLLMClient:
             f"Размер партии: {payload['batch_size']}\n"
             f"Избегай повторов тем: {previous}\n"
             f"{HuggingFaceLLMClient._build_generation_context(payload)}\n"
+            f"{mentor_focus_note}"
             "Верни JSON-массив, где у каждой карточки есть topic, explanation, examples, key_terms.\n"
             f"{HuggingFaceLLMClient._explanation_length_instruction(payload)}\n"
             "Examples возвращай массивом строк в формате: Japanese | Romaji | Русский перевод.\n"
@@ -413,14 +702,104 @@ class HuggingFaceLLMClient:
         )
 
     @staticmethod
-    def _normalize_speech_practice(parsed: dict, payload: dict) -> SpeechPracticeDTO:
+    def _build_mentor_prompt(
+        *,
+        user: User,
+        report: ProgressReportDTO,
+        plan: LearningPlanPageDTO,
+        message: str,
+        history: list[MentorMessage],
+        active_focus: MentorFocus | None,
+    ) -> str:
+        history_lines = []
+        for item in history[-6:]:
+            history_lines.append(f"{item.role}: {item.content}")
+        history_text = "\n".join(history_lines) or "история пока пустая"
+        focus_text = (
+            f"{active_focus.title}: {active_focus.note}"
+            if active_focus is not None
+            else "активного фокуса пока нет"
+        )
+        track_lines = [
+            f"{track.title}: {track.completed_cards}/{track.generated_cards}, батчей закрыто {track.completed_batches}"
+            for track in report.tracks
+        ]
+        return (
+            "Ты помогаешь выстроить следующий практический шаг, не ломая уже текущий план.\n"
+            f"Пользователь: {user.display_name}\n"
+            f"Цель: {HuggingFaceLLMClient._goal_label(user.learning_goal.value if user.learning_goal else None)}\n"
+            f"Уровень: {HuggingFaceLLMClient._level_label(user.language_level.value if user.language_level else None)}\n"
+            f"Горизонт обучения: {HuggingFaceLLMClient._timeline_label(user.study_timeline.value if user.study_timeline else None)}\n"
+            f"Trust score: {report.trust_score.score} ({report.trust_score.band_title})\n"
+            f"Следующий шаг: {report.next_step}\n"
+            f"Текущий этап плана: {plan.current_stage_title}\n"
+            f"Режим контента: {plan.content_mode.title}\n"
+            f"Темп: {plan.pace_mode.title}\n"
+            f"Слабые места: {', '.join(report.skill_assessment.weak_points) if report.skill_assessment and report.skill_assessment.weak_points else 'нет явных'}\n"
+            f"Сильные места: {', '.join(report.skill_assessment.strengths) if report.skill_assessment and report.skill_assessment.strengths else 'пока не выделены'}\n"
+            f"Активный фокус: {focus_text}\n"
+            f"Прогресс по трекам:\n- " + "\n- ".join(track_lines) + "\n"
+            f"Последние сообщения:\n{history_text}\n"
+            f"Новый запрос пользователя: {message}\n"
+            "Верни JSON-объект.\n"
+            "reply: 1-2 абзаца, очень конкретно.\n"
+            "action_steps: массив из 3 коротких шагов.\n"
+            "suggested_prompts: массив из 3 коротких следующих вопросов.\n"
+            "Если пользователь просит усилить кандзи, грамматику или речь, объясни через текущую партию, работу и следующую генерацию, а не через хаотичный прыжок."
+        )
+
+    @staticmethod
+    def _normalize_mentor_reply(
+        parsed: object,
+        report: ProgressReportDTO,
+        plan: LearningPlanPageDTO,
+        active_focus: MentorFocus | None,
+    ) -> MentorReplyDTO:
+        parsed_object = HuggingFaceLLMClient._coerce_object(parsed)
+        reply = str(
+            parsed_object.get("reply")
+            or parsed_object.get("answer")
+            or parsed_object.get("message")
+            or parsed_object.get("summary")
+            or ""
+        ).strip()
+        action_steps = HuggingFaceLLMClient._coerce_text_list(
+            parsed_object.get("action_steps")
+            or parsed_object.get("steps")
+            or parsed_object.get("next_steps")
+            or [],
+            limit=3,
+        )
+        suggested_prompts = HuggingFaceLLMClient._coerce_text_list(
+            parsed_object.get("suggested_prompts")
+            or parsed_object.get("follow_up_prompts")
+            or parsed_object.get("prompts")
+            or [],
+            limit=3,
+        )
+        if not reply or len(action_steps) < 2:
+            return HuggingFaceLLMClient._fallback_mentor_reply(
+                report, plan, reply or "", active_focus
+            )
+        return MentorReplyDTO(
+            reply=reply,
+            action_steps=action_steps,
+            suggested_prompts=(
+                suggested_prompts
+                or HuggingFaceLLMClient._mentor_prompt_suggestions(active_focus)
+            ),
+        )
+
+    @staticmethod
+    def _normalize_speech_practice(parsed: object, payload: dict) -> SpeechPracticeDTO:
+        parsed_object = HuggingFaceLLMClient._coerce_object(parsed)
         sentences = [
             HuggingFaceLLMClient._to_speech_line(item)
-            for item in parsed.get("sentences") or []
+            for item in (parsed_object.get("sentences") or [])
         ]
         dialogues = [
             HuggingFaceLLMClient._to_speech_dialogue(item)
-            for item in parsed.get("dialogues") or []
+            for item in (parsed_object.get("dialogues") or [])
             if isinstance(item, dict)
         ]
         if len(sentences) < 10 or len(dialogues) < 5:
@@ -429,9 +808,9 @@ class HuggingFaceLLMClient:
             words=list(payload["words"]),
             sentences=sentences[:10],
             dialogues=dialogues[:5],
-            coaching_tip=str(parsed.get("coaching_tip") or "").strip()
+            coaching_tip=str(parsed_object.get("coaching_tip") or "").strip()
             or HuggingFaceLLMClient._speech_coaching_tip(payload),
-            difficulty_label=str(parsed.get("difficulty_label") or "").strip()
+            difficulty_label=str(parsed_object.get("difficulty_label") or "").strip()
             or HuggingFaceLLMClient._speech_difficulty_label(payload),
         )
 
@@ -1900,6 +2279,39 @@ class HuggingFaceLLMClient:
         return "Сначала прочитай предложения, потом проговори диалоги."
 
     @staticmethod
+    def _normalize_advice_payload(
+        parsed: object,
+        user: User,
+        report: ProgressReportDTO,
+    ) -> AIAdviceDTO:
+        parsed_object = HuggingFaceLLMClient._coerce_object(parsed)
+        focus_points = HuggingFaceLLMClient._coerce_text_list(
+            parsed_object.get("focus_points")
+            or parsed_object.get("action_steps")
+            or parsed_object.get("steps")
+            or [],
+            limit=3,
+        )
+        headline = str(
+            parsed_object.get("headline")
+            or parsed_object.get("title")
+            or "Следующий шаг"
+        ).strip()
+        summary = str(
+            parsed_object.get("summary")
+            or parsed_object.get("reply")
+            or parsed_object.get("message")
+            or ""
+        ).strip()
+        if not summary or len(focus_points) < 2:
+            return HuggingFaceLLMClient._fallback_advice(user, report)
+        return AIAdviceDTO(
+            headline=headline,
+            summary=summary,
+            focus_points=focus_points,
+        )
+
+    @staticmethod
     def _fallback_advice(user: User, report: ProgressReportDTO) -> AIAdviceDTO:
         weakest_track = min(
             report.tracks,
@@ -1925,3 +2337,57 @@ class HuggingFaceLLMClient:
                 "Перед новой партией отметь 2-3 места, которые остались непонятными.",
             ],
         )
+
+    @staticmethod
+    def _fallback_mentor_reply(
+        report: ProgressReportDTO,
+        plan: LearningPlanPageDTO,
+        message: str,
+        active_focus: MentorFocus | None,
+    ) -> MentorReplyDTO:
+        focus_title = active_focus.title if active_focus is not None else "текущую базу"
+        weakest_track = min(
+            report.tracks,
+            key=lambda item: item.completion_rate if item.generated_cards else 101,
+        )
+        normalized = message.casefold()
+        if "кандз" in normalized or "kanji" in normalized:
+            reply = (
+                f"Кандзи лучше не врезать отдельным хаотичным блоком. Сначала добей текущую языковую партию и работу по ней, "
+                f"потому что именно через них система понимает, насколько можно усиливать чтение. Фокус уже смещен на кандзи: "
+                f"следующие языковые партии будут сильнее тянуть чтение знаков и узнавание их в словах."
+            )
+        elif "частиц" in normalized or "граммат" in normalized:
+            reply = (
+                f"Сейчас невыгодно прыгать дальше по плану, пока не держатся частицы и каркас предложения. "
+                f"Сначала закрой текущий language batch, затем работа покажет, где именно ломается грамматика, и уже после этого новая партия пойдет с большим упором на этот блок."
+            )
+        else:
+            reply = (
+                f"Сейчас план держится на этапе '{plan.current_stage_title}'. Я бы не рвал траекторию, а использовал наставника как механизм перенастройки фокуса: "
+                f"закрываешь текущую партию, проходишь работу, затем следующая генерация усиливает блок '{focus_title}'."
+            )
+        return MentorReplyDTO(
+            reply=reply,
+            action_steps=[
+                f"Закрой текущую партию в разделе '{weakest_track.title}'.",
+                "После этого пройди речевую практику или работу по уже закрытому батчу.",
+                f"Открой следующую языковую партию: она пойдет с фокусом на '{focus_title}'.",
+            ],
+            suggested_prompts=HuggingFaceLLMClient._mentor_prompt_suggestions(
+                active_focus
+            ),
+        )
+
+    @staticmethod
+    def _mentor_prompt_suggestions(
+        active_focus: MentorFocus | None,
+    ) -> list[str]:
+        prompts = [
+            "Что мне сейчас мешает идти дальше по плану?",
+            "Как лучше добить слабые места без новой каши из тем?",
+            "Когда можно будет убрать часть опор и идти сложнее?",
+        ]
+        if active_focus is not None:
+            prompts.insert(0, f"Как лучше закрепить фокус: {active_focus.title}?")
+        return prompts[:3]

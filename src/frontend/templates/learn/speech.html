@@ -45,8 +45,10 @@
           id="speech-words"
           name="words_text"
           rows="5"
+          maxlength="{{ text_input_limit }}"
           placeholder="みず | mizu | вода, たべる | taberu | есть, がっこう | gakkou | школа"
         >{{ page.words_text }}</textarea>
+        <small class="field-note">До {{ text_input_limit }} символов.</small>
       </label>
 
       <div class="form-actions">

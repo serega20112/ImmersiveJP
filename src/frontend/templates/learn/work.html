@@ -76,10 +76,11 @@
       <label class="field-stack">
         <span>Ответ</span>
         {% if task.kind in ['production', 'immersion'] %}
-        <textarea name="answer_{{ task.id }}" rows="4" placeholder="{{ task.placeholder }}">{{ task.submitted_answer or '' }}</textarea>
+        <textarea name="answer_{{ task.id }}" rows="4" maxlength="{{ text_input_limit }}" placeholder="{{ task.placeholder }}">{{ task.submitted_answer or '' }}</textarea>
         {% else %}
-        <input type="text" name="answer_{{ task.id }}" value="{{ task.submitted_answer or '' }}" placeholder="{{ task.placeholder }}" />
+        <input type="text" name="answer_{{ task.id }}" maxlength="{{ text_input_limit }}" value="{{ task.submitted_answer or '' }}" placeholder="{{ task.placeholder }}" />
         {% endif %}
+        <small class="field-note">До {{ text_input_limit }} символов.</small>
       </label>
       {% if page.result %}
         {% for item in page.result.task_results %}

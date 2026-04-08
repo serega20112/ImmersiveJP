@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import logging
+
+from src.backend.dependencies.settings import Settings
 from src.backend.domain.content import TrackType
 from src.backend.dto.learning_dto import TrackWorkPageDTO
+from src.backend.infrastructure.observability import get_logger, log_event
 from src.backend.infrastructure.repositories import (
     AbstractContentRepository,
     AbstractProgressRepository,
@@ -12,6 +16,12 @@ from src.backend.use_case.learning.work_tasks import (
     evaluate_work_submission,
     to_track_work_task_dto,
 )
+
+logger = get_logger(__name__)
+
+
+class InvalidTrackWorkSubmissionError(Exception):
+    pass
 
 
 class SubmitTrackWorkUseCase:
@@ -30,6 +40,7 @@ class SubmitTrackWorkUseCase:
         batch_number: int,
         answers: dict[str, str],
     ) -> TrackWorkPageDTO:
+        self._validate_answers(answers)
         cards = await self._content_repository.list_cards_by_batch(
             user_id,
             track,
@@ -48,6 +59,17 @@ class SubmitTrackWorkUseCase:
         review_cards = await self._load_review_cards(user_id, track, batch_number)
         tasks = build_prepared_work_tasks(track, cards, review_cards)
         result = evaluate_work_submission(tasks, answers, track=track)
+        log_event(
+            logger,
+            logging.INFO,
+            "learning.work_submitted",
+            "Submitted track work",
+            user_id=user_id,
+            track=track.value,
+            batch_number=batch_number,
+            score=result.score,
+            passed=result.passed,
+        )
         return TrackWorkPageDTO(
             track=track.value,
             title=f"Работа по партии {batch_number}",
@@ -61,6 +83,14 @@ class SubmitTrackWorkUseCase:
             ],
             result=result,
         )
+
+    @staticmethod
+    def _validate_answers(answers: dict[str, str]) -> None:
+        for value in answers.values():
+            if len(str(value).strip()) > Settings.text_input_limit:
+                raise InvalidTrackWorkSubmissionError(
+                    f"Один из ответов длиннее {Settings.text_input_limit} символов"
+                )
 
     async def _load_review_cards(
         self,

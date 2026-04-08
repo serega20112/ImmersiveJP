@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import logging
+
+from src.backend.dependencies.settings import Settings
 from src.backend.domain.content import TrackType
 from src.backend.domain.user import LanguageLevel, LearningGoal, StudyTimeline
 from src.backend.dto.onboarding_dto import OnboardingDTO, OnboardingResultDTO
+from src.backend.infrastructure.observability import get_logger, log_event
 from src.backend.infrastructure.repositories import AbstractUserRepository
 from src.backend.use_case.learning.generate_cards import GenerateCardsUseCase
 from src.backend.use_case.mappers import to_skill_assessment_dto
 from src.backend.use_case.onboarding.diagnostic_questions import (
     evaluate_diagnostic_answers,
 )
+
+logger = get_logger(__name__)
 
 
 class InvalidOnboardingDataError(Exception):
@@ -35,6 +41,10 @@ class CompleteOnboardingUseCase:
             raise InvalidOnboardingDataError(
                 "Некорректная цель, уровень или срок обучения"
             ) from error
+        if len(payload.interests_text.strip()) > Settings.text_input_limit:
+            raise InvalidOnboardingDataError(
+                f"Поле интересов ограничено {Settings.text_input_limit} символами"
+            )
         interests = self._parse_interests(payload.interests_text)
         if not interests:
             raise InvalidOnboardingDataError("Нужно указать хотя бы один интерес")
@@ -59,6 +69,17 @@ class CompleteOnboardingUseCase:
         for track in TrackType:
             await self._generate_cards_use_case.execute(user_id, track)
             generated_batches[track.value] = 1
+        log_event(
+            logger,
+            logging.INFO,
+            "onboarding.completed",
+            "User completed onboarding",
+            user_id=user_id,
+            goal=goal.value,
+            language_level=language_level.value,
+            study_timeline=study_timeline.value,
+            interests_count=len(interests),
+        )
         return OnboardingResultDTO(
             user_id=user_id,
             generated_batches=generated_batches,

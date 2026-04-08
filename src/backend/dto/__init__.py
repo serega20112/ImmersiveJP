@@ -25,6 +25,7 @@ from .learning_dto import (
     TrackWorkTaskResultDTO,
     WorkHintDTO,
 )
+from .mentor_dto import MentorFocusDTO, MentorMessageDTO, MentorPageDTO, MentorReplyDTO
 from .onboarding_dto import (
     DiagnosticQuestionGroupDTO,
     DiagnosticOptionDTO,

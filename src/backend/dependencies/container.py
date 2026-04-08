@@ -17,6 +17,7 @@ from src.backend.infrastructure.security import (
 )
 from src.backend.repository import (
     ContentRepository,
+    MentorRepository,
     ProgressRepository,
     SessionRepository,
     UserRepository,
@@ -57,6 +58,8 @@ from src.backend.use_case.profile import (
     BuildLearningPlanUseCase,
     BuildProgressReportUseCase,
     GenerateAIAdviceUseCase,
+    GetMentorPageUseCase,
+    SendMentorMessageUseCase,
 )
 
 
@@ -172,6 +175,10 @@ class RequestContainer:
         return ProgressRepository(self.session)
 
     @cached_property
+    def mentor_repository(self) -> MentorRepository:
+        return MentorRepository(self.root.key_value_store)
+
+    @cached_property
     def session_repository(self) -> SessionRepository:
         return SessionRepository(self.session)
 
@@ -217,6 +224,7 @@ class RequestContainer:
             self.user_repository,
             self.content_repository,
             self.session_repository,
+            self.mentor_repository,
             self.root.llm_client,
             self.root.rate_limiter,
         )
@@ -326,6 +334,25 @@ class RequestContainer:
         )
 
     @cached_property
+    def get_mentor_page_use_case(self) -> GetMentorPageUseCase:
+        return GetMentorPageUseCase(
+            self.mentor_repository,
+            self.build_progress_report_use_case,
+            self.build_learning_plan_use_case,
+        )
+
+    @cached_property
+    def send_mentor_message_use_case(self) -> SendMentorMessageUseCase:
+        return SendMentorMessageUseCase(
+            self.user_repository,
+            self.mentor_repository,
+            self.build_progress_report_use_case,
+            self.build_learning_plan_use_case,
+            self.get_mentor_page_use_case,
+            self.root.llm_client,
+        )
+
+    @cached_property
     def generate_ai_advice_use_case(self) -> GenerateAIAdviceUseCase:
         return GenerateAIAdviceUseCase(self.user_repository, self.root.llm_client)
 
@@ -374,6 +401,8 @@ class RequestContainer:
             self.build_learning_plan_use_case,
             self.build_progress_report_use_case,
             self.generate_ai_advice_use_case,
+            self.get_mentor_page_use_case,
+            self.send_mentor_message_use_case,
         )
 
     @cached_property

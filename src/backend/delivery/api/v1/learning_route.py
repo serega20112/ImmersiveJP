@@ -27,6 +27,9 @@ from src.backend.use_case.learning.generate_speech_practice import (
 from src.backend.use_case.learning.get_card_page import CardNotFoundError
 from src.backend.use_case.learning.get_next_cards import CurrentBatchNotCompletedError
 from src.backend.use_case.learning.get_track_work_page import TrackWorkUnavailableError
+from src.backend.use_case.learning.submit_track_work import (
+    InvalidTrackWorkSubmissionError,
+)
 
 learning_router = APIRouter(prefix="/learn")
 
@@ -149,6 +152,9 @@ async def work_submit(
             answers,
         )
         return render_template(request, "learn/work.html", page=page)
+    except InvalidTrackWorkSubmissionError as error:
+        flash(request, str(error), "error")
+        return RedirectResponse(url=request.url.path, status_code=303)
     except TrackWorkUnavailableError as error:
         flash(request, str(error), "error")
         return RedirectResponse(url=track_href(track.value), status_code=303)

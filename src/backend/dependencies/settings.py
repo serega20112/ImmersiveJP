@@ -48,6 +48,7 @@ class Settings:
     app_port: int = int(os.getenv("APP_PORT", "8000"))
     app_debug: bool = os.getenv("APP_DEBUG", "0") == "1"
     app_base_url: str = os.getenv("APP_BASE_URL", "http://127.0.0.1:8000")
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
     secret_key: str = os.getenv("SECRET_KEY", "immersjp-secret-key")
     session_secret: str = os.getenv("SESSION_SECRET", "immersjp-session-secret")
     cookie_secure: bool = os.getenv("COOKIE_SECURE", "0") == "1"
@@ -65,14 +66,33 @@ class Settings:
     hf_api_token: str | None = os.getenv("HF_API_TOKEN") or None
     hf_model: str = os.getenv("HF_MODEL", "openai/gpt-oss-120b")
     hf_provider: str | None = os.getenv("HF_PROVIDER", "fireworks-ai") or None
+    hf_mentor_model: str = os.getenv(
+        "HF_MENTOR_MODEL",
+        "openai/gpt-oss-20b:fireworks-ai",
+    )
+    hf_mentor_timeout_seconds: float = float(
+        os.getenv("HF_MENTOR_TIMEOUT_SECONDS", "18")
+    )
+    hf_mentor_retry_attempts: int = int(
+        os.getenv("HF_MENTOR_RETRY_ATTEMPTS", "1")
+    )
+    hf_mentor_max_tokens: int = int(
+        os.getenv("HF_MENTOR_MAX_TOKENS", "220")
+    )
     hf_api_url: str = os.getenv(
         "HF_API_URL",
         "https://router.huggingface.co/v1/chat/completions",
+    )
+    hf_timeout_seconds: float = float(os.getenv("HF_TIMEOUT_SECONDS", "30"))
+    hf_retry_attempts: int = int(os.getenv("HF_RETRY_ATTEMPTS", "3"))
+    hf_retry_backoff_seconds: float = float(
+        os.getenv("HF_RETRY_BACKOFF_SECONDS", "0.8")
     )
     llm_request_limit: int = int(os.getenv("LLM_REQUEST_LIMIT", "30"))
     llm_request_window_seconds: int = int(
         os.getenv("LLM_REQUEST_WINDOW_SECONDS", "3600")
     )
+    text_input_limit: int = int(os.getenv("TEXT_INPUT_LIMIT", "500"))
     access_token_expire_minutes: int = int(
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
     )

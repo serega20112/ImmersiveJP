@@ -135,8 +135,10 @@
         name="interests_text"
         rows="5"
         placeholder="anime, архитектура, программирование, история, бизнес, литература"
+        maxlength="{{ text_input_limit }}"
         required
       ></textarea>
+      <small class="field-note">До {{ text_input_limit }} символов.</small>
     </label>
   </section>
 

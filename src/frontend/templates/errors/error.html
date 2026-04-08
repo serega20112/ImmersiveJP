@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ page.title }} - ImmersJP{% endblock %}
+{% block body_class %}page--error{% endblock %}
+{% block content %}
+<section class="error-shell reveal">
+  <article class="panel error-card panel--hero">
+    <p class="section-kicker">Ошибка {{ page.status_code }}</p>
+    <h1>{{ page.title }}</h1>
+    <p class="page-lead">{{ page.message }}</p>
+    <div class="hero-facts">
+      <span class="hero-fact">запрос можно повторить</span>
+      {% if page.request_id %}
+      <span class="hero-fact">request id: {{ page.request_id }}</span>
+      {% endif %}
+    </div>
+    <div class="hero__actions">
+      <a href="{{ page.return_href }}" class="primary-button">{{ page.return_label }}</a>
+      <a href="/" class="ghost-button">На главную</a>
+    </div>
+  </article>
+</section>
+{% endblock %}

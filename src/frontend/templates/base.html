@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru" data-theme="paper">
+<html lang="ru" data-theme="paper" data-asset-version="{{ asset_version }}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,8 +11,13 @@
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&family=Prata&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}?v={{ asset_version }}" />
-    <script defer src="{{ url_for('static', path='js/app.js') }}?v={{ asset_version }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/core/index.css') }}?v={{ asset_version }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/forms/index.css') }}?v={{ asset_version }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/learn/index.css') }}?v={{ asset_version }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/plan/index.css') }}?v={{ asset_version }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/profile/index.css') }}?v={{ asset_version }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/responsive/index.css') }}?v={{ asset_version }}" />
+    <script type="module" src="{{ url_for('static', path='js/index.js') }}?v={{ asset_version }}"></script>
   </head>
   <body class="{% block body_class %}{% endblock %}">
     <header class="site-header">
@@ -25,54 +30,64 @@
           </span>
         </a>
 
-        <nav class="site-nav">
-          {% if current_user %}
-          <a
-            href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}"
-            class="nav-link {% if request.url.path.startswith('/dashboard') or request.url.path.startswith('/onboarding') %}is-active{% endif %}"
-          >
-            Обзор
-          </a>
-          {% if current_user.onboarding_completed %}
-          <a
-            href="/learn/language"
-            class="nav-link {% if request.url.path.startswith('/learn/language') or request.url.path.startswith('/learn/culture') or request.url.path.startswith('/learn/history') %}is-active{% endif %}"
-          >
-            Треки
-          </a>
-          <a
-            href="/learn/speech"
-            class="nav-link {% if request.url.path.startswith('/learn/speech') %}is-active{% endif %}"
-          >
-            Практика
-          </a>
-          <a
-            href="/plan"
-            class="nav-link {% if request.url.path.startswith('/plan') %}is-active{% endif %}"
-          >
-            План
-          </a>
-          {% endif %}
-          <a
-            href="/profile"
-            class="nav-link {% if request.url.path.startswith('/profile') %}is-active{% endif %}"
-          >
-            Профиль
-          </a>
-          {% else %}
-          <a href="/" class="nav-link {% if request.url.path == '/' %}is-active{% endif %}">Главная</a>
-          <a href="/auth/login" class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}">Вход</a>
-          <a href="/auth/register" class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}">Начать</a>
-          {% endif %}
+        <div class="site-header__nav">
+          <nav class="site-nav">
+            {% if current_user %}
+            <a
+              href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}"
+              class="nav-link {% if request.url.path.startswith('/dashboard') or request.url.path.startswith('/onboarding') %}is-active{% endif %}"
+            >
+              Обзор
+            </a>
+            {% if current_user.onboarding_completed %}
+            <a
+              href="/learn/language"
+              class="nav-link {% if request.url.path.startswith('/learn/language') or request.url.path.startswith('/learn/culture') or request.url.path.startswith('/learn/history') %}is-active{% endif %}"
+            >
+              Треки
+            </a>
+            <a
+              href="/learn/speech"
+              class="nav-link {% if request.url.path.startswith('/learn/speech') %}is-active{% endif %}"
+            >
+              Практика
+            </a>
+            <a
+              href="/plan"
+              class="nav-link {% if request.url.path.startswith('/plan') %}is-active{% endif %}"
+            >
+              План
+            </a>
+            <a
+              href="/mentor"
+              class="nav-link {% if request.url.path.startswith('/mentor') %}is-active{% endif %}"
+            >
+              Наставник
+            </a>
+            {% endif %}
+            <a
+              href="/profile"
+              class="nav-link {% if request.url.path.startswith('/profile') %}is-active{% endif %}"
+            >
+              Профиль
+            </a>
+            {% else %}
+            <a href="/" class="nav-link {% if request.url.path == '/' %}is-active{% endif %}">Главная</a>
+            <a href="/auth/login" class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}">Вход</a>
+            <a href="/auth/register" class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}">Начать</a>
+            {% endif %}
+          </nav>
 
-          <button type="button" class="ghost-button" data-theme-toggle>Тема</button>
+          <div class="site-tools">
+            <button type="button" class="ghost-button" data-theme-toggle>Тема</button>
 
-          {% if current_user %}
-          <form action="/auth/logout" method="post">
-            <button type="submit" class="ghost-button">Выйти</button>
-          </form>
-          {% endif %}
-        </nav>
+            {% if current_user %}
+            <form action="/auth/logout" method="post">
+              <button type="submit" class="ghost-button">Выйти</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </header>
 
