@@ -5,8 +5,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from src.backend.create_app import create_app
 from src.backend.infrastructure.web.middleware import (
     CsrfMiddleware,
+    RateLimitMiddleware,
     RequestContainerMiddleware,
     RequestLoggingMiddleware,
+    RequestMetricsMiddleware,
     RequestStateMiddleware,
 )
 
@@ -19,6 +21,8 @@ def test_middleware_order_matches_request_lifecycle():
         SessionMiddleware,
         RequestStateMiddleware,
         RequestLoggingMiddleware,
+        RequestMetricsMiddleware,
+        RateLimitMiddleware,
         CsrfMiddleware,
         RequestContainerMiddleware,
     ]

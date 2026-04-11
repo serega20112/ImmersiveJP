@@ -6,40 +6,44 @@ from fastapi import Depends
 
 from src.backend.dependencies.request_scope import get_request_container
 from src.backend.services import (
-    AuthService,
-    DashboardService,
-    LearningService,
-    OnboardingService,
-    ProfileService,
+    AuthServiceContract,
+    DashboardServiceContract,
+    LearningServiceContract,
+    OnboardingServiceContract,
+    ProfileServiceContract,
 )
 
 
-def get_auth_service() -> AuthService:
+def get_auth_service() -> AuthServiceContract:
     return get_request_container().auth_service
 
 
-def get_onboarding_service() -> OnboardingService:
+def get_onboarding_service() -> OnboardingServiceContract:
     return get_request_container().onboarding_service
 
 
-def get_dashboard_service() -> DashboardService:
+def get_dashboard_service() -> DashboardServiceContract:
     return get_request_container().dashboard_service
 
 
-def get_learning_service() -> LearningService:
+def get_learning_service() -> LearningServiceContract:
     return get_request_container().learning_service
 
 
-def get_profile_service() -> ProfileService:
+def get_profile_service() -> ProfileServiceContract:
     return get_request_container().profile_service
 
 
-AuthServiceDependency = Annotated[AuthService, Depends(get_auth_service)]
+AuthServiceDependency = Annotated[AuthServiceContract, Depends(get_auth_service)]
 OnboardingServiceDependency = Annotated[
-    OnboardingService, Depends(get_onboarding_service)
+    OnboardingServiceContract, Depends(get_onboarding_service)
 ]
 DashboardServiceDependency = Annotated[
-    DashboardService, Depends(get_dashboard_service)
+    DashboardServiceContract, Depends(get_dashboard_service)
 ]
-LearningServiceDependency = Annotated[LearningService, Depends(get_learning_service)]
-ProfileServiceDependency = Annotated[ProfileService, Depends(get_profile_service)]
+LearningServiceDependency = Annotated[
+    LearningServiceContract, Depends(get_learning_service)
+]
+ProfileServiceDependency = Annotated[
+    ProfileServiceContract, Depends(get_profile_service)
+]

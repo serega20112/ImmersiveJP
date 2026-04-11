@@ -19,29 +19,31 @@ from src.backend.dependencies.service_dependencies import (
     get_profile_service as _get_profile_service,
 )
 from src.backend.services import (
-    AuthService,
-    DashboardService,
-    LearningService,
-    OnboardingService,
-    ProfileService,
+    AuthServiceContract,
+    DashboardServiceContract,
+    LearningServiceContract,
+    OnboardingServiceContract,
+    ProfileServiceContract,
 )
 
 
-def get_auth_service(_request: Request | None = None) -> AuthService:
+def get_auth_service(_request: Request | None = None) -> AuthServiceContract:
     return _get_auth_service()
 
 
-def get_onboarding_service(_request: Request | None = None) -> OnboardingService:
+def get_onboarding_service(
+    _request: Request | None = None,
+) -> OnboardingServiceContract:
     return _get_onboarding_service()
 
 
-def get_dashboard_service(_request: Request | None = None) -> DashboardService:
+def get_dashboard_service(_request: Request | None = None) -> DashboardServiceContract:
     return _get_dashboard_service()
 
 
-def get_learning_service(_request: Request | None = None) -> LearningService:
+def get_learning_service(_request: Request | None = None) -> LearningServiceContract:
     return _get_learning_service()
 
 
-def get_profile_service(_request: Request | None = None) -> ProfileService:
+def get_profile_service(_request: Request | None = None) -> ProfileServiceContract:
     return _get_profile_service()

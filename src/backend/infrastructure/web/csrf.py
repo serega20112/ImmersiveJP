@@ -3,13 +3,13 @@ from __future__ import annotations
 from secrets import compare_digest, token_urlsafe
 
 from fastapi import Request
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.backend.infrastructure.web.constants import (
     CSRF_FIELD_NAME,
     CSRF_HEADER_NAME,
     CSRF_SESSION_KEY,
 )
+from src.backend.infrastructure.web.errors import SecurityViolationError
 
 _SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
@@ -43,7 +43,4 @@ async def validate_csrf(request: Request) -> None:
             submitted_token = str(form.get(CSRF_FIELD_NAME) or "").strip()
 
     if not submitted_token or not compare_digest(session_token, submitted_token):
-        raise StarletteHTTPException(
-            status_code=403,
-            detail="Некорректный CSRF token",
-        )
+        raise SecurityViolationError()

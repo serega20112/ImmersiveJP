@@ -26,4 +26,5 @@ class OnboardingProvidersMixin:
         return OnboardingService(
             self.complete_onboarding_use_case,
             self.get_onboarding_page_use_case,
+            self.root.key_value_store,
         )

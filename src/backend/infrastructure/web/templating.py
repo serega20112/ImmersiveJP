@@ -44,7 +44,7 @@ async def render_template(request: Request, template_name: str, **context):
         "csrf_field_name": CSRF_FIELD_NAME,
         **context,
     }
-    return templates.TemplateResponse(template_name, template_context)
+    return templates.TemplateResponse(request, template_name, template_context)
 
 
 async def render_error_page(

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from urllib.parse import urlparse
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -9,8 +8,13 @@ from fastapi.responses import PlainTextResponse, RedirectResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.backend.infrastructure.observability import get_logger, log_event
+from src.backend.infrastructure.web.error_responses import (
+    apply_default_response_headers,
+    build_application_error_response,
+    build_error_response,
+)
+from src.backend.infrastructure.web.errors import ApplicationError
 from src.backend.infrastructure.web.redirects import RouteRedirectError
-from src.backend.infrastructure.web.templating import flash, render_error_page
 
 logger = get_logger(__name__)
 
@@ -18,7 +22,13 @@ logger = get_logger(__name__)
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(RouteRedirectError)
     async def handle_route_redirect(request: Request, exc: RouteRedirectError):
-        return RedirectResponse(url=exc.location, status_code=303)
+        response = RedirectResponse(url=exc.location, status_code=303)
+        apply_default_response_headers(request, response)
+        return response
+
+    @app.exception_handler(ApplicationError)
+    async def handle_application_error(request: Request, exc: ApplicationError):
+        return await build_application_error_response(request, exc)
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(request: Request, exc: RequestValidationError):
@@ -32,17 +42,20 @@ def register_exception_handlers(app: FastAPI) -> None:
             method=request.method,
             errors=exc.errors(),
         )
-        return await _build_error_response(
+        response = await build_error_response(
             request=request,
             status_code=422,
             title="Нужно поправить данные",
             message="Форма заполнена некорректно. Проверь поля и попробуй еще раз.",
         )
+        return response
 
     @app.exception_handler(StarletteHTTPException)
     async def handle_http_exception(request: Request, exc: StarletteHTTPException):
         if request.url.path.startswith("/static") or request.url.path == "/favicon.ico":
-            return PlainTextResponse("Not found", status_code=exc.status_code)
+            response = PlainTextResponse("Not found", status_code=exc.status_code)
+            apply_default_response_headers(request, response)
+            return response
 
         title = "Страница не найдена" if exc.status_code == 404 else "Ошибка запроса"
         message = (
@@ -61,12 +74,13 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             detail=str(exc.detail),
         )
-        return await _build_error_response(
+        response = await build_error_response(
             request=request,
             status_code=exc.status_code,
             title=title,
             message=message,
         )
+        return response
 
     @app.exception_handler(Exception)
     async def handle_unexpected_exception(request: Request, exc: Exception):
@@ -86,7 +100,7 @@ def register_exception_handlers(app: FastAPI) -> None:
                 },
             },
         )
-        return await _build_error_response(
+        response = await build_error_response(
             request=request,
             status_code=500,
             title="Что-то сломалось на сервере",
@@ -94,34 +108,4 @@ def register_exception_handlers(app: FastAPI) -> None:
                 "Запрос не удалось завершить. Ничего не потеряно, но это место лучше повторить чуть позже."
             ),
         )
-
-
-async def _build_error_response(
-    *,
-    request: Request,
-    status_code: int,
-    title: str,
-    message: str,
-):
-    if request.method != "GET":
-        flash(request, message, "error")
-        return RedirectResponse(url=_resolve_return_href(request), status_code=303)
-    return await render_error_page(
-        request,
-        status_code=status_code,
-        title=title,
-        message=message,
-        return_href=_resolve_return_href(request),
-    )
-
-
-def _resolve_return_href(request: Request) -> str:
-    referer = request.headers.get("referer")
-    if referer:
-        parsed = urlparse(referer)
-        if not parsed.netloc or parsed.netloc == request.url.netloc:
-            path = parsed.path or "/"
-            if parsed.query:
-                return f"{path}?{parsed.query}"
-            return path
-    return request.url.path or "/"
+        return response

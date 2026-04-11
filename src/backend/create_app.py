@@ -12,15 +12,17 @@ from src.backend.delivery.api.router import api_router
 from src.backend.dependencies.container import container
 from src.backend.dependencies.settings import Settings
 from src.backend.infrastructure.files import get_session_factory
-from src.backend.infrastructure.observability import get_logger
+from src.backend.infrastructure.observability import HttpMetricsCollector, get_logger
 from src.backend.infrastructure.web import (
     SESSION_COOKIE_NAME,
     register_exception_handlers,
 )
 from src.backend.infrastructure.web.middleware import (
     CsrfMiddleware,
+    RateLimitMiddleware,
     RequestContainerMiddleware,
     RequestLoggingMiddleware,
+    RequestMetricsMiddleware,
     RequestStateMiddleware,
 )
 
@@ -45,6 +47,7 @@ def create_app() -> FastAPI:
     )
     app.state.root_container = container
     app.state.asset_version = str(int(time.time()))
+    app.state.metrics_collector = HttpMetricsCollector()
     app.mount(
         "/static", StaticFiles(directory=str(FRONTEND_ROOT / "static")), name="static"
     )
@@ -54,6 +57,17 @@ def create_app() -> FastAPI:
         session_factory=get_session_factory(),
     )
     app.add_middleware(CsrfMiddleware)
+    if Settings.api_rate_limit_enabled:
+        app.add_middleware(
+            RateLimitMiddleware,
+            rate_limiter=container.rate_limiter,
+            limit=Settings.api_rate_limit_requests,
+            window_seconds=Settings.api_rate_limit_window_seconds,
+        )
+    app.add_middleware(
+        RequestMetricsMiddleware,
+        collector=app.state.metrics_collector,
+    )
     app.add_middleware(RequestLoggingMiddleware, logger=logger)
     app.add_middleware(RequestStateMiddleware)
     app.add_middleware(

@@ -98,6 +98,11 @@ class AppSettings(BaseSettings):
 
     llm_request_limit: int = 30
     llm_request_window_seconds: int = 3600
+    api_rate_limit_enabled: bool = True
+    api_rate_limit_requests: int = 240
+    api_rate_limit_window_seconds: int = 60
+    metrics_enabled: bool = True
+    onboarding_page_cache_ttl_seconds: int = 900
     text_input_limit: int = 500
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 30
@@ -125,6 +130,19 @@ class AppSettings(BaseSettings):
                 f"COOKIE_SAMESITE must be one of: {', '.join(sorted(allowed))}"
             )
         return normalized
+
+    @field_validator(
+        "llm_request_limit",
+        "llm_request_window_seconds",
+        "api_rate_limit_requests",
+        "api_rate_limit_window_seconds",
+        "onboarding_page_cache_ttl_seconds",
+    )
+    @classmethod
+    def validate_positive_ints(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("Numeric limits must be greater than zero")
+        return value
 
     @model_validator(mode="after")
     def normalize_database_urls(self) -> "AppSettings":

@@ -4,7 +4,6 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import PlainTextResponse
 
 import pytest
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.testclient import TestClient
 
@@ -13,6 +12,7 @@ from src.backend.infrastructure.web.constants import (
     CSRF_HEADER_NAME,
 )
 from src.backend.infrastructure.web.csrf import ensure_csrf_token, validate_csrf
+from src.backend.infrastructure.web.errors import SecurityViolationError
 
 
 def _build_request(method: str, *, content_type: str = "", headers=None) -> Request:
@@ -51,7 +51,7 @@ async def test_validate_csrf_rejects_missing_token():
     request = _build_request("POST")
     ensure_csrf_token(request)
 
-    with pytest.raises(StarletteHTTPException) as exc:
+    with pytest.raises(SecurityViolationError) as exc:
         await validate_csrf(request)
 
     assert exc.value.status_code == 403
