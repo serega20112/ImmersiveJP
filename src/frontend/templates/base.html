@@ -20,86 +20,10 @@
     <script type="module" src="{{ url_for('static', path='js/index.js') }}?v={{ asset_version }}"></script>
   </head>
   <body class="{% block body_class %}{% endblock %}">
-    <header class="site-header">
-      <div class="site-header__inner">
-        <a href="/" class="brand-mark">
-          <span class="brand-mark__seal">浸</span>
-          <span class="brand-mark__copy">
-            <strong>ImmersJP</strong>
-            <small>язык, культура, история</small>
-          </span>
-        </a>
-
-        <div class="site-header__nav">
-          <nav class="site-nav">
-            {% if current_user %}
-            <a
-              href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}"
-              class="nav-link {% if request.url.path.startswith('/dashboard') or request.url.path.startswith('/onboarding') %}is-active{% endif %}"
-            >
-              Обзор
-            </a>
-            {% if current_user.onboarding_completed %}
-            <a
-              href="/learn/language"
-              class="nav-link {% if request.url.path.startswith('/learn/language') or request.url.path.startswith('/learn/culture') or request.url.path.startswith('/learn/history') %}is-active{% endif %}"
-            >
-              Треки
-            </a>
-            <a
-              href="/learn/speech"
-              class="nav-link {% if request.url.path.startswith('/learn/speech') %}is-active{% endif %}"
-            >
-              Практика
-            </a>
-            <a
-              href="/plan"
-              class="nav-link {% if request.url.path.startswith('/plan') %}is-active{% endif %}"
-            >
-              План
-            </a>
-            <a
-              href="/mentor"
-              class="nav-link {% if request.url.path.startswith('/mentor') %}is-active{% endif %}"
-            >
-              Наставник
-            </a>
-            {% endif %}
-            <a
-              href="/profile"
-              class="nav-link {% if request.url.path.startswith('/profile') %}is-active{% endif %}"
-            >
-              Профиль
-            </a>
-            {% else %}
-            <a href="/" class="nav-link {% if request.url.path == '/' %}is-active{% endif %}">Главная</a>
-            <a href="/auth/login" class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}">Вход</a>
-            <a href="/auth/register" class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}">Начать</a>
-            {% endif %}
-          </nav>
-
-          <div class="site-tools">
-            <button type="button" class="ghost-button" data-theme-toggle>Тема</button>
-
-            {% if current_user %}
-            <form action="/auth/logout" method="post">
-              <button type="submit" class="ghost-button">Выйти</button>
-            </form>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </header>
+    {% include "partials/site_header.html" %}
 
     <main class="site-main">
-      {% if flash_messages %}
-      <section class="flash-stack">
-        {% for flash in flash_messages %}
-        <div class="flash flash--{{ flash.category }}">{{ flash.message }}</div>
-        {% endfor %}
-      </section>
-      {% endif %}
-
+      {% include "partials/flash_stack.html" %}
       {% block content %}{% endblock %}
     </main>
   </body>

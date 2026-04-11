@@ -7,6 +7,7 @@
     <p class="section-kicker">{{ page.title }}</p>
     <h1>{{ page.subtitle }}</h1>
     <p class="page-lead">{{ page.next_action }}</p>
+    <p class="plan-horizon-note">{{ page.horizon_title }}</p>
     <div class="hero-facts">
       <span class="hero-fact">{{ page.current_stage_title }}</span>
       <span class="hero-fact">{{ page.current_stage_timeframe }}</span>
@@ -52,6 +53,16 @@
     <p>{{ page.current_stage_summary }}</p>
     {% if page.recovery_note %}
     <p class="aside-callout">{{ page.recovery_note }}</p>
+    {% endif %}
+  </article>
+
+  <article class="panel plan-focus-card">
+    <p class="section-kicker">Горизонт срока</p>
+    <h2>{{ page.horizon_title }}</h2>
+    {% if page.horizon_note %}
+    <p class="aside-callout">{{ page.horizon_note }}</p>
+    {% else %}
+    <p>План показывает всю дорожку, потому что ты не зафиксировал жесткий дедлайн и система может вести тебя дальше по общей карте.</p>
     {% endif %}
   </article>
 

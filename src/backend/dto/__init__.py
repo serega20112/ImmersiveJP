@@ -5,7 +5,7 @@ from .auth_dto import (
     UserViewDTO,
     VerificationDTO,
 )
-from .learning_dto import (
+from .learning import (
     CardCompletionResultDTO,
     CardExampleDTO,
     GeneratedCardDraftDTO,
@@ -27,9 +27,9 @@ from .learning_dto import (
 )
 from .mentor_dto import MentorFocusDTO, MentorMessageDTO, MentorPageDTO, MentorReplyDTO
 from .onboarding_dto import (
-    DiagnosticQuestionGroupDTO,
     DiagnosticOptionDTO,
     DiagnosticQuestionDTO,
+    DiagnosticQuestionGroupDTO,
     OnboardingDTO,
     OnboardingPageDTO,
     OnboardingResultDTO,

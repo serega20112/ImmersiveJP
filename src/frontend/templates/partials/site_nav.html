@@ -1,0 +1,47 @@
+<nav class="site-nav">
+  {% if current_user %}
+  <a
+    href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}"
+    class="nav-link {% if request.url.path.startswith('/dashboard') or request.url.path.startswith('/onboarding') %}is-active{% endif %}"
+  >
+    Обзор
+  </a>
+  {% if current_user.onboarding_completed %}
+  <a
+    href="/learn/language"
+    class="nav-link {% if request.url.path.startswith('/learn/language') or request.url.path.startswith('/learn/culture') or request.url.path.startswith('/learn/history') %}is-active{% endif %}"
+  >
+    Треки
+  </a>
+  <a
+    href="/learn/speech"
+    class="nav-link {% if request.url.path.startswith('/learn/speech') %}is-active{% endif %}"
+  >
+    Практика
+  </a>
+  <a
+    href="/plan"
+    class="nav-link {% if request.url.path.startswith('/plan') %}is-active{% endif %}"
+  >
+    План
+  </a>
+  <a
+    href="/mentor"
+    class="nav-link {% if request.url.path.startswith('/mentor') %}is-active{% endif %}"
+  >
+    Наставник
+  </a>
+  {% endif %}
+  <a
+    href="/profile"
+    class="nav-link {% if request.url.path.startswith('/profile') %}is-active{% endif %}"
+  >
+    Профиль
+  </a>
+  {% else %}
+  <a href="/" class="nav-link {% if request.url.path == '/' %}is-active{% endif %}">Главная</a>
+  <a href="/auth/login" class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}">Вход</a>
+  <a href="/auth/register" class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}">Начать</a>
+  {% endif %}
+</nav>
+

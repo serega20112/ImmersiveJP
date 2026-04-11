@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
@@ -10,12 +11,7 @@ from fastapi import Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from src.backend.delivery.api.v1.auth_route import auth_router
-from src.backend.delivery.api.v1.dashboard_route import dashboard_router
-from src.backend.delivery.api.v1.index_route import index_router
-from src.backend.delivery.api.v1.learning_route import learning_router
-from src.backend.delivery.api.v1.onboarding_route import onboarding_router
-from src.backend.delivery.api.v1.profile_route import profile_router
+from src.backend.delivery.api.router import api_router
 from src.backend.dependencies.container import container
 from src.backend.dependencies.settings import Settings
 from src.backend.infrastructure.files import get_session_factory
@@ -31,9 +27,19 @@ FRONTEND_ROOT = PROJECT_ROOT / "src" / "frontend"
 logger = get_logger(__name__)
 
 
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    yield
+    await app.state.root_container.shutdown()
+
+
 def create_app() -> FastAPI:
     configure_logging(Settings.log_level)
-    app = FastAPI(title=Settings.app_name, debug=Settings.app_debug)
+    app = FastAPI(
+        title=Settings.app_name,
+        debug=Settings.app_debug,
+        lifespan=_lifespan,
+    )
     app.state.root_container = container
     app.state.asset_version = str(int(time.time()))
     app.add_middleware(
@@ -102,15 +108,6 @@ def create_app() -> FastAPI:
         response.headers.setdefault("X-Request-ID", request_id)
         return response
 
-    @app.on_event("shutdown")
-    async def shutdown() -> None:
-        await app.state.root_container.shutdown()
-
-    app.include_router(index_router)
-    app.include_router(auth_router)
-    app.include_router(onboarding_router)
-    app.include_router(dashboard_router)
-    app.include_router(learning_router)
-    app.include_router(profile_router)
+    app.include_router(api_router)
     register_exception_handlers(app)
     return app

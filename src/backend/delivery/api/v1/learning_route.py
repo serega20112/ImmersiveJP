@@ -3,18 +3,23 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import Form
 from fastapi import Query
 from fastapi import Request
 from fastapi import Response
 from fastapi.responses import RedirectResponse
 
-from src.backend.delivery.api.v1.helpers import get_current_user
+from src.backend.dependencies.auth_dependencies import (
+    require_authenticated_user,
+    require_onboarded_user,
+)
 from src.backend.delivery.api.v1.helpers import get_learning_service
 from src.backend.delivery.api.v1.helpers import redirect_to_route
 from src.backend.delivery.api.v1.helpers import resolve_return_to
 from src.backend.delivery.api.v1.helpers import track_href
 from src.backend.domain.content import TrackType
+from src.backend.dto.auth_dto import UserViewDTO
 from src.backend.infrastructure.web import flash
 from src.backend.infrastructure.web import render_template
 from src.backend.use_case.learning.complete_card import CardOwnershipError
@@ -35,12 +40,10 @@ learning_router = APIRouter(prefix="/learn")
 
 
 @learning_router.get("/speech", name="learning.speech_page")
-async def speech_page(request: Request):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.login_page")
-    if not current_user.onboarding_completed:
-        return redirect_to_route(request, "onboarding.page")
+async def speech_page(
+    request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
+):
     page = await get_learning_service(request).get_speech_practice_page(current_user.id)
     return render_template(request, "learn/speech.html", page=page)
 
@@ -48,13 +51,9 @@ async def speech_page(request: Request):
 @learning_router.post("/speech", name="learning.speech_generate")
 async def speech_generate(
     request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
     words_text: Annotated[str, Form()],
 ):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.login_page")
-    if not current_user.onboarding_completed:
-        return redirect_to_route(request, "onboarding.page")
     try:
         page = await get_learning_service(request).generate_speech_practice(
             current_user.id,
@@ -84,14 +83,10 @@ async def history_track(request: Request):
 @learning_router.get("/{track}/cards/{card_id}", name="learning.card_page")
 async def card_page(
     request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
     track: TrackType,
     card_id: int,
 ):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.login_page")
-    if not current_user.onboarding_completed:
-        return redirect_to_route(request, "onboarding.page")
     try:
         page = await get_learning_service(request).get_card_page(
             current_user.id,
@@ -107,14 +102,10 @@ async def card_page(
 @learning_router.get("/{track}/work/{batch_number}", name="learning.work_page")
 async def work_page(
     request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
     track: TrackType,
     batch_number: int,
 ):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.login_page")
-    if not current_user.onboarding_completed:
-        return redirect_to_route(request, "onboarding.page")
     try:
         page = await get_learning_service(request).get_track_work_page(
             current_user.id,
@@ -130,14 +121,10 @@ async def work_page(
 @learning_router.post("/{track}/work/{batch_number}", name="learning.work_submit")
 async def work_submit(
     request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
     track: TrackType,
     batch_number: int,
 ):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.login_page")
-    if not current_user.onboarding_completed:
-        return redirect_to_route(request, "onboarding.page")
     form = await request.form()
     answers = {
         key.removeprefix("answer_"): str(value)
@@ -163,13 +150,11 @@ async def work_submit(
 @learning_router.post("/complete", name="learning.complete_card")
 async def complete_card(
     request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_authenticated_user)],
     card_id: Annotated[int, Form()],
     track: Annotated[str, Form()],
     return_to: Annotated[str | None, Form()] = None,
 ):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.login_page")
     try:
         await get_learning_service(request).complete_card(current_user.id, card_id)
         flash(request, "Карточка отмечена как пройденная.", "success")
@@ -184,11 +169,9 @@ async def complete_card(
 @learning_router.get("/next", name="learning.next_cards")
 async def next_cards(
     request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_authenticated_user)],
     track: Annotated[str, Query()],
 ):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.login_page")
     try:
         await get_learning_service(request).get_next_cards(
             current_user.id, TrackType(track)
@@ -202,11 +185,9 @@ async def next_cards(
 @learning_router.get("/download-pdf", name="learning.download_pdf")
 async def download_pdf(
     request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_authenticated_user)],
     track: Annotated[str, Query()],
 ):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.login_page")
     try:
         document = await get_learning_service(request).export_cards_to_pdf(
             current_user.id,
@@ -222,10 +203,6 @@ async def download_pdf(
 
 
 async def _render_track_page(request: Request, track: TrackType):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.login_page")
-    if not current_user.onboarding_completed:
-        return redirect_to_route(request, "onboarding.page")
+    current_user = await require_onboarded_user(request)
     page = await get_learning_service(request).get_track_page(current_user.id, track)
     return render_template(request, "learn/track.html", page=page)

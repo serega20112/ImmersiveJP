@@ -348,10 +348,22 @@ class BuildLearningPlanUseCase:
         current_stage = _ROADMAP[current_stage_index]
         content_mode = _build_content_mode(current_stage_index, report.trust_score.score)
         pace_mode = _build_pace_mode(user.study_timeline)
+        horizon_stage_index = max(
+            current_stage_index,
+            _timeline_horizon_index(user.study_timeline),
+        )
+        horizon_stage = _ROADMAP[horizon_stage_index]
 
         return LearningPlanPageDTO(
             title="Учебный план",
             subtitle=_subtitle_for_plan(current_stage_index, recovery_note is not None),
+            horizon_title=(
+                f"Горизонт на текущий срок: до этапа '{horizon_stage['title']}'"
+            ),
+            horizon_note=_horizon_note(
+                study_timeline=user.study_timeline,
+                horizon_stage_index=horizon_stage_index,
+            ),
             current_stage_title=current_stage["title"],
             current_stage_timeframe=current_stage["timeframe"],
             current_stage_summary=current_stage["summary"],
@@ -364,6 +376,7 @@ class BuildLearningPlanUseCase:
                 current_stage_index=current_stage_index,
                 progress_stage_index=progress_stage_index,
                 weak_stage_index=weak_stage_index,
+                visible_horizon_index=horizon_stage_index,
             ),
         )
 
@@ -537,15 +550,46 @@ def _build_pace_mode(study_timeline: StudyTimeline | None) -> PlanPaceDTO:
     )
 
 
+def _timeline_horizon_index(study_timeline: StudyTimeline | None) -> int:
+    timeline = study_timeline or StudyTimeline.FLEXIBLE
+    horizon_map = {
+        StudyTimeline.THREE_MONTHS: 1,
+        StudyTimeline.SIX_MONTHS: 3,
+        StudyTimeline.ONE_YEAR: 4,
+        StudyTimeline.TWO_YEARS: 5,
+        StudyTimeline.FLEXIBLE: 7,
+    }
+    return horizon_map[timeline]
+
+
+def _horizon_note(
+    *,
+    study_timeline: StudyTimeline | None,
+    horizon_stage_index: int,
+) -> str | None:
+    timeline = study_timeline or StudyTimeline.FLEXIBLE
+    if timeline == StudyTimeline.FLEXIBLE:
+        return None
+
+    stage = _ROADMAP[horizon_stage_index]
+    return (
+        f"Дальние этапы за пределами срока сейчас скрыты. В этом режиме план держит "
+        f"фокус до блока '{stage['title']}', а не размазывает внимание до финала."
+    )
+
+
 def _build_stage_dtos(
     *,
     current_stage_index: int,
     progress_stage_index: int,
     weak_stage_index: int | None,
+    visible_horizon_index: int,
 ) -> list[PlanStageDTO]:
     stages: list[PlanStageDTO] = []
     for stage in _ROADMAP:
         index = stage["index"]
+        if index > visible_horizon_index:
+            continue
         status, status_label = _status_for_stage(index, current_stage_index)
         focus_note = None
         if weak_stage_index is not None and index == weak_stage_index and weak_stage_index < progress_stage_index:

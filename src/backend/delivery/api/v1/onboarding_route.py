@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import Request
 
+from src.backend.dependencies.auth_dependencies import require_registered_user
 from src.backend.delivery.api.v1.helpers import get_current_user
 from src.backend.delivery.api.v1.helpers import get_onboarding_service
 from src.backend.delivery.api.v1.helpers import redirect_to_route
+from src.backend.dto.auth_dto import UserViewDTO
 from src.backend.dto.onboarding_dto import OnboardingDTO
 from src.backend.infrastructure.web import flash
 from src.backend.infrastructure.web import render_template
@@ -17,10 +22,10 @@ onboarding_router = APIRouter()
 
 
 @onboarding_router.get("/onboarding", name="onboarding.page")
-async def onboarding_page(request: Request):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.register_page")
+async def onboarding_page(
+    request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_registered_user)],
+):
     if current_user.onboarding_completed:
         return redirect_to_route(request, "dashboard.dashboard_page")
     page = await get_onboarding_service(request).get_page()
@@ -28,11 +33,10 @@ async def onboarding_page(request: Request):
 
 
 @onboarding_router.post("/onboarding", name="onboarding.complete")
-async def complete_onboarding(request: Request):
-    current_user = get_current_user(request)
-    if current_user is None:
-        return redirect_to_route(request, "auth.register_page")
-
+async def complete_onboarding(
+    request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_registered_user)],
+):
     form = await request.form()
     diagnostic_answers = {
         key.removeprefix("diagnostic_"): str(value)
@@ -48,7 +52,9 @@ async def complete_onboarding(request: Request):
                 study_timeline=str(form.get("study_timeline", "")),
                 interests_text=str(form.get("interests_text", "")),
                 diagnostic_answers=diagnostic_answers,
-                diagnostic_hints_used=int(str(form.get("diagnostic_hints_used", "0")) or 0),
+                diagnostic_hints_used=int(
+                    str(form.get("diagnostic_hints_used", "0")) or 0
+                ),
             ),
         )
         flash(request, result.skill_assessment.summary, "success")

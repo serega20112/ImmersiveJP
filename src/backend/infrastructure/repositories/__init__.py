@@ -1,5 +1,7 @@
-from .content_repository import AbstractContentRepository
-from .mentor_repository import AbstractMentorRepository
-from .progress_repository import AbstractProgressRepository
-from .session_repository import AbstractSessionRepository
-from .user_repository import AbstractUserRepository
+from src.backend.domain.repositories import (
+    AbstractContentRepository,
+    AbstractMentorRepository,
+    AbstractProgressRepository,
+    AbstractSessionRepository,
+    AbstractUserRepository,
+)

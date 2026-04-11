@@ -73,10 +73,10 @@ body.page--mentor::after {
 }
 
 .mentor-shell {
-  width: min(980px, 100%);
+  width: min(1040px, 100%);
   margin: 0 auto;
   display: grid;
-  gap: 18px;
+  gap: 22px;
 }
 
 .mentor-topbar,
@@ -94,8 +94,8 @@ body.page--mentor::after {
 }
 
 .mentor-topbar {
-  gap: 12px;
-  padding: 8px 4px 4px;
+  gap: 16px;
+  padding: 10px 6px 2px;
 }
 
 .mentor-topbar__copy {
@@ -105,10 +105,10 @@ body.page--mentor::after {
 
 .mentor-topbar__copy h1 {
   margin: 0;
-  max-width: 12ch;
+  max-width: 14ch;
   color: #f6f2eb;
-  font-size: clamp(2rem, 3.2vw, 2.7rem);
-  line-height: 1.02;
+  font-size: clamp(2rem, 3vw, 2.9rem);
+  line-height: 0.98;
 }
 
 .mentor-topbar__copy p:last-child {
@@ -126,16 +126,23 @@ body.page--mentor::after {
 }
 
 .mentor-chat-shell {
-  gap: 18px;
+  gap: 20px;
 }
 
 .mentor-chat-stream {
-  min-height: 52vh;
+  min-height: 56vh;
+  padding: 26px 28px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 18%),
+    rgba(18, 19, 24, 0.66);
+  backdrop-filter: blur(18px);
 }
 
 .mentor-messages {
   display: grid;
-  gap: 24px;
+  gap: 28px;
 }
 
 .mentor-entry {
@@ -187,7 +194,7 @@ body.page--mentor::after {
 }
 
 .mentor-entry--assistant .mentor-entry__body {
-  padding: 0 0 20px;
+  padding: 0 0 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -228,7 +235,7 @@ body.page--mentor::after {
   position: sticky;
   bottom: 14px;
   z-index: 3;
-  padding-top: 10px;
+  padding-top: 6px;
   background: linear-gradient(180deg, rgba(16, 17, 21, 0), rgba(16, 17, 21, 0.86) 24%, rgba(16, 17, 21, 0.98));
 }
 
@@ -236,6 +243,7 @@ body.page--mentor::after {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  padding: 0 2px;
 }
 
 .mentor-prompt-chip {
@@ -252,10 +260,11 @@ body.page--mentor::after {
 }
 
 .mentor-composer {
-  padding: 14px;
+  padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  background: rgba(44, 45, 50, 0.86);
+  border-radius: 26px;
+  background:
+    linear-gradient(180deg, rgba(53, 55, 62, 0.9), rgba(36, 37, 42, 0.92));
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(18px);
 }

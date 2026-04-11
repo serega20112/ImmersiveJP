@@ -9,16 +9,19 @@ from fastapi.responses import PlainTextResponse, RedirectResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.backend.infrastructure.observability import get_logger, log_event
+from src.backend.infrastructure.web.redirects import RouteRedirectError
 from src.backend.infrastructure.web.templating import flash, render_error_page
 
 logger = get_logger(__name__)
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(RouteRedirectError)
+    async def handle_route_redirect(request: Request, exc: RouteRedirectError):
+        return RedirectResponse(url=exc.location, status_code=303)
+
     @app.exception_handler(RequestValidationError)
-    async def handle_validation_error(
-        request: Request, exc: RequestValidationError
-    ):
+    async def handle_validation_error(request: Request, exc: RequestValidationError):
         log_event(
             logger,
             logging.WARNING,
@@ -37,9 +40,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(StarletteHTTPException)
-    async def handle_http_exception(
-        request: Request, exc: StarletteHTTPException
-    ):
+    async def handle_http_exception(request: Request, exc: StarletteHTTPException):
         if request.url.path.startswith("/static") or request.url.path == "/favicon.ico":
             return PlainTextResponse("Not found", status_code=exc.status_code)
 
@@ -68,9 +69,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(Exception)
-    async def handle_unexpected_exception(
-        request: Request, exc: Exception
-    ):
+    async def handle_unexpected_exception(request: Request, exc: Exception):
         logger.error(
             "Unhandled application exception",
             exc_info=exc,

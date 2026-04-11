@@ -1,8 +1,9 @@
-﻿/* Plan, auth and finishing states. */
+/* Plan, auth and finishing states. */
 
+.plan-topline {
   display: grid;
   gap: 24px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .plan-roadmap {
@@ -22,6 +23,13 @@
 .page--plan .plan-stage h2 {
   font-family: "Manrope", "Noto Sans JP", sans-serif;
   letter-spacing: -0.01em;
+}
+
+.plan-horizon-note {
+  margin: -4px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.96rem;
+  line-height: 1.6;
 }
 
 .plan-focus-card__time {
@@ -162,4 +170,3 @@
     transform: translateY(0);
   }
 }
-

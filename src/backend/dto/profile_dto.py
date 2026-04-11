@@ -134,6 +134,8 @@ class LearningPlanPageDTO(BaseModel):
 
     title: str
     subtitle: str
+    horizon_title: str
+    horizon_note: str | None = None
     current_stage_title: str
     current_stage_timeframe: str
     current_stage_summary: str
