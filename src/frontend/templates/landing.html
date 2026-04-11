@@ -2,95 +2,159 @@
 {% block title %}ImmersJP - погружение в Японию{% endblock %}
 {% block body_class %}page--landing{% endblock %}
 {% block content %}
-<section class="hero reveal">
-  <div class="hero__panel panel panel--hero">
-    <p class="section-kicker">ImmersJP</p>
-    <h1 class="hero__title">Материалы по языку, культуре и истории Японии.</h1>
-    <p class="hero__lead">
-      Сервис собирает учебный план под цель, уровень и интересы. Карточки открываются по трем
-      трекам, а пройденный материал можно сохранить в PDF.
-    </p>
+<section class="landing-hero reveal">
+  <div class="panel panel--hero landing-hero__main">
+    <div class="section-stack">
+      <p class="section-kicker">Immersive Japan Learning System</p>
+      <h1>Японский через живую среду, а не через сухой набор уроков.</h1>
+      <p class="page-lead">
+        ImmersJP собирает персональный учебный контур под цель, уровень и интересы. Вместо
+        однотипного курса ты получаешь язык, культуру и историю в одной ритмике, с практикой,
+        планом и наставником.
+      </p>
+    </div>
+
     <div class="hero__actions">
       {% if current_user %}
       <a href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}" class="primary-button">
-        Продолжить
+        Вернуться в контур
       </a>
       {% else %}
-      <a href="/auth/register" class="primary-button">Начать обучение</a>
+      <a href="/auth/register" class="primary-button">Собрать первый контур</a>
       {% endif %}
-      <a href="#product" class="ghost-button">Как это устроено</a>
+      <a href="#product" class="ghost-button">Посмотреть систему</a>
     </div>
-    <ul class="metric-strip">
-      <li>
+
+    <div class="metric-grid metric-grid--hero">
+      <article class="metric-card">
         <strong>3</strong>
-        <span>основных трека</span>
-      </li>
-      <li>
+        <span>трека в одном маршруте</span>
+      </article>
+      <article class="metric-card">
         <strong>10</strong>
-        <span>карточек в одной партии</span>
-      </li>
-      <li>
+        <span>карточек в одном батче</span>
+      </article>
+      <article class="metric-card">
         <strong>PDF</strong>
-        <span>для повторения офлайн</span>
-      </li>
-    </ul>
+        <span>для офлайн-повторения</span>
+      </article>
+    </div>
   </div>
 
-  <aside class="hero__aside panel panel--accent">
-    <div class="hero__aside-kanji">日本</div>
-    <div>
-      <p class="section-kicker">Как это работает</p>
-      <ol class="step-list">
-        <li>Пользователь указывает цель, уровень и интересы.</li>
-        <li>Сервис готовит первую партию карточек по языку, культуре и истории.</li>
-        <li>У каждой карточки есть краткое превью и отдельная страница конспекта.</li>
-        <li>После завершения партии можно запросить следующую.</li>
+  <aside class="landing-hero__rail">
+    <article class="panel panel--signal landing-orbit-card">
+      <p class="section-kicker">Как идет поток</p>
+      <h2>Система сначала снимает стартовую точку, а потом двигает тебя партиями.</h2>
+      <ol class="step-list step-list--strong">
+        <li>Цель, уровень и интересы задают тон первых материалов.</li>
+        <li>Первая генерация открывает язык, культуру и историю в единой логике.</li>
+        <li>После карточек подключаются работа, речевая практика и коррекция плана.</li>
+        <li>Наставник смотрит на доверие системы и помогает сместить фокус без хаоса.</li>
       </ol>
-    </div>
+    </article>
+
+    <article class="panel landing-kanji-card">
+      <div class="kanji-column">
+        <span>日</span>
+        <span>本</span>
+        <span>語</span>
+      </div>
+      <div class="landing-kanji-card__copy">
+        <p class="section-kicker">Погружение</p>
+        <h2>Не просто учить слова, а видеть среду, в которой они живут.</h2>
+        <p>
+          Карточки строятся вокруг ситуаций, бытовых норм, исторических причин и речевых сцен,
+          поэтому материал не разваливается на отдельные несвязанные куски.
+        </p>
+      </div>
+    </article>
   </aside>
 </section>
 
-<section id="product" class="bento-grid bento-grid--three reveal">
+<section id="product" class="feature-marquee reveal">
   <article class="panel feature-card feature-card--language">
     <p class="section-kicker">Язык</p>
-    <h2>Фразы, грамматика и речевые ситуации.</h2>
+    <h2>Фразы, грамматика и регистр внутри реальных речевых сцен.</h2>
     <p>
-      В карточках важен не только перевод, но и контекст: где фраза используется, какой у нее тон
-      и как она работает в живой речи.
+      Здесь важен не только перевод, но и ситуация: кто говорит, в каком тоне, что звучит
+      естественно, а что рушит впечатление от речи.
     </p>
   </article>
+
   <article class="panel feature-card feature-card--culture">
     <p class="section-kicker">Культура</p>
-    <h2>Повседневные нормы, ритуалы и бытовая среда.</h2>
+    <h2>Быт, сервис, ритуалы и повседневные нормы, которые чувствуют японскую среду.</h2>
     <p>
-      От очередей и сервиса до устройства дома, районной жизни и делового этикета.
+      От очередей и кухни до устройства дома, отношений в районе и поведения в общественном
+      пространстве.
     </p>
   </article>
+
   <article class="panel feature-card feature-card--history">
     <p class="section-kicker">История</p>
-    <h2>Периоды и события, которые помогают понимать современную Японию.</h2>
+    <h2>Периоды и переломы, которые помогают читать современную Японию глубже.</h2>
     <p>
-      Не набор дат, а связка причин, изменений и последствий, которые видны в настоящем.
+      Не склад дат, а причинно-следственная линия: что менялось, почему это важно и где это видно
+      сейчас.
     </p>
   </article>
 </section>
 
-<section class="manifesto reveal">
-  <article class="panel manifesto__lead">
-    <p class="section-kicker">Настройка</p>
-    <h2>Стартовые материалы зависят от цели, уровня и интересов.</h2>
+<section class="story-grid reveal">
+  <article class="panel story-card">
+    <p class="section-kicker">01 / Диагностика</p>
+    <h2>Сервис сначала понимает, кто ты и куда идешь.</h2>
     <p>
-      Для туризма, переезда, работы и учебы нужен разный набор тем. Поэтому первая партия строится
-      не по общему шаблону, а по вводным данным конкретного пользователя.
+      Онбординг учитывает цель, срок, уровень и интересы, а короткая диагностика дает стартовую
+      оценку без лишнего шума.
     </p>
   </article>
-  <article class="panel manifesto__note">
-    <p class="section-kicker">В сервисе</p>
+
+  <article class="panel story-card">
+    <p class="section-kicker">02 / Партии</p>
+    <h2>Материал приходит батчами, чтобы держать темп без перегруза.</h2>
+    <p>
+      Каждая партия закрывает одну связную тему, а не разбрасывает внимание по десятку несвязанных
+      предметов.
+    </p>
+  </article>
+
+  <article class="panel story-card">
+    <p class="section-kicker">03 / Практика</p>
+    <h2>После карточек идет речь и работа, а не бесконечная генерация нового.</h2>
+    <p>
+      Это позволяет системе понять, насколько материал действительно закрепился, а не просто был
+      открыт и просмотрен.
+    </p>
+  </article>
+
+  <article class="panel story-card">
+    <p class="section-kicker">04 / Контроль</p>
+    <h2>Профиль, план и наставник собирают картину в один операционный экран.</h2>
+    <p>
+      Видно, где система доверяет тебе больше, где осторожничает и на что стоит сместить фокус
+      прямо сейчас.
+    </p>
+  </article>
+</section>
+
+<section class="manifesto-band reveal">
+  <article class="panel manifesto-band__lead">
+    <p class="section-kicker">Персонализация</p>
+    <h2>Стартовые материалы зависят не от общего шаблона, а от твоего маршрута.</h2>
+    <p>
+      Для туризма, переезда, работы и учебы нужен разный словарь, разный культурный фон и разный
+      темп объяснений. Поэтому контур обучения собирается под конкретного пользователя.
+    </p>
+  </article>
+
+  <article class="panel panel--accent manifesto-band__support">
+    <p class="section-kicker">Что внутри</p>
     <ul class="plain-list">
-      <li>персональные партии карточек по каждому треку</li>
-      <li>прогресс и рекомендации в профиле</li>
-      <li>экспорт пройденных материалов в PDF</li>
-      <li>речевая практика по словам из языковых карточек</li>
+      <li>персональные батчи по каждому треку</li>
+      <li>профиль с trust score и рекомендациями</li>
+      <li>экспорт в PDF для повторения вне сервиса</li>
+      <li>наставник, который опирается на твой текущий контур</li>
     </ul>
   </article>
 </section>

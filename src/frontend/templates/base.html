@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&family=Prata&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&family=Sora:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="{{ url_for('static', path='css/core/index.css') }}?v={{ asset_version }}" />
@@ -20,11 +20,22 @@
     <script type="module" src="{{ url_for('static', path='js/index.js') }}?v={{ asset_version }}"></script>
   </head>
   <body class="{% block body_class %}{% endblock %}">
-    {% include "partials/site_header.html" %}
+    <div class="site-backdrop" aria-hidden="true">
+      <span class="site-backdrop__orb site-backdrop__orb--alpha"></span>
+      <span class="site-backdrop__orb site-backdrop__orb--beta"></span>
+      <span class="site-backdrop__orb site-backdrop__orb--gamma"></span>
+      <span class="site-backdrop__grid"></span>
+    </div>
 
-    <main class="site-main">
-      {% include "partials/flash_stack.html" %}
-      {% block content %}{% endblock %}
-    </main>
+    <div class="site-frame">
+      {% include "partials/site_header.html" %}
+
+      <main class="site-main">
+        <div class="site-main__inner">
+          {% include "partials/flash_stack.html" %}
+          {% block content %}{% endblock %}
+        </div>
+      </main>
+    </div>
   </body>
 </html>

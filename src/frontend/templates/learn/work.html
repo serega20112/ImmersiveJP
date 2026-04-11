@@ -17,12 +17,26 @@
     </div>
   </div>
 
-  <aside class="panel page-hero__side">
+  <aside class="panel panel--signal page-hero__side">
     <p class="section-kicker">Темы партии</p>
     <div class="tag-row">
       {% for topic in page.source_topics %}
       <span class="tag">{{ topic }}</span>
       {% endfor %}
+    </div>
+    <div class="mini-metrics">
+      <div class="mini-metric">
+        <strong>{{ page.batch_number }}</strong>
+        <span>партия</span>
+      </div>
+      <div class="mini-metric">
+        <strong>{{ page.tasks|length }}</strong>
+        <span>заданий</span>
+      </div>
+      <div class="mini-metric">
+        <strong>{{ page.pass_score }}</strong>
+        <span>проходной балл</span>
+      </div>
     </div>
     <p class="utility-card__note">
       Работа собрана только из уже пройденного материала. Здесь важнее точность и устойчивость, а не скорость.
@@ -54,6 +68,7 @@
 {% endif %}
 
 <form method="post" class="work-sheet reveal" data-pending-form data-pending-label="Проверяем работу...">
+  {% include "partials/csrf_field.html" %}
   <div class="work-grid">
     {% for task in page.tasks %}
     <article class="panel work-task">

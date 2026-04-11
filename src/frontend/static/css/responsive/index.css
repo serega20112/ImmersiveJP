@@ -1,51 +1,45 @@
-﻿/* Responsive rules and reduced-motion overrides. */
-
-@media (max-width: 1120px) {
-  .hero,
+@media (max-width: 1180px) {
+  .landing-hero,
+  .track-hero,
   .page-hero,
-  .page-hero--dashboard,
-  .auth-layout,
-  .manifesto,
   .speech-workbench,
-  .practice-overview,
   .card-layout,
-  .dashboard-stage,
-  .profile-grid,
-  .dashboard-topline {
+  .practice-overview,
+  .auth-stage,
+  .onboarding-hero,
+  .plan-hero,
+  .dashboard-hero,
+  .profile-hero,
+  .manifesto-band {
     grid-template-columns: 1fr;
   }
 
-  .dashboard-operating-grid,
-  .track-gallery,
-  .dashboard-grid,
-  .preview-grid,
+  .dashboard-signal-grid,
+  .profile-insights,
+  .feature-marquee,
+  .story-grid,
+  .plan-overview,
   .speech-line-grid,
   .dialogue-grid,
-  .example-grid,
-  .bento-grid--three,
   .work-grid,
-  .plan-topline {
+  .metric-grid,
+  .mini-metrics,
+  .skill-columns,
+  .track-card__stats,
+  .trust-components {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .trust-card {
-    order: -1;
+  .speech-inline-card {
+    grid-template-columns: 1fr;
   }
 
-  .utility-stack > * {
-    flex: 0 0 auto;
-  }
-
-  .mentor-shell {
-    width: min(100%, 860px);
-  }
-
-  .dashboard-stage__trust {
-    order: -1;
+  .mentor-stage {
+    width: min(100%, 920px);
   }
 }
 
-@media (max-width: 820px) {
+@media (max-width: 860px) {
   .site-header {
     padding-left: 12px;
     padding-right: 12px;
@@ -57,117 +51,91 @@
   }
 
   .site-header__inner,
-  .site-main > section,
-  .site-main > .flash-stack {
+  .site-main__inner {
     width: 100%;
   }
 
-  .site-header__inner {
-    grid-template-columns: 1fr;
-  }
-
-  .site-header__nav,
-  .site-nav,
-  .site-tools {
-    justify-self: start;
-    width: 100%;
-  }
-
-  .site-header__nav,
+  .site-header__inner,
+  .site-header__cluster,
   .site-tools {
     flex-direction: column;
     align-items: stretch;
   }
 
   .site-nav {
-    padding: 8px;
-    border-radius: 24px;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .nav-link {
+    min-width: 134px;
+  }
+
+  .viewer-badge,
+  .theme-switch,
+  .logout-form {
+    width: 100%;
+  }
+
+  .logout-form .ghost-button {
+    width: 100%;
   }
 
   .choice-grid,
   .choice-grid--compact,
   .choice-grid--timeline,
   .choice-grid--triple,
-  .metric-strip,
-  .dashboard-operating-grid,
+  .metric-grid,
+  .mini-metrics,
+  .dashboard-signal-grid,
+  .profile-insights,
+  .feature-marquee,
+  .story-grid,
   .track-gallery,
-  .dashboard-grid,
-  .preview-grid,
+  .track-card__stats,
+  .trust-components,
+  .skill-columns,
   .speech-line-grid,
   .dialogue-grid,
-  .example-grid,
-  .skill-columns,
-  .track-panel__stats,
   .work-grid,
-  .plan-topline,
-  .plan-stage__modules,
-  .trust-components {
+  .plan-overview,
+  .plan-stage__modules {
     grid-template-columns: 1fr;
-  }
-
-  .speech-inline-card,
-  .work-task__head,
-  .track-card__head,
-  .track-card__stats {
-    grid-template-columns: 1fr;
-    align-items: start;
-  }
-
-  .plan-stage__head {
-    flex-direction: column;
   }
 
   .hero__actions,
-  .track-hero__actions,
-  .form-actions,
-  .utility-stack,
   .panel-actions,
-  .dashboard-stage__facts,
-  .dashboard-stage__actions,
-  .dashboard-operating-card__links,
-  .track-card__footer,
-  .hint-panel__actions,
-  .site-nav,
-  .site-tools {
+  .utility-stack,
+  .form-actions,
+  .hero-facts,
+  .tag-row,
+  .mentor-prompt-row,
+  .mentor-stage__meta,
+  .preview-card__footer,
+  .work-result__head,
+  .track-card__footer {
     flex-direction: column;
   }
 
   .primary-button,
   .ghost-button,
-  .nav-link,
+  .word-chip,
   .hint-button {
     width: 100%;
   }
 
-  .trust-score__ring {
-    width: 154px;
-    height: 154px;
-  }
-
-  .mentor-shell {
-    width: 100%;
-  }
-
-  .mentor-topbar__copy h1 {
-    max-width: 100%;
-  }
-
-  .dashboard-stage__intro h1 {
-    max-width: 100%;
-  }
-
-  .mentor-prompt-row {
+  .roadmap-stage__head,
+  .roadmap-stage__title {
     flex-direction: column;
   }
 
-  .mentor-prompt-chip,
-  .dashboard-stage__actions .primary-button,
-  .dashboard-stage__actions .ghost-button,
-  .dashboard-operating-card__links .ghost-button,
-  .track-card__footer .primary-button,
-  .track-card__footer .ghost-button,
-  .mentor-composer__actions .primary-button {
-    width: 100%;
+  .onboarding-step__head {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-chat-dock {
+    position: static;
   }
 
   .mentor-composer__actions {
@@ -175,15 +143,33 @@
     justify-content: stretch;
   }
 
-  .mentor-chat-dock {
-    position: static;
-    background: none;
-    padding-top: 0;
-  }
-
   .mentor-entry__body,
   .mentor-entry--user .mentor-entry__body {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .panel {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .site-header__inner {
+    border-radius: 24px;
+  }
+
+  .brand-mark__copy strong {
+    font-size: 1.44rem;
+  }
+
+  .trust-score__ring {
+    width: 152px;
+    height: 152px;
+  }
+
+  .kanji-column {
+    font-size: 3.6rem;
   }
 }
 

@@ -11,4 +11,5 @@ from src.backend.delivery.api.common.services import (
     get_learning_service,
     get_onboarding_service,
     get_profile_service,
+    resolve_current_user,
 )

@@ -1,449 +1,133 @@
-.hero,
+.landing-hero,
+.track-hero,
 .page-hero,
-.manifesto,
-.auth-layout,
-.profile-grid,
-.dashboard-grid,
-.dashboard-topline,
-.preview-grid,
-.card-layout,
 .speech-workbench,
-.speech-line-grid,
-.dialogue-grid,
-.example-grid,
-.skill-columns,
-.bento-grid,
-.metric-strip,
-.hero__actions,
-.track-hero__actions,
-.form-shell,
-.diagnostic-grid,
-.profile-shell,
-.track-shell,
-.card-shell,
-.work-grid {
+.card-layout,
+.practice-overview,
+.auth-stage,
+.onboarding-hero,
+.plan-hero,
+.dashboard-hero,
+.profile-hero,
+.manifesto-band {
   display: grid;
   gap: 24px;
-}
-
-.hero,
-.page-hero,
-.auth-layout,
-.manifesto,
-.speech-workbench,
-.practice-overview,
-.card-layout {
-  grid-template-columns: minmax(0, 1.1fr) 360px;
   align-items: start;
 }
 
-.page-hero--dashboard {
-  grid-template-columns: 1fr;
+.landing-hero,
+.track-hero,
+.page-hero,
+.speech-workbench,
+.card-layout,
+.practice-overview,
+.auth-stage,
+.onboarding-hero,
+.plan-hero,
+.dashboard-hero,
+.profile-hero {
+  grid-template-columns: minmax(0, 1.1fr) 360px;
 }
 
-.hero-stack,
+.landing-hero__main,
+.landing-hero__rail,
+.landing-orbit-card,
+.landing-kanji-card,
+.feature-card,
+.story-card,
+.manifesto-band__lead,
+.manifesto-band__support,
 .page-hero__copy,
 .page-hero__side,
-.hero__aside,
-.auth-aside,
-.auth-card,
-.feature-card,
-.track-panel,
-.skill-summary-card,
-.speech-form-card,
-.speech-rail,
-.card-article,
-.card-aside,
-.side-panel,
-.batch-nav,
-.dialogue-card,
-.speech-line-card,
-.practice-overview,
-.practice-overview__meta,
-.note-block,
-.section-head,
-.diagnostic-block,
-.profile-overview,
-.advice-card,
-.progress-card,
-.trust-card,
-.work-task,
-.work-result,
-.diagnostic-group {
+.track-hero__main,
+.track-hero__rail,
+.error-card {
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
-.page-hero h1,
-.hero__title,
-.auth-aside h1,
-.manifesto h2,
-.track-panel h2,
-.skill-summary-card h2,
-.section-head h2,
-.page-hero__side h2,
-.advice-card h2,
-.progress-card h2,
-.empty-state h2,
-.speech-form-card h2,
-.practice-overview h2,
-.dialogue-card h3,
-.track-shell h2,
-.card-article h2,
-.card-article h3,
-.work-task h2,
-.work-result h2,
-.diagnostic-group__head h3 {
-  margin: 0;
-  line-height: 1.04;
-}
-
-.page-hero h1,
-.auth-aside h1,
-.hero__title {
-  font-size: clamp(2.2rem, 4vw, 3.45rem);
-  line-height: 1.04;
-}
-
-.page--learn .page-hero h1,
-.page--learn .track-panel h2,
-.page--learn .preview-card h2,
-.page--learn .batch-nav__item strong {
-  font-family: "Manrope", "Noto Sans JP", sans-serif;
-  letter-spacing: -0.01em;
-}
-
-.section-head h2,
-.track-panel h2,
-.skill-summary-card h2,
-.page-hero__side h2,
-.practice-overview h2,
-.advice-card h2,
-.progress-card h2,
-.work-task h2,
-.work-result h2 {
-  font-size: clamp(1.45rem, 2.2vw, 2rem);
-}
-
-.hero__title {
-  max-width: 12ch;
-}
-
-.hero__actions,
-.track-hero__actions,
-.form-actions,
-.hero-facts,
-.tag-row,
-.preview-card__meta,
-.preview-card__footer,
-.track-panel__head,
-.progress-meta,
-.utility-stack,
-.panel-actions,
-.hint-panel__actions,
-.track-panel__stats,
-.work-result__head {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-
-.tag-row--terms {
-  gap: 14px;
-  align-items: stretch;
-}
-
-.hero-fact,
-.tag,
-.status-chip,
-.track-panel__percent,
-.preview-card__meta span,
-.word-chip,
-.task-format {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-muted) 88%, transparent);
-}
-
-.hero-fact,
-.tag,
-.status-chip,
-.preview-card__meta span,
-.task-format {
-  min-height: 34px;
-  padding: 0 14px;
-  color: var(--ink-soft);
-  font-size: 0.84rem;
-  font-weight: 600;
-}
-
-.term-chip {
-  display: grid;
-  gap: 4px;
-  min-width: 146px;
-  padding: 11px 14px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--surface-muted) 90%, transparent);
-  align-content: start;
-}
-
-.term-chip--compact {
-  min-width: 132px;
-  padding: 10px 12px;
-}
-
-.term-chip__label {
-  color: var(--ink);
-  font-size: 0.92rem;
-  font-weight: 700;
-  line-height: 1.35;
-  letter-spacing: 0;
-}
-
-.term-chip__translation {
-  color: var(--ink-soft);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.metric-strip {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.metric-strip li,
-.stat-chip {
-  display: grid;
-  gap: 6px;
-  padding: 16px 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface-muted) 90%, transparent);
-}
-
-.metric-strip strong,
-.stat-chip strong {
-  font-size: 1.5rem;
-}
-
-.hero__aside-kanji {
-  justify-self: end;
-  font-family: "Zen Old Mincho", serif;
-  font-size: 3.2rem;
-  color: color-mix(in srgb, var(--vermilion) 65%, white);
-  opacity: 0.22;
-}
-
-.plain-list,
-.step-list,
-.skill-list {
-  margin: 0;
-  padding-left: 18px;
-  display: grid;
-  gap: 10px;
-}
-
-.bento-grid--three,
-.dashboard-grid,
-.preview-grid,
-.work-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.dashboard-topline,
-.profile-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.dashboard-topline--insights {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-}
-
-.dashboard-grid {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  align-items: stretch;
-}
-
-.dashboard-grid .track-panel,
-.dashboard-topline--insights .skill-summary-card {
-  min-height: 100%;
-}
-
-.track-panel {
-  min-height: 290px;
-  padding-top: 28px;
-}
-
-.track-panel--language {
-  border-color: color-mix(in srgb, var(--vermilion) 36%, var(--line-strong));
-}
-
-.track-panel--culture {
-  border-color: color-mix(in srgb, var(--pine) 36%, var(--line-strong));
-}
-
-.track-panel--history {
-  border-color: color-mix(in srgb, var(--gold) 44%, var(--line-strong));
-}
-
-.track-panel__head,
-.preview-card__meta,
-.preview-card__footer,
-.work-result__head {
-  justify-content: space-between;
-}
-
-.track-panel__percent {
-  min-height: 36px;
-  padding: 0 13px;
-  color: var(--ink);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.track-panel__stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.trust-card {
-  align-content: start;
-  padding-top: 28px;
-}
-
-.trust-card--hero {
-  min-height: 100%;
-}
-
-.trust-score__ring {
-  display: grid;
-  place-items: center;
-  width: 180px;
-  height: 180px;
-  margin: 0 auto;
-  border-radius: 50%;
-  border: 1px solid var(--line-strong);
-  background:
-    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.56), transparent 38%),
-    linear-gradient(160deg, color-mix(in srgb, var(--surface-muted) 88%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
-  box-shadow: inset 0 0 0 12px rgba(255, 255, 255, 0.18);
-}
-
-.trust-score__ring--starter {
-  box-shadow: inset 0 0 0 12px rgba(166, 122, 56, 0.14);
-}
-
-.trust-score__ring--reader {
-  box-shadow: inset 0 0 0 12px rgba(36, 58, 87, 0.14);
-}
-
-.trust-score__ring--speaker {
-  box-shadow: inset 0 0 0 12px rgba(46, 97, 83, 0.16);
-}
-
-.trust-score__ring--fluent {
-  box-shadow: inset 0 0 0 12px rgba(43, 114, 83, 0.18);
-}
-
-.trust-score__ring strong {
-  font-size: 4rem;
-  line-height: 0.88;
-}
-
-.trust-score__ring span {
-  color: var(--ink-muted);
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.trust-score__copy {
-  display: grid;
-  gap: 10px;
-  text-align: center;
-}
-
-.trust-score__hero {
-  display: grid;
-  gap: 20px;
-  justify-items: center;
-}
-
-.trust-components {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.trust-components--stacked {
-  grid-template-columns: 1fr;
-}
-
-.trust-component {
-  display: flex;
-  justify-content: space-between;
+.landing-kanji-card {
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--surface-muted) 88%, transparent);
 }
 
-.trust-component strong {
-  font-size: 1rem;
-}
-
-.trust-component span {
-  color: var(--vermilion);
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.trust-component--detailed {
-  align-items: start;
-}
-
-.trust-component--detailed div {
+.kanji-column {
   display: grid;
   gap: 6px;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 6vw, 5rem);
+  line-height: 0.82;
+  color: var(--accent-strong);
+  opacity: 0.42;
 }
 
-.trust-component--detailed p {
-  font-size: 0.88rem;
+.feature-marquee,
+.story-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-body.page--dashboard,
-body.page--profile,
-body.page--plan {
-  background:
-    radial-gradient(circle at 88% 4%, rgba(185, 75, 51, 0.14), transparent 18%),
-    radial-gradient(circle at 10% 18%, rgba(35, 56, 79, 0.1), transparent 16%),
-    linear-gradient(180deg, #f4eee4, #e8ddd0);
+.feature-card--language {
+  border-color: rgba(216, 95, 58, 0.24);
 }
 
-html[data-theme="night"] body.page--dashboard,
-html[data-theme="night"] body.page--profile,
-html[data-theme="night"] body.page--plan {
-  background:
-    radial-gradient(circle at 86% 8%, rgba(222, 116, 84, 0.12), transparent 20%),
-    radial-gradient(circle at 12% 16%, rgba(144, 173, 201, 0.1), transparent 18%),
-    linear-gradient(180deg, #131922, #18202a 56%, #11161d);
+.feature-card--culture {
+  border-color: rgba(43, 111, 120, 0.24);
 }
 
-html[data-theme="night"] body.page--dashboard::before,
-html[data-theme="night"] body.page--profile::before,
-html[data-theme="night"] body.page--plan::before {
-  opacity: 0.26;
+.feature-card--history {
+  border-color: rgba(191, 142, 74, 0.24);
 }
 
-html[data-theme="night"] body.page--dashboard::after,
-html[data-theme="night"] body.page--profile::after,
-html[data-theme="night"] body.page--plan::after {
-  opacity: 0.28;
-  background: radial-gradient(circle, rgba(222, 116, 84, 0.14), transparent 68%);
+.manifesto-band {
+  grid-template-columns: minmax(0, 1.18fr) 360px;
+}
+
+.auth-story,
+.auth-card,
+.onboarding-step,
+.error-shell,
+.empty-state {
+  display: grid;
+  gap: 18px;
+}
+
+.error-shell {
+  justify-items: center;
+  padding-top: 24px;
+}
+
+.error-card {
+  width: min(760px, 100%);
+}
+
+.page-hero__copy h1,
+.track-hero__main h1,
+.landing-hero__main h1,
+.dashboard-hero__main h1,
+.profile-hero__main h1,
+.onboarding-hero__main h1,
+.plan-hero__main h1,
+.auth-story h1,
+.error-card h1 {
+  font-size: clamp(2.45rem, 4.6vw, 4.4rem);
+}
+
+.feature-card h2,
+.story-card h2,
+.manifesto-band h2,
+.page-hero__side h2,
+.section-head h2,
+.auth-card__head h2,
+.plan-focus-card h2,
+.plan-mode-card h2,
+.signal-card h2,
+.track-card h2,
+.advice-card h2,
+.skill-summary-card h2,
+.trust-score__copy h2,
+.mentor-empty h2 {
+  font-size: clamp(1.45rem, 2.4vw, 2.1rem);
+  line-height: 1.02;
 }

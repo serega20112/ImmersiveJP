@@ -2,28 +2,29 @@
 {% block title %}Онбординг - ImmersJP{% endblock %}
 {% block body_class %}page--onboarding{% endblock %}
 {% block content %}
-<section class="page-hero page-hero--dashboard reveal">
-  <div class="page-hero__copy panel panel--hero hero-stack">
+<section class="onboarding-hero reveal">
+  <div class="panel panel--hero onboarding-hero__main">
     <p class="section-kicker">Онбординг</p>
-    <h1>Сначала цель и интересы, потом короткий адаптивный срез.</h1>
+    <h1>Сначала цель и ритм, потом короткий адаптивный срез.</h1>
     <p class="page-lead">
-      Вопросы в диагностике меняются от выбранного уровня. По этому блоку система оценивает стартовую точку перед первой партией карточек.
+      Вопросы в диагностике меняются от выбранного уровня. По этому блоку система оценивает
+      стартовую точку перед первой партией карточек и выбирает темп следующего движения.
     </p>
     <div class="hero-facts">
-      <span class="hero-fact">5 вопросов</span>
+      <span class="hero-fact">5 диагностических вопросов</span>
       <span class="hero-fact">3 уровня сложности</span>
-      <span class="hero-fact">учет срока обучения</span>
-      <span class="hero-fact">сразу после генерации откроется язык</span>
+      <span class="hero-fact">учет горизонта обучения</span>
+      <span class="hero-fact">после генерации откроется язык</span>
     </div>
   </div>
 
-  <aside class="panel panel--tone page-hero__side">
-    <p class="section-kicker">Что изменилось</p>
+  <aside class="panel panel--signal onboarding-hero__aside">
+    <p class="section-kicker">Что учитывает система</p>
     <ul class="plain-list">
-      <li>уровень вопросов теперь зависит от твоей самооценки</li>
+      <li>уровень вопросов зависит от твоей самооценки</li>
       <li>срок обучения влияет на темп и глубину объяснений</li>
-      <li>вопросы стали короче и чище по структуре</li>
-      <li>результат уходит в trust score и влияет на следующие партии</li>
+      <li>интересы определяют контекст первых партий</li>
+      <li>результат уходит в trust score и влияет на следующие циклы</li>
     </ul>
   </aside>
 </section>
@@ -31,15 +32,19 @@
 <form
   action="/onboarding"
   method="post"
-  class="form-shell reveal"
+  class="onboarding-flow reveal"
   data-pending-form
   data-pending-label="Готовим материалы..."
 >
-  <section class="panel form-section">
-    <div class="section-head">
-      <p class="section-kicker">Шаг 1</p>
-      <h2>Зачем тебе японский</h2>
-      <p>От этого зависят сцены, словарь и контекст первых батчей.</p>
+  {% include "partials/csrf_field.html" %}
+  <section class="panel onboarding-step">
+    <div class="onboarding-step__head">
+      <span class="step-badge">01</span>
+      <div class="section-head">
+        <p class="section-kicker">Цель</p>
+        <h2>Зачем тебе японский</h2>
+        <p>От этого зависят сцены, словарь и контекст первых батчей.</p>
+      </div>
     </div>
     <div class="choice-grid" data-choice-group>
       <input type="hidden" name="goal" value="" data-choice-input />
@@ -70,11 +75,14 @@
     </div>
   </section>
 
-  <section class="panel form-section">
-    <div class="section-head">
-      <p class="section-kicker">Шаг 2</p>
-      <h2>Какой уровень ближе всего сейчас</h2>
-      <p>Диагностика ниже перестроится под этот выбор. Это стартовая гипотеза, а не приговор.</p>
+  <section class="panel onboarding-step">
+    <div class="onboarding-step__head">
+      <span class="step-badge">02</span>
+      <div class="section-head">
+        <p class="section-kicker">Уровень</p>
+        <h2>Какой уровень ближе всего сейчас</h2>
+        <p>Диагностика ниже перестроится под этот выбор. Это стартовая гипотеза, а не приговор.</p>
+      </div>
     </div>
     <div class="choice-grid choice-grid--compact" data-choice-group data-diagnostic-level-group>
       <input type="hidden" name="language_level" value="zero" data-choice-input data-diagnostic-level-input />
@@ -99,11 +107,14 @@
     </div>
   </section>
 
-  <section class="panel form-section">
-    <div class="section-head">
-      <p class="section-kicker">Шаг 3</p>
-      <h2>Какой у тебя горизонт по времени</h2>
-      <p>Это влияет на темп: сколько теории давать за раз, как быстро убирать опоры и насколько агрессивно двигать дальше.</p>
+  <section class="panel onboarding-step">
+    <div class="onboarding-step__head">
+      <span class="step-badge">03</span>
+      <div class="section-head">
+        <p class="section-kicker">Срок</p>
+        <h2>Какой у тебя горизонт по времени</h2>
+        <p>Это влияет на темп: сколько теории давать за раз, как быстро убирать опоры и насколько агрессивно двигать дальше.</p>
+      </div>
     </div>
     <div class="choice-grid choice-grid--timeline" data-choice-group>
       <input type="hidden" name="study_timeline" value="one_year" data-choice-input />
@@ -123,11 +134,14 @@
     </div>
   </section>
 
-  <section class="panel form-section">
-    <div class="section-head">
-      <p class="section-kicker">Шаг 4</p>
-      <h2>Интересы</h2>
-      <p>Можно писать свободно: темы, медиа, профессии, хобби, исторические периоды.</p>
+  <section class="panel onboarding-step">
+    <div class="onboarding-step__head">
+      <span class="step-badge">04</span>
+      <div class="section-head">
+        <p class="section-kicker">Интересы</p>
+        <h2>Что тебе действительно интересно</h2>
+        <p>Можно писать свободно: темы, медиа, профессии, хобби, исторические периоды.</p>
+      </div>
     </div>
     <label class="field-stack">
       <span>Интересы</span>
@@ -142,11 +156,14 @@
     </label>
   </section>
 
-  <section class="panel form-section">
-    <div class="section-head">
-      <p class="section-kicker">Шаг 5</p>
-      <h2>Диагностика</h2>
-      <p>Пять вопросов под текущий уровень. Здесь проверяется, насколько уверенно держится база без дополнительных опор.</p>
+  <section class="panel onboarding-step">
+    <div class="onboarding-step__head">
+      <span class="step-badge">05</span>
+      <div class="section-head">
+        <p class="section-kicker">Диагностика</p>
+        <h2>Короткий срез по текущему уровню</h2>
+        <p>Пять вопросов без лишнего шума. Здесь проверяется, насколько уверенно держится база без дополнительных опор.</p>
+      </div>
     </div>
 
     <div class="diagnostic-groups">

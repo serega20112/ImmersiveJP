@@ -1,152 +1,113 @@
-/* Profile and mentor pages. */
-
 body.page--mentor {
-  color: #ebe7e1;
   background:
-    radial-gradient(circle at 50% -10%, rgba(112, 92, 219, 0.16), transparent 26%),
-    radial-gradient(circle at 85% 12%, rgba(41, 104, 199, 0.12), transparent 24%),
-    linear-gradient(180deg, #17181c, #121317 58%, #101115);
-}
-
-body.page--mentor::before,
-body.page--mentor::after {
-  display: none;
+    radial-gradient(circle at 12% 8%, rgba(255, 128, 87, 0.14), transparent 22%),
+    radial-gradient(circle at 84% 12%, rgba(123, 197, 208, 0.12), transparent 22%),
+    linear-gradient(180deg, #0d1118, #0a0f18 56%, #070b12);
 }
 
 .page--mentor .site-header__inner {
   border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(18, 19, 23, 0.72);
+  background: rgba(11, 15, 22, 0.78);
   box-shadow: none;
-  backdrop-filter: blur(18px);
+}
+
+.page--mentor .site-nav {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .page--mentor .brand-mark__copy small,
 .page--mentor .nav-link,
-.page--mentor .ghost-button,
-.page--mentor .field-note,
-.page--mentor .pending-note {
-  color: rgba(235, 231, 225, 0.68);
+.page--mentor .theme-switch__copy small,
+.page--mentor .viewer-badge small {
+  color: rgba(240, 232, 224, 0.68);
+}
+
+.page--mentor .nav-link span,
+.page--mentor .brand-mark__copy strong,
+.page--mentor .viewer-badge span,
+.page--mentor .theme-switch__copy strong {
+  color: #f5eee5;
 }
 
 .page--mentor .nav-link:hover,
 .page--mentor .nav-link.is-active,
-.page--mentor .ghost-button:hover {
-  color: #f6f2eb;
-  background: rgba(255, 255, 255, 0.06);
+.page--mentor .theme-switch,
+.page--mentor .viewer-badge,
+.page--mentor .ghost-button {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.page--mentor .site-nav {
-  border-color: rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.page--mentor .brand-mark__seal {
-  box-shadow: none;
-}
-
-.page--mentor .primary-button {
-  box-shadow: none;
-}
-
-.page--mentor .section-kicker {
-  color: #a8a0d9;
+.page--mentor .theme-switch,
+.page--mentor .viewer-badge,
+.page--mentor .ghost-button,
+.page--mentor .status-chip,
+.page--mentor .tag,
+.page--mentor .hero-fact {
+  color: #f5eee5;
 }
 
 .page--mentor .status-chip,
 .page--mentor .tag,
 .page--mentor .hero-fact {
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
-  color: rgba(235, 231, 225, 0.8);
 }
 
-.page--mentor .status-chip--focus {
-  color: #d1c5ff;
-  border-color: rgba(164, 140, 255, 0.22);
-  background: rgba(125, 97, 239, 0.14);
+.page--mentor .section-kicker {
+  color: #9ccfda;
 }
 
-.page--mentor .flash {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(22, 23, 28, 0.88);
-  box-shadow: none;
-}
-
-.mentor-shell {
-  width: min(1040px, 100%);
-  margin: 0 auto;
+.mentor-stage {
   display: grid;
-  gap: 22px;
+  gap: 24px;
+  width: min(1080px, 100%);
+  margin: 0 auto;
 }
 
-.mentor-topbar,
+.mentor-stage__hero,
+.mentor-stage__copy,
 .mentor-chat-shell,
 .mentor-chat-stream,
 .mentor-chat-dock,
 .mentor-composer,
-.mentor-composer__actions,
 .mentor-entry,
-.mentor-entry__meta,
 .mentor-entry__body,
 .mentor-empty {
   display: grid;
-  gap: 14px;
-}
-
-.mentor-topbar {
   gap: 16px;
-  padding: 10px 6px 2px;
 }
 
-.mentor-topbar__copy {
-  display: grid;
-  gap: 10px;
+.mentor-stage__copy h1 {
+  max-width: 12ch;
+  color: #faf4ec;
+  font-size: clamp(2.4rem, 4vw, 4rem);
 }
 
-.mentor-topbar__copy h1 {
+.mentor-stage__copy p:last-child,
+.mentor-entry__body p,
+.mentor-entry__body li,
+.mentor-empty p {
   margin: 0;
-  max-width: 14ch;
-  color: #f6f2eb;
-  font-size: clamp(2rem, 3vw, 2.9rem);
-  line-height: 0.98;
+  color: rgba(240, 232, 224, 0.82);
 }
 
-.mentor-topbar__copy p:last-child {
-  margin: 0;
-  max-width: 72ch;
-  color: rgba(235, 231, 225, 0.7);
-  line-height: 1.65;
-}
-
-.mentor-topbar__meta {
+.mentor-stage__meta,
+.mentor-prompt-row {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
 }
 
-.mentor-chat-shell {
-  gap: 20px;
-}
-
 .mentor-chat-stream {
   min-height: 56vh;
-  padding: 26px 28px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 18%),
-    rgba(18, 19, 24, 0.66);
-  backdrop-filter: blur(18px);
 }
 
 .mentor-messages {
   display: grid;
   gap: 28px;
-}
-
-.mentor-entry {
-  gap: 10px;
 }
 
 .mentor-entry--assistant {
@@ -158,154 +119,96 @@ body.page--mentor::after {
 }
 
 .mentor-entry__meta {
-  grid-auto-flow: column;
-  justify-content: start;
+  display: flex;
   gap: 10px;
   align-items: center;
 }
 
 .mentor-entry--user .mentor-entry__meta {
-  justify-content: end;
+  justify-content: flex-end;
 }
 
 .mentor-entry__meta strong {
-  color: #f5f0e8;
-  font-size: 0.96rem;
-  font-weight: 700;
+  color: #faf4ec;
+  font-size: 0.94rem;
 }
 
 .mentor-entry__meta span {
-  color: rgba(235, 231, 225, 0.46);
+  color: rgba(240, 232, 224, 0.48);
   font-size: 0.8rem;
 }
 
 .mentor-entry__body {
   width: min(100%, 820px);
-  padding: 0;
-  color: rgba(240, 235, 228, 0.86);
-}
-
-.mentor-entry__body p,
-.mentor-entry__body li,
-.mentor-empty p {
-  margin: 0;
-  color: rgba(240, 235, 228, 0.86);
-  line-height: 1.72;
 }
 
 .mentor-entry--assistant .mentor-entry__body {
-  padding: 0 0 24px;
+  padding-bottom: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .mentor-entry--user .mentor-entry__body {
   width: min(100%, 640px);
-  padding: 14px 18px;
+  padding: 16px 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #f6f2eb;
-}
-
-.mentor-entry--user .mentor-entry__body p {
-  color: #f6f2eb;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .mentor-steps {
   margin: 0;
-  padding-left: 22px;
+  padding-left: 20px;
   display: grid;
   gap: 8px;
-  color: rgba(240, 235, 228, 0.82);
 }
 
-.mentor-empty {
-  padding: 28px 0 8px;
-}
-
-.mentor-empty h2 {
-  margin: 0;
-  color: #f6f2eb;
-  font-family: "Manrope", "Noto Sans JP", sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: -0.03em;
+.mentor-prompt-chip {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(240, 232, 224, 0.86);
 }
 
 .mentor-chat-dock {
   position: sticky;
-  bottom: 14px;
-  z-index: 3;
-  padding-top: 6px;
-  background: linear-gradient(180deg, rgba(16, 17, 21, 0), rgba(16, 17, 21, 0.86) 24%, rgba(16, 17, 21, 0.98));
-}
-
-.mentor-prompt-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 0 2px;
-}
-
-.mentor-prompt-chip {
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(235, 231, 225, 0.78);
-}
-
-.mentor-prompt-chip:hover {
-  background: rgba(255, 255, 255, 0.07);
+  bottom: 12px;
 }
 
 .mentor-composer {
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 26px;
-  background:
-    linear-gradient(180deg, rgba(53, 55, 62, 0.9), rgba(36, 37, 42, 0.92));
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(18px);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .mentor-composer__field {
   display: grid;
 }
 
-.page--mentor .mentor-composer textarea {
-  min-height: 92px;
-  padding: 10px 12px;
+.mentor-composer textarea {
+  min-height: 96px;
+  padding: 0;
   border: 0;
-  border-radius: 16px;
+  border-radius: 0;
   background: transparent;
-  color: #f6f2eb;
+  color: #faf4ec;
   box-shadow: none;
 }
 
-.page--mentor .mentor-composer textarea::placeholder {
-  color: rgba(235, 231, 225, 0.42);
-}
-
-.page--mentor .mentor-composer textarea:focus {
-  box-shadow: none;
+.mentor-composer textarea::placeholder {
+  color: rgba(240, 232, 224, 0.42);
 }
 
 .mentor-composer__actions {
+  display: grid;
   grid-auto-flow: column;
   justify-content: space-between;
+  gap: 12px;
   align-items: center;
 }
 
-.mentor-composer__actions .primary-button {
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 14px;
+.page--mentor .field-note,
+.page--mentor .pending-note {
+  color: rgba(240, 232, 224, 0.64);
 }
 
-.page--profile .track-panel,
-.page--profile .advice-card,
-.page--profile .skill-summary-card,
-.page--profile .trust-card {
-  min-height: 100%;
+.page--mentor .pending-note {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
 }

@@ -1,48 +1,31 @@
-/* Plan, auth and finishing states. */
-
-.plan-topline {
+.plan-overview,
+.plan-roadmap,
+.plan-dictionary-grid,
+.plan-stage__modules {
   display: grid;
   gap: 24px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
-.plan-roadmap {
-  display: grid;
-  gap: 24px;
+.plan-overview {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .plan-mode-card,
 .plan-focus-card,
-.plan-stage {
+.roadmap-stage {
   display: grid;
-  gap: 16px;
-}
-
-.page--plan .plan-mode-card h2,
-.page--plan .plan-focus-card h2,
-.page--plan .plan-stage h2 {
-  font-family: "Manrope", "Noto Sans JP", sans-serif;
-  letter-spacing: -0.01em;
+  gap: 18px;
 }
 
 .plan-horizon-note {
   margin: -4px 0 0;
   color: var(--ink-soft);
-  font-size: 0.96rem;
-  line-height: 1.6;
 }
 
 .plan-focus-card__time {
   margin: -6px 0 0;
-  color: var(--vermilion);
-  font-size: 0.92rem;
+  color: var(--accent-strong);
   font-weight: 700;
-}
-
-.plan-dictionary-grid,
-.plan-stage__modules {
-  display: grid;
-  gap: 14px;
 }
 
 .plan-dictionary-grid {
@@ -55,31 +38,37 @@
   padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--surface-muted) 88%, transparent);
-  color: inherit;
-  text-decoration: none;
+  background: var(--surface-muted);
 }
 
 .plan-dictionary:hover {
   transform: translateY(-1px);
 }
 
-.plan-dictionary span {
-  color: var(--ink-soft);
-  line-height: 1.55;
-}
-
-.plan-stage__head {
+.roadmap-stage__head,
+.roadmap-stage__title {
   display: flex;
-  justify-content: space-between;
   gap: 16px;
   align-items: start;
+  justify-content: space-between;
 }
 
-.plan-stage__summary {
-  margin: 0;
-  color: var(--ink-soft);
-  line-height: 1.72;
+.roadmap-stage__title {
+  justify-content: flex-start;
+}
+
+.roadmap-stage__index {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-muted);
+  color: var(--accent-strong);
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  font-weight: 700;
 }
 
 .plan-stage__modules {
@@ -92,81 +81,29 @@
   padding: 16px 18px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--surface-muted) 88%, transparent);
-}
-
-.plan-stage__status {
-  justify-self: start;
+  background: var(--surface-muted);
 }
 
 .plan-stage__status--done {
-  background: rgba(43, 114, 83, 0.12);
-  border-color: rgba(43, 114, 83, 0.24);
+  border-color: rgba(47, 127, 98, 0.24);
+  background: rgba(47, 127, 98, 0.1);
   color: var(--success);
 }
 
 .plan-stage__status--current {
-  background: rgba(191, 69, 43, 0.1);
-  border-color: color-mix(in srgb, var(--vermilion) 40%, var(--line-strong));
-  color: var(--vermilion-deep);
+  border-color: rgba(216, 95, 58, 0.28);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .plan-stage__status--next {
-  color: var(--indigo);
+  color: var(--accent-secondary);
 }
 
-.plan-stage--current {
-  border-color: color-mix(in srgb, var(--vermilion) 44%, var(--line-strong));
+.roadmap-stage--current {
+  border-color: rgba(216, 95, 58, 0.3);
 }
 
-.plan-stage--done {
-  border-color: color-mix(in srgb, var(--success) 30%, var(--line-strong));
-}
-
-.task-format {
-  color: var(--indigo);
-}
-
-.task-review {
-  display: grid;
-  gap: 6px;
-}
-
-.task-review--ok {
-  border-color: rgba(43, 114, 83, 0.24);
-  background: rgba(43, 114, 83, 0.08);
-}
-
-.task-review--bad {
-  border-color: rgba(157, 59, 44, 0.24);
-  background: rgba(157, 59, 44, 0.08);
-}
-
-.certificate-card {
-  border-color: color-mix(in srgb, var(--gold) 45%, var(--line-strong));
-}
-
-.auth-layout {
-  grid-template-columns: 420px minmax(0, 1fr);
-}
-
-.auth-card {
-  align-content: start;
-}
-
-.empty-state {
-  gap: 12px;
-}
-
-.reveal {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: reveal 320ms ease forwards;
-}
-
-@keyframes reveal {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.roadmap-stage--done {
+  border-color: rgba(47, 127, 98, 0.24);
 }

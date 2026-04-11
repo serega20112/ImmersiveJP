@@ -2,10 +2,10 @@
 {% block title %}Профиль - ImmersJP{% endblock %}
 {% block body_class %}page--profile{% endblock %}
 {% block content %}
-<section class="page-hero page-hero--dashboard reveal">
-  <div class="page-hero__copy panel panel--hero hero-stack">
+<section class="profile-hero reveal">
+  <div class="panel panel--hero profile-hero__main">
     <p class="section-kicker">Профиль</p>
-    <h1>Здесь видно, насколько система тебе доверяет на практике.</h1>
+    <h1>Здесь видно, насколько система доверяет твоему текущему ритму.</h1>
     <p class="page-lead">{{ report.next_step }}</p>
     <div class="hero-facts">
       <span class="hero-fact">{{ report.total_completed }} карточек закрыто</span>
@@ -18,7 +18,7 @@
     </div>
   </div>
 
-  <aside class="panel trust-card">
+  <aside class="panel panel--signal trust-card">
     <p class="section-kicker">Trust Score</p>
     <div class="trust-score__ring trust-score__ring--{{ report.trust_score.band_key }}">
       <strong>{{ report.trust_score.score }}</strong>
@@ -42,7 +42,7 @@
   </aside>
 </section>
 
-<section class="profile-grid reveal">
+<section class="profile-insights reveal">
   <article class="panel advice-card">
     <p class="section-kicker">Рекомендация</p>
     <h2>{{ advice.headline }}</h2>
@@ -87,17 +87,30 @@
   {% endif %}
 </section>
 
-<section class="dashboard-grid reveal">
+<section class="track-gallery reveal">
   {% for track in report.tracks %}
-  <article class="panel track-panel track-panel--{{ track.track }}">
-    <div class="track-panel__head">
+  <article class="panel track-card track-card--{{ track.track }}">
+    <div class="track-card__head">
       <div>
         <p class="section-kicker">{{ track.title }}</p>
-        <h2>Партия {{ track.current_batch }}</h2>
+        <h2>Партия {{ track.current_batch if track.current_batch else 'новый цикл' }}</h2>
       </div>
-      <span class="track-panel__percent">{{ track.completed_batches }} батчей</span>
+      <span class="track-card__batch">{{ track.completed_batches }} батчей</span>
     </div>
-    <div class="track-panel__stats">
+
+    <p class="track-card__note">
+      {% if track.work_ready_batch %}
+      Работа по партии {{ track.work_ready_batch }} доступна.
+      {% else %}
+      После первой закрытой партии здесь появится работа для проверки материала.
+      {% endif %}
+    </p>
+
+    <div class="track-card__meter" aria-hidden="true">
+      <span style="width: {{ track.completion_rate|round(0)|int }}%"></span>
+    </div>
+
+    <div class="track-card__stats">
       <div class="stat-chip">
         <strong>{{ track.completed_cards }}</strong>
         <span>пройдено</span>
@@ -111,23 +124,13 @@
         <span>закрыто</span>
       </div>
     </div>
-    <p class="track-panel__note">
+
+    <div class="track-card__footer">
       {% if track.work_ready_batch %}
-      Работа по партии {{ track.work_ready_batch }} доступна.
-      {% else %}
-      После первой закрытой партии здесь появится работа для проверки материала.
-      {% endif %}
-    </p>
-    {% if track.work_ready_batch %}
-    <div class="panel-actions">
       <a href="{{ '/learn/' ~ track.track ~ '/work/' ~ track.work_ready_batch }}" class="ghost-button">Открыть работу</a>
+      {% endif %}
       <a href="{{ '/learn/' ~ track.track }}" class="primary-button">Открыть трек</a>
     </div>
-    {% else %}
-    <div class="panel-actions">
-      <a href="{{ '/learn/' ~ track.track }}" class="primary-button">Открыть трек</a>
-    </div>
-    {% endif %}
   </article>
   {% endfor %}
 </section>

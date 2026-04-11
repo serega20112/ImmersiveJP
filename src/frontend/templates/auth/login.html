@@ -2,28 +2,45 @@
 {% block title %}Вход - ImmersJP{% endblock %}
 {% block body_class %}page--auth{% endblock %}
 {% block content %}
-<section class="auth-layout reveal">
-  <aside class="panel auth-aside">
+<section class="auth-stage reveal">
+  <aside class="panel panel--hero auth-story">
     <p class="section-kicker">Вход</p>
-    <h1>Войди в аккаунт.</h1>
-    <p>После входа откроются текущие партии, профиль и уже пройденные материалы.</p>
+    <h1>Вернись в свой учебный контур.</h1>
+    <p class="page-lead">
+      После входа откроются текущие батчи, профиль с trust score, план по сроку и уже собранные
+      материалы.
+    </p>
+    <div class="hero-facts">
+      <span class="hero-fact">прогресс по трекам</span>
+      <span class="hero-fact">история карточек</span>
+      <span class="hero-fact">PDF и практика</span>
+    </div>
     <ul class="plain-list">
-      <li>доступ к текущим трекам</li>
-      <li>сохраненный прогресс по трекам</li>
-      <li>история завершенных карточек и PDF</li>
+      <li>текущие партии восстанавливаются без ручного поиска</li>
+      <li>профиль сразу показывает, насколько система тебе доверяет</li>
+      <li>наставник видит контекст уже пройденных батчей</li>
     </ul>
   </aside>
 
   <form action="/auth/login" method="post" class="panel auth-card">
+    {% include "partials/csrf_field.html" %}
+    <div class="auth-card__head">
+      <p class="section-kicker">Аккаунт</p>
+      <h2>Вход по email</h2>
+      <p>Открой текущий маршрут и продолжи с того места, где остановился.</p>
+    </div>
+
     <label class="field-stack">
       <span>Email</span>
       <input type="email" name="email" required />
     </label>
+
     <label class="field-stack">
       <span>Пароль</span>
       <input type="password" name="password" required />
     </label>
-    <button type="submit" class="primary-button">Войти</button>
+
+    <button type="submit" class="primary-button">Войти в систему</button>
     <p class="form-note">Нет аккаунта? <a href="/auth/register">Зарегистрироваться</a>.</p>
   </form>
 </section>

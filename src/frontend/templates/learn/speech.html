@@ -17,7 +17,7 @@
     </div>
   </div>
 
-  <aside class="panel page-hero__side">
+  <aside class="panel panel--signal page-hero__side">
     <div class="utility-stack">
       <a href="{{ url_for('learning.language') }}" class="ghost-button">Назад к языку</a>
       <a href="{{ url_for('profile.page') }}" class="ghost-button">Профиль</a>
@@ -39,6 +39,7 @@
     </div>
 
     <form action="{{ url_for('learning.speech_generate') }}" method="post" class="speech-form" data-pending-form data-pending-label="Собираем практику...">
+      {% include "partials/csrf_field.html" %}
       <label class="field-stack">
         <span>Слова или термины</span>
         <textarea
@@ -60,7 +61,7 @@
 
   <aside class="speech-rail">
     {% if page.suggested_words %}
-    <section class="panel">
+    <section class="panel panel--accent">
       <p class="section-kicker">Подсказки</p>
       <h2>Слова из последней языковой партии.</h2>
       <div class="tag-row suggested-words">
@@ -94,7 +95,7 @@
 </section>
 
 {% if page.practice %}
-<section class="panel practice-overview reveal">
+<section class="panel panel--accent practice-overview reveal">
   <div class="practice-overview__copy">
     <p class="section-kicker">Режим</p>
     <h2>{{ page.practice.difficulty_label }}</h2>

@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <aside class="panel page-hero__side">
+  <aside class="panel panel--signal page-hero__side">
     <div class="utility-stack">
       {% if page.work_href %}
       <a href="{{ page.work_href }}" class="primary-button">Работа по партии</a>
@@ -28,12 +28,27 @@
       <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}">Следующая партия</a>
       {% if not page.card.is_completed %}
       <form action="{{ url_for('learning.complete_card') }}" method="post" class="side-panel__form">
+        {% include "partials/csrf_field.html" %}
         <input type="hidden" name="card_id" value="{{ page.card.id }}" />
         <input type="hidden" name="track" value="{{ page.track }}" />
         <input type="hidden" name="return_to" value="{{ request.url.path }}" />
         <button type="submit" class="ghost-button">Отметить как пройденную</button>
       </form>
       {% endif %}
+    </div>
+    <div class="mini-metrics">
+      <div class="mini-metric">
+        <strong>{{ page.card.position }}</strong>
+        <span>позиция</span>
+      </div>
+      <div class="mini-metric">
+        <strong>{{ page.completed_total }}</strong>
+        <span>закрыто</span>
+      </div>
+      <div class="mini-metric">
+        <strong>{{ page.generated_total }}</strong>
+        <span>всего</span>
+      </div>
     </div>
     <p class="utility-card__note">
       {% if page.all_current_batch_completed %}

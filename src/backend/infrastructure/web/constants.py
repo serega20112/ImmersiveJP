@@ -1,0 +1,6 @@
+ACCESS_TOKEN_COOKIE_NAME = "access_token"
+REFRESH_TOKEN_COOKIE_NAME = "refresh_token"
+SESSION_COOKIE_NAME = "immersjp_session"
+CSRF_SESSION_KEY = "csrf_token"
+CSRF_FIELD_NAME = "csrf_token"
+CSRF_HEADER_NAME = "X-CSRF-Token"

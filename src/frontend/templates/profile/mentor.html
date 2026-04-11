@@ -2,15 +2,15 @@
 {% block title %}Наставник - ImmersJP{% endblock %}
 {% block body_class %}page--mentor{% endblock %}
 {% block content %}
-<section class="mentor-shell reveal">
-  <header class="mentor-topbar">
-    <div class="mentor-topbar__copy">
+<section class="mentor-stage reveal">
+  <div class="panel panel--night mentor-stage__hero">
+    <div class="mentor-stage__copy">
       <p class="section-kicker">{{ page.title }}</p>
       <h1>{{ page.subtitle }}</h1>
       <p>{{ page.next_step }}</p>
     </div>
 
-    <div class="mentor-topbar__meta">
+    <div class="mentor-stage__meta">
       <span class="status-chip">{{ page.current_stage_title }}</span>
       <span class="status-chip">{{ page.pace_title }}</span>
       <span class="status-chip">{{ page.content_mode_title }}</span>
@@ -18,10 +18,10 @@
       <span class="status-chip status-chip--focus">{{ page.active_focus.title }}</span>
       {% endif %}
     </div>
-  </header>
+  </div>
 
   <section class="mentor-chat-shell">
-    <div class="mentor-chat-stream">
+    <div class="panel panel--night mentor-chat-stream">
       {% if page.messages %}
       <div class="mentor-messages">
         {% for message in page.messages %}
@@ -68,10 +68,11 @@
       <form
         action="{{ url_for('profile.mentor_send') }}"
         method="post"
-        class="mentor-composer"
+        class="panel panel--night mentor-composer"
         data-pending-form
         data-pending-label="Наставник думает..."
       >
+        {% include "partials/csrf_field.html" %}
         <label class="mentor-composer__field">
           <textarea
             id="mentor-message"

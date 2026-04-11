@@ -2,31 +2,45 @@
 {% block title %}Подтверждение почты - ImmersJP{% endblock %}
 {% block body_class %}page--auth{% endblock %}
 {% block content %}
-<section class="auth-layout reveal">
-  <aside class="panel auth-aside">
+<section class="auth-stage reveal">
+  <aside class="panel panel--hero auth-story">
     <p class="section-kicker">Подтверждение</p>
-    <h1>Подтверди почту.</h1>
-    <p>
-      Код отправляется на адрес, указанный при регистрации. Если почтовый сервис не настроен,
-      код можно посмотреть в логах приложения.
+    <h1>Заверши активацию аккаунта.</h1>
+    <p class="page-lead">
+      Код отправляется на адрес, указанный при регистрации. После подтверждения откроются вход и
+      сборка стартового учебного контура.
     </p>
+    <div class="hero-facts">
+      <span class="hero-fact">одноразовый код</span>
+      <span class="hero-fact">ограниченное время</span>
+      <span class="hero-fact">защита аккаунта</span>
+    </div>
     <ul class="plain-list">
-      <li>после подтверждения откроется вход и онбординг</li>
-      <li>код одноразовый и действует ограниченное время</li>
-      <li>подтверждение помогает защитить аккаунт</li>
+      <li>почта фиксируется как рабочий канал для входа</li>
+      <li>без подтверждения система не откроет онбординг</li>
+      <li>если почта не настроена, код можно увидеть в логах приложения</li>
     </ul>
   </aside>
 
   <form action="/auth/verify-email" method="post" class="panel auth-card">
+    {% include "partials/csrf_field.html" %}
+    <div class="auth-card__head">
+      <p class="section-kicker">Почта</p>
+      <h2>Подтверди адрес</h2>
+      <p>После этого можно будет войти в аккаунт и пройти онбординг.</p>
+    </div>
+
     <label class="field-stack">
       <span>Email</span>
       <input type="email" name="email" value="{{ email }}" required />
     </label>
+
     <label class="field-stack">
       <span>Код</span>
       <input type="text" name="code" inputmode="numeric" maxlength="6" required />
     </label>
-    <button type="submit" class="primary-button">Подтвердить</button>
+
+    <button type="submit" class="primary-button">Подтвердить почту</button>
     <p class="form-note">После подтверждения можно переходить ко входу и онбордингу.</p>
   </form>
 </section>

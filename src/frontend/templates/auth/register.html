@@ -2,34 +2,49 @@
 {% block title %}Регистрация - ImmersJP{% endblock %}
 {% block body_class %}page--auth{% endblock %}
 {% block content %}
-<section class="auth-layout reveal">
-  <aside class="panel auth-aside">
+<section class="auth-stage reveal">
+  <aside class="panel panel--hero auth-story">
     <p class="section-kicker">Регистрация</p>
-    <h1>Создай аккаунт для сохранения прогресса.</h1>
-    <p>
-      После регистрации на почту придет код подтверждения. После этого можно будет войти и пройти
-      онбординг.
+    <h1>Создай профиль и собери первый маршрут.</h1>
+    <p class="page-lead">
+      После регистрации на почту придет код подтверждения. Дальше откроется вход и онбординг, где
+      сервис настроит стартовую точку и темп обучения.
     </p>
+    <div class="hero-facts">
+      <span class="hero-fact">единый профиль</span>
+      <span class="hero-fact">прогресс по трекам</span>
+      <span class="hero-fact">доступ к новым батчам</span>
+    </div>
     <ul class="plain-list">
-      <li>один профиль для всех треков</li>
-      <li>сохранение текущих партий и статистики</li>
-      <li>доступ к PDF и новым партиям</li>
+      <li>один аккаунт для языка, культуры и истории</li>
+      <li>сохранение текущих партий, работы и PDF</li>
+      <li>настройка контента под цель, срок и интересы</li>
     </ul>
   </aside>
 
   <form action="/auth/register" method="post" class="panel auth-card">
+    {% include "partials/csrf_field.html" %}
+    <div class="auth-card__head">
+      <p class="section-kicker">Новый аккаунт</p>
+      <h2>Старт за пару минут</h2>
+      <p>Создай профиль, подтверди почту и переходи к онбордингу.</p>
+    </div>
+
     <label class="field-stack">
       <span>Имя</span>
       <input type="text" name="display_name" minlength="2" maxlength="40" required />
     </label>
+
     <label class="field-stack">
       <span>Email</span>
       <input type="email" name="email" required />
     </label>
+
     <label class="field-stack">
       <span>Пароль</span>
       <input type="password" name="password" minlength="8" required />
     </label>
+
     <button type="submit" class="primary-button">Создать аккаунт</button>
     <p class="form-note">Уже есть аккаунт? <a href="/auth/login">Войти</a>.</p>
   </form>

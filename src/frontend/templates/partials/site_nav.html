@@ -4,44 +4,58 @@
     href="{{ '/dashboard' if current_user.onboarding_completed else '/onboarding' }}"
     class="nav-link {% if request.url.path.startswith('/dashboard') or request.url.path.startswith('/onboarding') %}is-active{% endif %}"
   >
-    Обзор
+    <span>Обзор</span>
+    <small>система</small>
   </a>
   {% if current_user.onboarding_completed %}
   <a
     href="/learn/language"
     class="nav-link {% if request.url.path.startswith('/learn/language') or request.url.path.startswith('/learn/culture') or request.url.path.startswith('/learn/history') %}is-active{% endif %}"
   >
-    Треки
+    <span>Треки</span>
+    <small>материалы</small>
   </a>
   <a
     href="/learn/speech"
     class="nav-link {% if request.url.path.startswith('/learn/speech') %}is-active{% endif %}"
   >
-    Практика
+    <span>Практика</span>
+    <small>речь</small>
   </a>
   <a
     href="/plan"
     class="nav-link {% if request.url.path.startswith('/plan') %}is-active{% endif %}"
   >
-    План
+    <span>План</span>
+    <small>маршрут</small>
   </a>
   <a
     href="/mentor"
     class="nav-link {% if request.url.path.startswith('/mentor') %}is-active{% endif %}"
   >
-    Наставник
+    <span>Наставник</span>
+    <small>фокус</small>
   </a>
   {% endif %}
   <a
     href="/profile"
     class="nav-link {% if request.url.path.startswith('/profile') %}is-active{% endif %}"
   >
-    Профиль
+    <span>Профиль</span>
+    <small>прогресс</small>
   </a>
   {% else %}
-  <a href="/" class="nav-link {% if request.url.path == '/' %}is-active{% endif %}">Главная</a>
-  <a href="/auth/login" class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}">Вход</a>
-  <a href="/auth/register" class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}">Начать</a>
+  <a href="/" class="nav-link {% if request.url.path == '/' %}is-active{% endif %}">
+    <span>Главная</span>
+    <small>старт</small>
+  </a>
+  <a href="/auth/login" class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}">
+    <span>Вход</span>
+    <small>аккаунт</small>
+  </a>
+  <a href="/auth/register" class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}">
+    <span>Начать</span>
+    <small>регистрация</small>
+  </a>
   {% endif %}
 </nav>
-

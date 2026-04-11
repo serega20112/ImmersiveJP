@@ -14,8 +14,12 @@ from src.backend.delivery.api.v1.helpers import set_auth_cookies
 from src.backend.dto.auth_dto import LoginDTO
 from src.backend.dto.auth_dto import RegistrationDTO
 from src.backend.dto.auth_dto import VerificationDTO
-from src.backend.infrastructure.web import flash
-from src.backend.infrastructure.web import render_template
+from src.backend.infrastructure.web import (
+    ACCESS_TOKEN_COOKIE_NAME,
+    REFRESH_TOKEN_COOKIE_NAME,
+    flash,
+    render_template,
+)
 from src.backend.use_case.auth.login_user import EmailNotVerifiedError
 from src.backend.use_case.auth.login_user import InvalidCredentialsError
 from src.backend.use_case.auth.register_user import EmailAlreadyExistsError
@@ -89,8 +93,8 @@ async def login_user(
 async def logout_user(request: Request):
     auth_service = get_auth_service(request)
     await auth_service.logout(
-        request.cookies.get("access_token"),
-        request.cookies.get("refresh_token"),
+        request.cookies.get(ACCESS_TOKEN_COOKIE_NAME),
+        request.cookies.get(REFRESH_TOKEN_COOKIE_NAME),
     )
     response = redirect_to_route(request, "index.landing")
     clear_auth_cookies(response)

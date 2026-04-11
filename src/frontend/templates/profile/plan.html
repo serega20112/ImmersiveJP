@@ -2,8 +2,8 @@
 {% block title %}План - ImmersJP{% endblock %}
 {% block body_class %}page--plan{% endblock %}
 {% block content %}
-<section class="page-hero reveal">
-  <div class="page-hero__copy panel panel--hero hero-stack">
+<section class="plan-hero reveal">
+  <div class="panel panel--hero plan-hero__main">
     <p class="section-kicker">{{ page.title }}</p>
     <h1>{{ page.subtitle }}</h1>
     <p class="page-lead">{{ page.next_action }}</p>
@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <aside class="panel plan-mode-card">
+  <aside class="panel panel--signal plan-mode-card">
     <p class="section-kicker">Режим контента</p>
     <h2>{{ page.content_mode.title }}</h2>
     <p>{{ page.content_mode.summary }}</p>
@@ -45,7 +45,7 @@
   </aside>
 </section>
 
-<section class="plan-topline reveal">
+<section class="plan-overview reveal">
   <article class="panel plan-focus-card">
     <p class="section-kicker">Текущий этап</p>
     <h2>{{ page.current_stage_title }}</h2>
@@ -91,11 +91,14 @@
 
 <section class="plan-roadmap reveal">
   {% for stage in page.stages %}
-  <article class="panel plan-stage plan-stage--{{ stage.status }}">
-    <div class="plan-stage__head">
-      <div>
-        <p class="section-kicker">Этап {{ stage.index }} / {{ stage.timeframe }}</p>
-        <h2>{{ stage.title }}</h2>
+  <article class="panel roadmap-stage roadmap-stage--{{ stage.status }}">
+    <div class="roadmap-stage__head">
+      <div class="roadmap-stage__title">
+        <span class="roadmap-stage__index">{{ stage.index }}</span>
+        <div>
+          <p class="section-kicker">{{ stage.timeframe }}</p>
+          <h2>{{ stage.title }}</h2>
+        </div>
       </div>
       <span class="status-chip plan-stage__status plan-stage__status--{{ stage.status }}">{{ stage.status_label }}</span>
     </div>

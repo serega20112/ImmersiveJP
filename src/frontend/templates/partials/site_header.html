@@ -3,24 +3,37 @@
     <a href="/" class="brand-mark">
       <span class="brand-mark__seal">浸</span>
       <span class="brand-mark__copy">
+        <small>IMMERSIVE JAPAN SYSTEM</small>
         <strong>ImmersJP</strong>
-        <small>язык, культура, история</small>
       </span>
     </a>
 
-    <div class="site-header__nav">
+    <div class="site-header__cluster">
       {% include "partials/site_nav.html" %}
 
       <div class="site-tools">
-        <button type="button" class="ghost-button" data-theme-toggle>Тема</button>
+        {% if current_user %}
+        <div class="viewer-badge">
+          <span>{{ current_user.display_name }}</span>
+          <small>{% if current_user.onboarding_completed %}контур активен{% else %}нужен онбординг{% endif %}</small>
+        </div>
+        {% endif %}
+
+        <button type="button" class="theme-switch" data-theme-toggle>
+          <span class="theme-switch__halo"></span>
+          <span class="theme-switch__copy">
+            <strong data-theme-toggle-name>Бумага</strong>
+            <small data-theme-toggle-hint>переключить на ночь</small>
+          </span>
+        </button>
 
         {% if current_user %}
-        <form action="/auth/logout" method="post">
-          <button type="submit" class="ghost-button">Выйти</button>
+        <form action="/auth/logout" method="post" class="logout-form">
+          {% include "partials/csrf_field.html" %}
+          <button type="submit" class="ghost-button ghost-button--quiet">Выйти</button>
         </form>
         {% endif %}
       </div>
     </div>
   </div>
 </header>
-

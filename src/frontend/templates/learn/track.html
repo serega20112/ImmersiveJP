@@ -2,13 +2,13 @@
 {% block title %}{{ page.title }} - ImmersJP{% endblock %}
 {% block body_class %}page--learn{% endblock %}
 {% block content %}
-<section class="page-hero reveal">
-  <div class="page-hero__copy panel panel--hero hero-stack">
+<section class="track-hero reveal">
+  <div class="panel panel--hero track-hero__main">
     <p class="section-kicker">{{ page.title }}</p>
     <h1>{{ page.subtitle }}</h1>
     <p class="page-lead">
-      Партия {{ page.current_batch if page.current_batch else 'еще не создана' }}. 
-      Закрыто {{ page.completed_total }} из {{ page.generated_total }} карточек. 
+      Партия {{ page.current_batch if page.current_batch else 'еще не создана' }}.
+      Закрыто {{ page.completed_total }} из {{ page.generated_total }} карточек.
       Полностью завершено батчей: {{ page.completed_batches }}.
     </p>
     <div class="hero-facts">
@@ -22,7 +22,7 @@
     </div>
   </div>
 
-  <aside class="panel page-hero__side">
+  <aside class="panel panel--signal track-hero__rail">
     <div class="utility-stack">
       {% if page.track == 'language' %}
       <a href="{{ url_for('learning.speech_page') }}" class="ghost-button">Речевая практика</a>
@@ -32,6 +32,20 @@
       {% endif %}
       <a href="{{ url_for('learning.download_pdf') }}?track={{ page.track }}" class="ghost-button">Скачать PDF</a>
       <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}">Следующая партия</a>
+    </div>
+    <div class="mini-metrics">
+      <div class="mini-metric">
+        <strong>{{ page.completed_total }}</strong>
+        <span>пройдено</span>
+      </div>
+      <div class="mini-metric">
+        <strong>{{ page.generated_total }}</strong>
+        <span>всего</span>
+      </div>
+      <div class="mini-metric">
+        <strong>{{ page.completed_batches }}</strong>
+        <span>батчей</span>
+      </div>
     </div>
     <p class="utility-card__note">
       {% if page.can_generate_next %}
@@ -44,7 +58,7 @@
 </section>
 
 {% if page.track == 'language' %}
-<section class="panel speech-inline-card reveal">
+<section class="panel panel--accent speech-inline-card reveal">
   <div>
     <p class="section-kicker">Речевая практика</p>
     <h2>Повтори слова из этого батча в живом ответе.</h2>

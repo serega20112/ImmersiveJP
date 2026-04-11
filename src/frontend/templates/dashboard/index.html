@@ -2,24 +2,26 @@
 {% block title %}Dashboard - ImmersJP{% endblock %}
 {% block body_class %}page--dashboard{% endblock %}
 {% block content %}
-<section class="dashboard-stage reveal">
-  <div class="panel panel--hero dashboard-stage__intro">
-    <p class="section-kicker">Обзор</p>
+<section class="dashboard-hero reveal">
+  <div class="panel panel--hero dashboard-hero__main">
+    <p class="section-kicker">Оперативная сводка</p>
     <h1>{{ dashboard.user_display_name }}, учебный контур сейчас выглядит так.</h1>
     <p class="page-lead">{{ dashboard.recommendation }}</p>
-    <div class="dashboard-stage__facts">
-      <span class="hero-fact">3 трека в одном ритме</span>
-      <span class="hero-fact">контрольные после партий</span>
-      <span class="hero-fact">уровень доверия может падать</span>
+
+    <div class="hero-facts">
+      <span class="hero-fact">3 трека в одном цикле</span>
+      <span class="hero-fact">контроль после каждой партии</span>
+      <span class="hero-fact">{{ dashboard.trust_score.band_title }}</span>
     </div>
-    <div class="dashboard-stage__actions">
+
+    <div class="hero__actions">
       <a href="{{ dashboard.speech_practice_href }}" class="primary-button">Открыть практику</a>
-      <a href="/plan" class="ghost-button">Открыть план</a>
-      <a href="/mentor" class="ghost-button">Открыть наставника</a>
+      <a href="/plan" class="ghost-button">Маршрут на срок</a>
+      <a href="/mentor" class="ghost-button">Поговорить с наставником</a>
     </div>
   </div>
 
-  <aside class="panel dashboard-stage__trust">
+  <aside class="panel panel--signal dashboard-hero__trust">
     <p class="section-kicker">Trust Score</p>
     <div class="trust-score__hero">
       <div class="trust-score__ring trust-score__ring--{{ dashboard.trust_score.band_key }}">
@@ -31,6 +33,7 @@
         <p>{{ dashboard.trust_score.summary }}</p>
       </div>
     </div>
+
     <div class="trust-components">
       {% for component in dashboard.trust_score.components %}
       <article class="trust-component">
@@ -39,25 +42,26 @@
       </article>
       {% endfor %}
     </div>
+
     <p class="trust-note">{{ dashboard.trust_score.note }}</p>
   </aside>
 </section>
 
-<section class="dashboard-operating-grid reveal">
-  <article class="panel dashboard-operating-card">
-    <p class="section-kicker">Как система ведет тебя</p>
+<section class="dashboard-signal-grid reveal">
+  <article class="panel signal-card">
+    <p class="section-kicker">Как идет система</p>
     <h2>Партия -> работа -> следующая партия.</h2>
     <ul class="plain-list">
-      <li>закрывай текущий батч до конца</li>
-      <li>после завершения открывай работу по этой партии</li>
-      <li>если trust score падает, вернись к старому материалу до новой генерации</li>
+      <li>сначала закрывай текущий батч полностью</li>
+      <li>после завершения переходи к работе по партии</li>
+      <li>если trust score падает, не форсируй новую генерацию</li>
     </ul>
   </article>
 
   {% if dashboard.skill_assessment %}
-  <article class="panel dashboard-operating-card">
-    <p class="section-kicker">Диагностика</p>
-    <h2>{{ dashboard.skill_assessment.estimated_level_title }} старт</h2>
+  <article class="panel signal-card">
+    <p class="section-kicker">Стартовый срез</p>
+    <h2>{{ dashboard.skill_assessment.estimated_level_title }} уровень</h2>
     <p>{{ dashboard.skill_assessment.summary }}</p>
     <div class="skill-columns">
       <div>
@@ -80,13 +84,13 @@
   </article>
   {% endif %}
 
-  <article class="panel dashboard-operating-card">
-    <p class="section-kicker">Рекомендация</p>
-    <h2>{{ dashboard.trust_score.band_title }} режим</h2>
+  <article class="panel signal-card signal-card--accent">
+    <p class="section-kicker">Режим на сейчас</p>
+    <h2>{{ dashboard.trust_score.band_title }}</h2>
     <p>{{ dashboard.recommendation }}</p>
-    <div class="dashboard-operating-card__links">
-      <a href="/profile" class="ghost-button">Профиль</a>
-      <a href="/mentor" class="ghost-button">Наставник</a>
+    <div class="panel-actions">
+      <a href="/profile" class="ghost-button">Открыть профиль</a>
+      <a href="/mentor" class="ghost-button">Открыть наставника</a>
     </div>
   </article>
 </section>
@@ -101,6 +105,7 @@
       </div>
       <span class="track-card__batch">{{ section.completed_batches }} батчей</span>
     </div>
+
     <p class="track-card__note">
       {% if section.work_ready_batch %}
       Работа по партии {{ section.work_ready_batch }} уже доступна.
@@ -108,6 +113,11 @@
       Работа откроется после первой полностью завершенной партии.
       {% endif %}
     </p>
+
+    <div class="track-card__meter" aria-hidden="true">
+      <span style="width: {{ section.completion_rate|round(0)|int }}%"></span>
+    </div>
+
     <div class="track-card__stats">
       <div class="stat-chip">
         <strong>{{ section.completed_cards }}</strong>
@@ -122,6 +132,7 @@
         <span>закрыто</span>
       </div>
     </div>
+
     <div class="track-card__footer">
       <a href="{{ section.href }}" class="primary-button">Открыть трек</a>
       {% if section.work_ready_batch %}

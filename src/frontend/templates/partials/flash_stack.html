@@ -1,8 +1,18 @@
 {% if flash_messages %}
 <section class="flash-stack">
   {% for flash in flash_messages %}
-  <div class="flash flash--{{ flash.category }}">{{ flash.message }}</div>
+  <div class="flash flash--{{ flash.category }}">
+    <strong class="flash__label">
+      {% if flash.category == 'success' %}
+      Готово
+      {% elif flash.category == 'error' %}
+      Ошибка
+      {% else %}
+      Сообщение
+      {% endif %}
+    </strong>
+    <span>{{ flash.message }}</span>
+  </div>
   {% endfor %}
 </section>
 {% endif %}
-

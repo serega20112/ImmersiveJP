@@ -6,6 +6,8 @@ from fastapi import Request
 from fastapi.templating import Jinja2Templates
 
 from src.backend.dependencies.settings import Settings
+from src.backend.infrastructure.web.constants import CSRF_FIELD_NAME
+from src.backend.infrastructure.web.csrf import ensure_csrf_token
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 TEMPLATES_ROOT = PROJECT_ROOT / "src" / "frontend" / "templates"
@@ -31,6 +33,8 @@ def render_template(request: Request, template_name: str, **context):
         "flash_messages": pop_flashes(request),
         "asset_version": getattr(request.app.state, "asset_version", "dev"),
         "text_input_limit": Settings.text_input_limit,
+        "csrf_token": ensure_csrf_token(request),
+        "csrf_field_name": CSRF_FIELD_NAME,
         **context,
     }
     return templates.TemplateResponse(template_name, template_context)
