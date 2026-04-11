@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from fastapi import Request
 
-from src.backend.delivery.api.v1.helpers import get_current_user
-from src.backend.delivery.api.v1.helpers import resolve_current_user
+from src.backend.dependencies.current_user import get_current_user, resolve_current_user
 from src.backend.dto.auth_dto import UserViewDTO
 from src.backend.infrastructure.web import RouteRedirectError
 

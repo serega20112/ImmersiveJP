@@ -5,6 +5,10 @@ from pathlib import Path
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 
+from src.backend.dependencies.current_user import (
+    get_current_user,
+    resolve_current_user,
+)
 from src.backend.dependencies.settings import Settings
 from src.backend.infrastructure.web.constants import CSRF_FIELD_NAME
 from src.backend.infrastructure.web.csrf import ensure_csrf_token
@@ -26,10 +30,13 @@ def pop_flashes(request: Request) -> list[dict[str, str]]:
     return messages
 
 
-def render_template(request: Request, template_name: str, **context):
+async def render_template(request: Request, template_name: str, **context):
+    current_user = get_current_user(request)
+    if current_user is None:
+        current_user = await resolve_current_user(request)
     template_context = {
         "request": request,
-        "current_user": getattr(request.state, "current_user", None),
+        "current_user": current_user,
         "flash_messages": pop_flashes(request),
         "asset_version": getattr(request.app.state, "asset_version", "dev"),
         "text_input_limit": Settings.text_input_limit,
@@ -40,7 +47,7 @@ def render_template(request: Request, template_name: str, **context):
     return templates.TemplateResponse(template_name, template_context)
 
 
-def render_error_page(
+async def render_error_page(
     request: Request,
     *,
     status_code: int,
@@ -49,7 +56,7 @@ def render_error_page(
     return_href: str,
     return_label: str = "Вернуться",
 ):
-    response = render_template(
+    response = await render_template(
         request,
         "errors/error.html",
         page={

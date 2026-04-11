@@ -1,30 +1,27 @@
 from __future__ import annotations
 
-import logging
-import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from uuid import uuid4
+import time
 
 from fastapi import FastAPI
-from fastapi import Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.backend.delivery.api.router import api_router
-from src.backend.delivery.api.common.services import _UNRESOLVED_CURRENT_USER
 from src.backend.dependencies.container import container
 from src.backend.dependencies.settings import Settings
 from src.backend.infrastructure.files import get_session_factory
-from src.backend.infrastructure.observability import (
-    get_logger,
-    log_event,
-)
+from src.backend.infrastructure.observability import get_logger
 from src.backend.infrastructure.web import (
-    ACCESS_TOKEN_COOKIE_NAME,
     SESSION_COOKIE_NAME,
     register_exception_handlers,
-    validate_csrf,
+)
+from src.backend.infrastructure.web.middleware import (
+    CsrfMiddleware,
+    RequestContainerMiddleware,
+    RequestLoggingMiddleware,
+    RequestStateMiddleware,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -51,71 +48,14 @@ def create_app() -> FastAPI:
     app.mount(
         "/static", StaticFiles(directory=str(FRONTEND_ROOT / "static")), name="static"
     )
-
-    @app.middleware("http")
-    async def request_scope(request: Request, call_next):
-        started_at = time.perf_counter()
-        request_id = uuid4().hex
-        request.state.request_id = request_id
-        request.state.db_session = None
-        request.state.current_user = None
-        response = None
-        try:
-            request.state.container = app.state.root_container.scope(
-                session_factory=get_session_factory(),
-                request_state=request.state,
-            )
-            request.state.current_user = _UNRESOLVED_CURRENT_USER
-            await validate_csrf(request)
-            if request.method in {"GET", "HEAD"} and not request.url.path.startswith(
-                "/static"
-            ):
-                access_token = request.cookies.get(ACCESS_TOKEN_COOKIE_NAME)
-                request.state.current_user = (
-                    await request.state.container.auth_service.resolve_current_user(
-                        access_token
-                    )
-                )
-            response = await call_next(request)
-        except Exception:
-            if not request.url.path.startswith("/static"):
-                log_event(
-                    logger,
-                    logging.ERROR,
-                    "http.request_failed",
-                    "Request failed",
-                    request_id=request_id,
-                    path=request.url.path,
-                    method=request.method,
-                    user_id=getattr(request.state.current_user, "id", None),
-                    duration_ms=round((time.perf_counter() - started_at) * 1000, 2),
-                )
-            raise
-        finally:
-            request_container = getattr(request.state, "container", None)
-            if request_container is not None:
-                await request_container.aclose()
-        if not request.url.path.startswith("/static") and response is not None:
-            log_event(
-                logger,
-                logging.INFO,
-                "http.request_completed",
-                "Request completed",
-                request_id=request_id,
-                path=request.url.path,
-                method=request.method,
-                user_id=getattr(request.state.current_user, "id", None),
-                status_code=response.status_code,
-                duration_ms=round((time.perf_counter() - started_at) * 1000, 2),
-            )
-        if response is None:
-            raise RuntimeError("Request completed without producing a response")
-        response.headers.setdefault("X-Frame-Options", "DENY")
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("Referrer-Policy", "same-origin")
-        response.headers.setdefault("X-Request-ID", request_id)
-        return response
-
+    app.add_middleware(
+        RequestContainerMiddleware,
+        root_container=container,
+        session_factory=get_session_factory(),
+    )
+    app.add_middleware(CsrfMiddleware)
+    app.add_middleware(RequestLoggingMiddleware, logger=logger)
+    app.add_middleware(RequestStateMiddleware)
     app.add_middleware(
         SessionMiddleware,
         secret_key=Settings.session_secret,

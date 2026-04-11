@@ -7,8 +7,8 @@ from fastapi import Form
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 
+from src.backend.dependencies.service_dependencies import AuthServiceDependency
 from src.backend.delivery.api.v1.helpers import clear_auth_cookies
-from src.backend.delivery.api.v1.helpers import get_auth_service
 from src.backend.delivery.api.v1.helpers import redirect_to_route
 from src.backend.delivery.api.v1.helpers import set_auth_cookies
 from src.backend.dto.auth_dto import LoginDTO
@@ -31,17 +31,17 @@ auth_router = APIRouter(prefix="/auth")
 
 @auth_router.get("/register", name="auth.register_page")
 async def register_page(request: Request):
-    return render_template(request, "auth/register.html")
+    return await render_template(request, "auth/register.html")
 
 
 @auth_router.post("/register", name="auth.register_user")
 async def register_user(
     request: Request,
+    auth_service: AuthServiceDependency,
     email: Annotated[str, Form()],
     password: Annotated[str, Form()],
     display_name: Annotated[str, Form()],
 ):
-    auth_service = get_auth_service(request)
     try:
         await auth_service.register(
             RegistrationDTO(
@@ -66,16 +66,16 @@ async def register_user(
 
 @auth_router.get("/login", name="auth.login_page")
 async def login_page(request: Request):
-    return render_template(request, "auth/login.html")
+    return await render_template(request, "auth/login.html")
 
 
 @auth_router.post("/login", name="auth.login_user")
 async def login_user(
     request: Request,
+    auth_service: AuthServiceDependency,
     email: Annotated[str, Form()],
     password: Annotated[str, Form()],
 ):
-    auth_service = get_auth_service(request)
     try:
         auth_result = await auth_service.login(LoginDTO(email=email, password=password))
         flash(request, f"С возвращением, {auth_result.user.display_name}.", "success")
@@ -90,8 +90,7 @@ async def login_user(
 
 
 @auth_router.post("/logout", name="auth.logout_user")
-async def logout_user(request: Request):
-    auth_service = get_auth_service(request)
+async def logout_user(request: Request, auth_service: AuthServiceDependency):
     await auth_service.logout(
         request.cookies.get(ACCESS_TOKEN_COOKIE_NAME),
         request.cookies.get(REFRESH_TOKEN_COOKIE_NAME),
@@ -103,7 +102,7 @@ async def logout_user(request: Request):
 
 @auth_router.get("/verify-email", name="auth.verify_email_page")
 async def verify_email_page(request: Request):
-    return render_template(
+    return await render_template(
         request,
         "auth/verify_email.html",
         email=str(request.query_params.get("email") or ""),
@@ -113,10 +112,10 @@ async def verify_email_page(request: Request):
 @auth_router.post("/verify-email", name="auth.verify_email")
 async def verify_email(
     request: Request,
+    auth_service: AuthServiceDependency,
     email: Annotated[str, Form()],
     code: Annotated[str, Form()],
 ):
-    auth_service = get_auth_service(request)
     try:
         await auth_service.verify_email(VerificationDTO(email=email, code=code))
         flash(request, "Почта подтверждена. Теперь можно войти.", "success")

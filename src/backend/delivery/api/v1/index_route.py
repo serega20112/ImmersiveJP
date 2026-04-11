@@ -10,4 +10,4 @@ index_router = APIRouter()
 
 @index_router.get("/", name="index.landing")
 async def landing_page(request: Request):
-    return render_template(request, "landing.html")
+    return await render_template(request, "landing.html")

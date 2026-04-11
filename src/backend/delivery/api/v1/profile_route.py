@@ -8,7 +8,7 @@ from fastapi import Form
 from fastapi import Request
 
 from src.backend.dependencies.auth_dependencies import require_authenticated_user
-from src.backend.delivery.api.v1.helpers import get_profile_service
+from src.backend.dependencies.service_dependencies import ProfileServiceDependency
 from src.backend.delivery.api.v1.helpers import redirect_to_route
 from src.backend.dto.auth_dto import UserViewDTO
 from src.backend.infrastructure.web import flash
@@ -22,44 +22,45 @@ profile_router = APIRouter()
 async def profile_page(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_authenticated_user)],
+    profile_service: ProfileServiceDependency,
 ):
-    report = await get_profile_service(request).build_progress_report(current_user.id)
-    advice = await get_profile_service(request).generate_ai_advice(
-        current_user.id, report
+    report = await profile_service.build_progress_report(current_user.id)
+    advice = await profile_service.generate_ai_advice(current_user.id, report)
+    return await render_template(
+        request, "profile/index.html", report=report, advice=advice
     )
-    return render_template(request, "profile/index.html", report=report, advice=advice)
 
 
 @profile_router.get("/plan", name="profile.plan_page")
 async def plan_page(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_authenticated_user)],
+    profile_service: ProfileServiceDependency,
 ):
-    page = await get_profile_service(request).build_learning_plan(current_user.id)
-    return render_template(request, "profile/plan.html", page=page)
+    page = await profile_service.build_learning_plan(current_user.id)
+    return await render_template(request, "profile/plan.html", page=page)
 
 
 @profile_router.get("/mentor", name="profile.mentor_page")
 async def mentor_page(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_authenticated_user)],
+    profile_service: ProfileServiceDependency,
 ):
-    page = await get_profile_service(request).get_mentor_page(current_user.id)
-    return render_template(request, "profile/mentor.html", page=page)
+    page = await profile_service.get_mentor_page(current_user.id)
+    return await render_template(request, "profile/mentor.html", page=page)
 
 
 @profile_router.post("/mentor", name="profile.mentor_send")
 async def mentor_send(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_authenticated_user)],
+    profile_service: ProfileServiceDependency,
     message: str = Form(),
 ):
     try:
-        page = await get_profile_service(request).send_mentor_message(
-            current_user.id,
-            message,
-        )
-        return render_template(request, "profile/mentor.html", page=page)
+        page = await profile_service.send_mentor_message(current_user.id, message)
+        return await render_template(request, "profile/mentor.html", page=page)
     except InvalidMentorMessageError as error:
         flash(request, str(error), "error")
         return redirect_to_route(request, "profile.mentor_page")

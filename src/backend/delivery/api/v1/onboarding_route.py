@@ -7,8 +7,7 @@ from fastapi import Depends
 from fastapi import Request
 
 from src.backend.dependencies.auth_dependencies import require_registered_user
-from src.backend.delivery.api.v1.helpers import get_current_user
-from src.backend.delivery.api.v1.helpers import get_onboarding_service
+from src.backend.dependencies.service_dependencies import OnboardingServiceDependency
 from src.backend.delivery.api.v1.helpers import redirect_to_route
 from src.backend.dto.auth_dto import UserViewDTO
 from src.backend.dto.onboarding_dto import OnboardingDTO
@@ -25,17 +24,19 @@ onboarding_router = APIRouter()
 async def onboarding_page(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_registered_user)],
+    onboarding_service: OnboardingServiceDependency,
 ):
     if current_user.onboarding_completed:
         return redirect_to_route(request, "dashboard.dashboard_page")
-    page = await get_onboarding_service(request).get_page()
-    return render_template(request, "onboarding/index.html", page=page)
+    page = await onboarding_service.get_page()
+    return await render_template(request, "onboarding/index.html", page=page)
 
 
 @onboarding_router.post("/onboarding", name="onboarding.complete")
 async def complete_onboarding(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_registered_user)],
+    onboarding_service: OnboardingServiceDependency,
 ):
     form = await request.form()
     diagnostic_answers = {
@@ -44,7 +45,7 @@ async def complete_onboarding(
         if key.startswith("diagnostic_")
     }
     try:
-        result = await get_onboarding_service(request).complete(
+        result = await onboarding_service.complete(
             current_user.id,
             OnboardingDTO(
                 goal=str(form.get("goal", "")),

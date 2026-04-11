@@ -32,7 +32,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             method=request.method,
             errors=exc.errors(),
         )
-        return _build_error_response(
+        return await _build_error_response(
             request=request,
             status_code=422,
             title="Нужно поправить данные",
@@ -61,7 +61,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             detail=str(exc.detail),
         )
-        return _build_error_response(
+        return await _build_error_response(
             request=request,
             status_code=exc.status_code,
             title=title,
@@ -86,7 +86,7 @@ def register_exception_handlers(app: FastAPI) -> None:
                 },
             },
         )
-        return _build_error_response(
+        return await _build_error_response(
             request=request,
             status_code=500,
             title="Что-то сломалось на сервере",
@@ -96,7 +96,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
 
-def _build_error_response(
+async def _build_error_response(
     *,
     request: Request,
     status_code: int,
@@ -106,7 +106,7 @@ def _build_error_response(
     if request.method != "GET":
         flash(request, message, "error")
         return RedirectResponse(url=_resolve_return_href(request), status_code=303)
-    return render_error_page(
+    return await render_error_page(
         request,
         status_code=status_code,
         title=title,
