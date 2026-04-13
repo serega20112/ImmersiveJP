@@ -21,6 +21,42 @@ def test_settings_normalize_database_urls():
     )
 
 
+def test_settings_build_database_urls_from_postgres_fields():
+    settings = AppSettings(
+        app_debug=False,
+        secret_key="x" * 24,
+        session_secret="y" * 24,
+        postgres_user="db-user",
+        postgres_password="db-pass",
+        postgres_host="postgres",
+        postgres_port=5432,
+        postgres_db="immersjp",
+    )
+
+    assert settings.database_url == (
+        "postgresql+asyncpg://db-user:db-pass@postgres:5432/immersjp"
+    )
+    assert settings.database_sync_url == (
+        "postgresql+psycopg://db-user:db-pass@postgres:5432/immersjp"
+    )
+
+
+def test_settings_preserve_explicit_database_sync_url():
+    settings = AppSettings(
+        app_debug=False,
+        secret_key="x" * 24,
+        session_secret="y" * 24,
+        database_sync_url="postgresql://db-user:db-pass@postgres:5432/immersjp",
+    )
+
+    assert settings.database_url == (
+        "postgresql+asyncpg://db-user:db-pass@postgres:5432/immersjp"
+    )
+    assert settings.database_sync_url == (
+        "postgresql+psycopg://db-user:db-pass@postgres:5432/immersjp"
+    )
+
+
 def test_settings_reject_weak_secrets_outside_debug():
     with pytest.raises(ValueError):
         AppSettings(

@@ -15,12 +15,15 @@ _PLACEHOLDER_SECRETS = {
 }
 
 
-def _build_default_database_url(*, async_mode: bool) -> str:
-    user = "immersjp"
-    password = "immersjp"
-    host = "localhost"
-    port = "5432"
-    database = "immersjp"
+def _build_database_url(
+    *,
+    user: str,
+    password: str,
+    host: str,
+    port: int | str,
+    database: str,
+    async_mode: bool,
+) -> str:
     scheme = "postgresql+asyncpg" if async_mode else "postgresql+psycopg"
     return f"{scheme}://{user}:{password}@{host}:{port}/{database}"
 
@@ -28,7 +31,7 @@ def _build_default_database_url(*, async_mode: bool) -> str:
 def _normalize_database_url(value: str | None, *, async_mode: bool) -> str:
     raw_value = str(value or "").strip()
     if not raw_value:
-        return _build_default_database_url(async_mode=async_mode)
+        raise ValueError("Database URL normalization requires a non-empty value")
     if raw_value.startswith("postgres://"):
         raw_value = f"postgresql://{raw_value[len('postgres://'):]}"
     if async_mode:
@@ -181,10 +184,21 @@ class AppSettings(BaseSettings):
                     raise ValueError(
                         f"{secret_name} is too weak for non-debug mode. Set a non-placeholder value with at least 16 characters."
                     )
-        raw_database_url = self.database_url
-        self.database_url = _normalize_database_url(raw_database_url, async_mode=True)
+        fallback_database_url = _build_database_url(
+            user=self.postgres_user,
+            password=self.postgres_password,
+            host=self.postgres_host,
+            port=self.postgres_port,
+            database=self.postgres_db,
+            async_mode=False,
+        )
+        raw_database_url = self.database_url or self.database_sync_url or fallback_database_url
+        self.database_url = _normalize_database_url(
+            self.database_url or raw_database_url,
+            async_mode=True,
+        )
         self.database_sync_url = _normalize_database_url(
-            raw_database_url,
+            self.database_sync_url or raw_database_url,
             async_mode=False,
         )
         return self
