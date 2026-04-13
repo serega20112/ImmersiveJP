@@ -7,6 +7,7 @@ from src.backend.infrastructure.repositories import (
     AbstractProgressRepository,
     AbstractSessionRepository,
 )
+from src.backend.use_case.batch_progress import summarize_completed_batches
 from src.backend.use_case.mappers import to_track_card_dto
 
 
@@ -42,8 +43,13 @@ class GetTrackPageUseCase:
         all_current_batch_completed = bool(cards) and all(
             int(card.id or 0) in completed_ids for card in cards
         )
-        completed_batches = completed_total // 10
-        work_ready_batch = completed_batches if completed_batches > 0 else None
+        can_generate_next = not cards or all_current_batch_completed
+        completed_batches, work_ready_batch = await summarize_completed_batches(
+            self._progress_repository,
+            user_id=user_id,
+            track=track,
+            current_batch=current_batch,
+        )
         return TrackPageDTO(
             track=track.value,
             title=track.title,
@@ -53,7 +59,10 @@ class GetTrackPageUseCase:
             completed_total=completed_total,
             generated_total=generated_total,
             all_current_batch_completed=all_current_batch_completed,
-            can_generate_next=all_current_batch_completed,
+            can_generate_next=can_generate_next,
+            generate_action_label=(
+                "Создать первую партию" if generated_total == 0 else "Следующая партия"
+            ),
             completed_batches=completed_batches,
             work_ready_batch=work_ready_batch,
             work_href=(

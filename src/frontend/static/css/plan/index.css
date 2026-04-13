@@ -24,7 +24,7 @@
 
 .plan-focus-card__time {
   margin: -6px 0 0;
-  color: var(--accent-strong);
+  color: var(--accent-secondary);
   font-weight: 700;
 }
 
@@ -38,7 +38,9 @@
   padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: var(--surface-muted);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+    var(--surface-muted);
 }
 
 .plan-dictionary:hover {
@@ -64,8 +66,10 @@
   height: 56px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: var(--surface-muted);
-  color: var(--accent-strong);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
+    var(--surface-muted);
+  color: var(--accent-secondary);
   font-family: var(--font-mono);
   font-size: 0.92rem;
   font-weight: 700;
@@ -81,29 +85,35 @@
   padding: 16px 18px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: var(--surface-muted);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+    var(--surface-muted);
 }
 
 .plan-stage__status--done {
-  border-color: rgba(47, 127, 98, 0.24);
-  background: rgba(47, 127, 98, 0.1);
+  border-color: rgba(121, 223, 172, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    rgba(121, 223, 172, 0.08);
   color: var(--success);
 }
 
 .plan-stage__status--current {
-  border-color: rgba(216, 95, 58, 0.28);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
+  border-color: rgba(100, 230, 255, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    rgba(100, 230, 255, 0.08);
+  color: var(--accent-secondary-strong);
 }
 
 .plan-stage__status--next {
-  color: var(--accent-secondary);
+  color: var(--accent-strong);
 }
 
 .roadmap-stage--current {
-  border-color: rgba(216, 95, 58, 0.3);
+  border-color: rgba(100, 230, 255, 0.26);
 }
 
 .roadmap-stage--done {
-  border-color: rgba(47, 127, 98, 0.24);
+  border-color: rgba(121, 223, 172, 0.24);
 }

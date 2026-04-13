@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import json
+
 from src.backend.domain.mentor import MentorMessage
 from src.backend.domain.user import User
+from src.backend.dto.learning import TrackWorkResultDTO
 from src.backend.dto.profile_dto import LearningPlanPageDTO, ProgressReportDTO
 
 
 class LLMPromptMixin:
     @staticmethod
     def _build_cards_prompt(payload: dict) -> str:
-        interests = ", ".join(payload["interests"]) or "не указаны"
-        previous = ", ".join(payload["previous_topics"]) or "нет"
+        interests = ", ".join((payload["interests"] or [])[:6]) or "не указаны"
+        previous = ", ".join((payload["previous_topics"] or [])[:12]) or "нет"
         mentor_focus_note = (
             f"Особый запрос пользователя на ближайшие партии: {payload.get('mentor_focus')}\n"
             if payload.get("mentor_focus")
@@ -26,19 +29,54 @@ class LLMPromptMixin:
             f"Размер партии: {payload['batch_size']}\n"
             f"Избегай повторов тем: {previous}\n"
             f"{HuggingFaceLLMClient._build_generation_context(payload)}\n"
+            f"{HuggingFaceLLMClient._track_scope_instruction(payload.get('track'))}\n"
+            "Цель, интересы и горизонт обучения могут менять только угол подачи внутри выбранного трека, "
+            "но не имеют права уводить карточки в другой трек.\n"
             f"{mentor_focus_note}"
             "Верни JSON-массив, где у каждой карточки есть topic, explanation, examples, key_terms.\n"
+            "topic: короткий заголовок до 7 слов.\n"
             f"{HuggingFaceLLMClient._explanation_length_instruction(payload)}\n"
-            "Examples возвращай массивом строк в формате: Japanese | Romaji | Русский перевод.\n"
-            "key_terms возвращай массивом из 4-6 строк. Если термин японский, формат каждой строки: Термин | Русский перевод.\n"
+            "Examples можно вернуть пустым массивом или массивом до 2 очень коротких строк в формате: Japanese | Romaji | Русский перевод.\n"
+            "key_terms возвращай массивом ровно из 3 коротких строк. Если термин японский, формат каждой строки: Термин | Русский перевод.\n"
             "Если термин уже русский, можно вернуть его как есть или дать короткое пояснение через |.\n"
             "Пиши естественным русским языком без канцелярита и рекламного тона.\n"
             "Не используй английские слова, если есть нормальный русский эквивалент.\n"
             "Не упоминай диагностику пользователя, trust score, тесты, сильные или слабые стороны.\n"
             "Не начинай explanation с формул вроде 'эта карточка про тему', 'смотри на тему', 'для уровня'.\n"
             "Темы внутри партии должны отличаться не только названием, но и сценой применения.\n"
-            "Examples должны быть уникальными для карточки и прямо отражать ее тему. Не повторяй один и тот же набор примеров в соседних карточках.\n"
-            "Если трек не языковой, все равно давай примеры в удобном формате для быстрого чтения."
+            "Если даешь examples, они должны быть уникальными и прямо отражать тему карточки.\n"
+            "Пиши плотно и коротко. Лучше компактно, чем многословно."
+        )
+
+    @staticmethod
+    def _build_work_review_prompt(
+        payload: dict,
+        fallback_result: TrackWorkResultDTO,
+    ) -> str:
+        tasks_json = json.dumps(payload.get("tasks") or [], ensure_ascii=False)
+        return (
+            "Проверь учебную работу ImmersJP по уже завершенной партии карточек.\n"
+            f"Трек: {payload['track']}\n"
+            f"Номер партии: {payload['batch_number']}\n"
+            f"Цель: {HuggingFaceLLMClient._goal_label(payload.get('goal'))}\n"
+            f"Уровень: {HuggingFaceLLMClient._level_label(payload.get('language_level'))}\n"
+            f"Горизонт обучения: {HuggingFaceLLMClient._timeline_label(payload.get('study_timeline'))}\n"
+            f"{HuggingFaceLLMClient._track_scope_instruction(payload.get('track'))}\n"
+            "Оценивай только то, насколько ответ опирается на материал партии и закрывает сам вопрос.\n"
+            "Для recall-задач сверяйся с expected_answers, но засчитывай стандартные варианты ромадзи, "
+            "мелкие опечатки, kana/kanji запись той же фразы и короткие естественные русские перефразировки, "
+            "если смысл совпадает.\n"
+            "Для production и immersion разрешай перефразировку, если смысл верный и опора на материал партии реально есть.\n"
+            "Не засчитывай пустые ответы, общие фразы не по теме и ответы, которые не используют нужные элементы.\n"
+            f"Проходной балл: {fallback_result.pass_score}\n"
+            f"Задания и ответы JSON: {tasks_json}\n"
+            "Верни JSON-объект с полями summary, verdict, task_results, certificate_statement.\n"
+            "task_results: массив объектов с полями task_id, is_correct, feedback.\n"
+            "feedback: одно короткое предложение о том, что получилось или чего не хватило.\n"
+            "summary: 1 короткое предложение по партии целиком.\n"
+            "verdict: 1 короткое предложение, можно ли считать материал закрепленным.\n"
+            "certificate_statement: optional, только если ответ действительно сильный.\n"
+            "Без markdown, без reasoning, без текста вне JSON."
         )
 
     @staticmethod
@@ -228,11 +266,11 @@ class LLMPromptMixin:
     def _explanation_length_instruction(payload: dict) -> str:
         timeline = str(payload.get("study_timeline") or "flexible")
         instructions = {
-            "three_months": "Explanation делай плотным конспектом длиной около 130-170 слов.",
-            "six_months": "Explanation делай плотным конспектом длиной около 150-190 слов.",
-            "one_year": "Explanation делай плотным конспектом длиной около 170-220 слов.",
-            "two_years": "Explanation делай подробным конспектом длиной около 190-240 слов.",
-            "flexible": "Explanation делай подробным, но прикладным конспектом длиной около 180-230 слов.",
+            "three_months": "Explanation делай плотным конспектом длиной около 35-50 слов.",
+            "six_months": "Explanation делай плотным конспектом длиной около 40-55 слов.",
+            "one_year": "Explanation делай плотным конспектом длиной около 45-60 слов.",
+            "two_years": "Explanation делай компактным, но содержательным конспектом длиной около 50-70 слов.",
+            "flexible": "Explanation делай компактным конспектом длиной около 45-65 слов.",
         }
         return instructions.get(timeline, instructions["flexible"])
 
@@ -283,3 +321,26 @@ class LLMPromptMixin:
         if timeline == "two_years":
             return "Проговаривай сначала медленно, потом еще раз без опоры на перевод и отмечай, где смысл собирается из контекста."
         return "Сначала прочитай предложения, потом проговори диалоги."
+
+    @staticmethod
+    def _track_scope_instruction(track: str | None) -> str:
+        instructions = {
+            "language": (
+                "Трек language означает только японский язык: слова, грамматика, частицы, регистр, "
+                "фразы, речевые сцены и понимание реплик. Не превращай карточки в культурологию, "
+                "историю, визовые инструкции, бытовой гайд по переезду или общие советы по жизни."
+            ),
+            "culture": (
+                "Трек culture означает только культурные нормы, повседневный быт, ритуалы, сервис, "
+                "этикет, общественное поведение, социальные роли и привычки среды. Не уходи в "
+                "историческую хронологию, войны, реформы, политические события, а также не делай "
+                "из карточек учебник языка, визовый гайд или инструкцию по документам."
+            ),
+            "history": (
+                "Трек history означает только историю: эпохи, события, реформы, войны, фигуры, "
+                "политические и социальные переломы, экономические сдвиги, память о прошлом и их "
+                "последствия. Не уходи в визы, переезд, жилье, аренду, транспорт, бытовые советы, "
+                "этикет повседневности и разговорные фразы."
+            ),
+        }
+        return instructions.get(str(track), instructions["culture"])

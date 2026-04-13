@@ -1,6 +1,7 @@
 .auth-card__head,
 .section-head,
-.diagnostic-block__head {
+.diagnostic-block__head,
+.diagnostic-group__head {
   display: grid;
   gap: 8px;
 }
@@ -27,12 +28,16 @@
   place-items: center;
   width: 64px;
   height: 64px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 22px;
-  background: linear-gradient(145deg, var(--accent), var(--accent-strong));
-  color: #fff7f1;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, var(--accent-secondary), var(--accent));
+  color: #04131d;
   font-family: var(--font-mono);
   font-size: 0.9rem;
   font-weight: 700;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.22);
 }
 
 .choice-grid,
@@ -60,9 +65,11 @@
   width: 100%;
   min-height: 132px;
   padding: 0;
-  border: 1px solid var(--line-strong);
-  border-radius: 26px;
-  background: rgba(255, 255, 255, 0.38);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    var(--surface-muted);
   cursor: pointer;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -74,6 +81,17 @@
   inset: 0 auto 0 0;
   width: 4px;
   background: transparent;
+}
+
+.choice-button::after {
+  content: "";
+  position: absolute;
+  inset: auto -40px -40px auto;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(100, 230, 255, 0.14), transparent 72%);
+  pointer-events: none;
 }
 
 .choice-button__body {
@@ -100,20 +118,20 @@
 
 .choice-button.is-pressed,
 .choice-button[aria-pressed="true"] {
-  border-color: rgba(216, 95, 58, 0.34);
+  border-color: rgba(100, 230, 255, 0.28);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent),
-    var(--surface-muted);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
+    rgba(100, 230, 255, 0.08);
 }
 
 .choice-button.is-pressed::before,
 .choice-button[aria-pressed="true"]::before {
-  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  background: linear-gradient(180deg, var(--accent-secondary), var(--accent));
 }
 
 .choice-button.is-pressed strong,
 .choice-button[aria-pressed="true"] strong {
-  color: var(--accent-strong);
+  color: var(--ink);
 }
 
 .choice-button--dense {
@@ -135,5 +153,12 @@
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: 24px;
-  background: var(--surface-muted);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+    var(--surface-muted);
+}
+
+.form-note a {
+  color: var(--accent-secondary);
+  font-weight: 700;
 }

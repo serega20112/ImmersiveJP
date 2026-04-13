@@ -9,6 +9,7 @@ from src.backend.infrastructure.repositories import (
     AbstractSessionRepository,
     AbstractUserRepository,
 )
+from src.backend.use_case.batch_progress import summarize_completed_batches
 from src.backend.use_case.mappers import to_skill_assessment_dto, to_track_progress_dto
 from src.backend.use_case.profile.trust_score import build_trust_score
 
@@ -36,15 +37,24 @@ class BuildProgressReportUseCase:
         total_completed = await self._progress_repository.get_total_completed(user_id)
         for track in TrackType:
             session = await self._session_repository.get_track_session(user_id, track)
+            current_batch = session.last_generated_batch if session else 0
             generated_cards = await self._content_repository.count_cards(user_id, track)
             completed_cards = await self._progress_repository.get_completed_count(
                 user_id, track
+            )
+            completed_batches, work_ready_batch = await summarize_completed_batches(
+                self._progress_repository,
+                user_id=user_id,
+                track=track,
+                current_batch=current_batch,
             )
             snapshot = TrackProgressSnapshot(
                 track=track,
                 completed_cards=completed_cards,
                 generated_cards=generated_cards,
-                current_batch=session.last_generated_batch if session else 0,
+                current_batch=current_batch,
+                completed_batches=completed_batches,
+                work_ready_batch=work_ready_batch,
             )
             snapshots.append(snapshot)
             total_generated += generated_cards

@@ -4,6 +4,7 @@ import logging
 
 from src.backend.dependencies.settings import Settings
 from src.backend.domain.content import LearningCard, TrackType
+from src.backend.domain.progress import CARD_BATCH_SIZE
 from src.backend.dto.learning_dto import TrackCardDTO
 from src.backend.infrastructure.external import HuggingFaceLLMClient
 from src.backend.infrastructure.observability import get_logger, log_event
@@ -44,7 +45,7 @@ class GenerateCardsUseCase:
         self,
         user_id: int,
         track: TrackType,
-        batch_size: int = 10,
+        batch_size: int = CARD_BATCH_SIZE,
     ) -> list[TrackCardDTO]:
         is_allowed = await self._rate_limiter.is_allowed(
             scope="llm-generation",

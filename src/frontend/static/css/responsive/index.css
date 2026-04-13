@@ -69,7 +69,7 @@
   }
 
   .nav-link {
-    min-width: 134px;
+    min-width: 138px;
   }
 
   .viewer-badge,
@@ -159,8 +159,13 @@
     border-radius: 24px;
   }
 
+  .brand-mark__seal {
+    width: 52px;
+    height: 52px;
+  }
+
   .brand-mark__copy strong {
-    font-size: 1.44rem;
+    font-size: 1.36rem;
   }
 
   .trust-score__ring {
@@ -169,7 +174,7 @@
   }
 
   .kanji-column {
-    font-size: 3.6rem;
+    font-size: 4rem;
   }
 }
 

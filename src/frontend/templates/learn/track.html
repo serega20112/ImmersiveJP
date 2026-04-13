@@ -17,7 +17,7 @@
       {% if page.work_ready_batch %}
       <span class="hero-fact">работа по партии {{ page.work_ready_batch }} готова</span>
       {% else %}
-      <span class="hero-fact">сначала закрой 10 карточек</span>
+      <span class="hero-fact">сначала закрой текущий батч</span>
       {% endif %}
     </div>
   </div>
@@ -31,7 +31,7 @@
       <a href="{{ page.work_href }}" class="primary-button">Открыть работу</a>
       {% endif %}
       <a href="{{ url_for('learning.download_pdf') }}?track={{ page.track }}" class="ghost-button">Скачать PDF</a>
-      <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}">Следующая партия</a>
+      <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}">{{ page.generate_action_label }}</a>
     </div>
     <div class="mini-metrics">
       <div class="mini-metric">
@@ -49,9 +49,13 @@
     </div>
     <p class="utility-card__note">
       {% if page.can_generate_next %}
-      Текущая партия закрыта. Сначала можно пройти работу, потом открывать новый батч.
+      {% if page.generated_total == 0 %}
+      Для этого трека партия еще не создана. Можно запустить первую генерацию вручную.
       {% else %}
-      Новая партия откроется после завершения текущей десятки. Работа строится только по завершенным батчам.
+      Текущая партия закрыта. Сначала можно пройти работу, потом открывать новый батч.
+      {% endif %}
+      {% else %}
+      Новая партия откроется после завершения текущего батча. Работа строится только по завершенным батчам.
       {% endif %}
     </p>
   </aside>
@@ -71,8 +75,14 @@
 {% if not page.cards %}
 <section class="panel empty-state reveal">
   <p class="section-kicker">Пусто</p>
+  {% if page.generated_total == 0 %}
+  <h2>Первая партия еще не создана.</h2>
+  <p>Этот трек можно запустить отдельно, когда он тебе реально нужен.</p>
+  <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="primary-button">Создать первую партию</a>
+  {% else %}
   <h2>Карточки пока не готовы.</h2>
   <p>Вернись чуть позже или открой другой трек, если генерация еще продолжается.</p>
+  {% endif %}
 </section>
 {% else %}
 <section class="preview-grid reveal">

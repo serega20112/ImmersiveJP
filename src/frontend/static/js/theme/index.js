@@ -1,12 +1,14 @@
+const STORAGE_KEY = "immersjp-theme-v2";
+
 const THEME_COPY = {
   paper: {
-    name: "Бумага",
+    name: "Свет",
     hint: "переключить на ночь",
-    aria: "Текущая тема: бумага. Нажми, чтобы включить ночной режим.",
+    aria: "Текущая тема: свет. Нажми, чтобы включить ночной режим.",
   },
   night: {
     name: "Ночь",
-    hint: "переключить на бумагу",
+    hint: "переключить на свет",
     aria: "Текущая тема: ночь. Нажми, чтобы включить светлый режим.",
   },
 };
@@ -16,10 +18,10 @@ export const initThemeToggle = () => {
   const themeToggle = document.querySelector("[data-theme-toggle]");
   const themeName = document.querySelector("[data-theme-toggle-name]");
   const themeHint = document.querySelector("[data-theme-toggle-hint]");
-  const savedTheme = localStorage.getItem("immersjp-theme");
+  const savedTheme = localStorage.getItem(STORAGE_KEY);
 
   const syncTheme = (theme) => {
-    const copy = THEME_COPY[theme] || THEME_COPY.paper;
+    const copy = THEME_COPY[theme] || THEME_COPY.night;
 
     root.setAttribute("data-theme", theme);
 
@@ -39,7 +41,7 @@ export const initThemeToggle = () => {
     }
   };
 
-  syncTheme(savedTheme || root.getAttribute("data-theme") || "paper");
+  syncTheme(savedTheme || root.getAttribute("data-theme") || "night");
 
   if (!themeToggle) {
     return;
@@ -49,6 +51,6 @@ export const initThemeToggle = () => {
     const nextTheme =
       root.getAttribute("data-theme") === "night" ? "paper" : "night";
     syncTheme(nextTheme);
-    localStorage.setItem("immersjp-theme", nextTheme);
+    localStorage.setItem(STORAGE_KEY, nextTheme);
   });
 };

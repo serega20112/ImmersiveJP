@@ -24,7 +24,10 @@
   <aside class="panel panel--signal dashboard-hero__trust">
     <p class="section-kicker">Trust Score</p>
     <div class="trust-score__hero">
-      <div class="trust-score__ring trust-score__ring--{{ dashboard.trust_score.band_key }}">
+      <div
+        class="trust-score__ring trust-score__ring--{{ dashboard.trust_score.band_key }}"
+        style="--trust-progress: {{ dashboard.trust_score.score }}%;"
+      >
         <strong>{{ dashboard.trust_score.score }}</strong>
         <span>/ 100</span>
       </div>

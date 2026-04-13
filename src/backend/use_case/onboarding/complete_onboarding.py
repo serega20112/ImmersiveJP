@@ -66,9 +66,8 @@ class CompleteOnboardingUseCase:
             skill_assessment=skill_assessment,
         )
         generated_batches: dict[str, int] = {}
-        for track in TrackType:
-            await self._generate_cards_use_case.execute(user_id, track)
-            generated_batches[track.value] = 1
+        await self._generate_cards_use_case.execute(user_id, TrackType.LANGUAGE)
+        generated_batches[TrackType.LANGUAGE.value] = 1
         log_event(
             logger,
             logging.INFO,
@@ -79,6 +78,7 @@ class CompleteOnboardingUseCase:
             language_level=language_level.value,
             study_timeline=study_timeline.value,
             interests_count=len(interests),
+            generated_tracks=list(generated_batches.keys()),
         )
         return OnboardingResultDTO(
             user_id=user_id,

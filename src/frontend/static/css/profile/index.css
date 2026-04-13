@@ -1,42 +1,23 @@
 body.page--mentor {
   background:
-    radial-gradient(circle at 12% 8%, rgba(255, 128, 87, 0.14), transparent 22%),
-    radial-gradient(circle at 84% 12%, rgba(123, 197, 208, 0.12), transparent 22%),
-    linear-gradient(180deg, #0d1118, #0a0f18 56%, #070b12);
+    radial-gradient(circle at 12% 10%, rgba(255, 107, 74, 0.18), transparent 24%),
+    radial-gradient(circle at 88% 12%, rgba(100, 230, 255, 0.16), transparent 24%),
+    linear-gradient(180deg, #040611, #080d1b 40%, #0c1325);
 }
 
 .page--mentor .site-header__inner {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(11, 15, 22, 0.78);
-  box-shadow: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    rgba(7, 11, 22, 0.84);
 }
 
-.page--mentor .site-nav {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.page--mentor .brand-mark__copy small,
-.page--mentor .nav-link,
-.page--mentor .theme-switch__copy small,
-.page--mentor .viewer-badge small {
-  color: rgba(240, 232, 224, 0.68);
-}
-
-.page--mentor .nav-link span,
-.page--mentor .brand-mark__copy strong,
-.page--mentor .viewer-badge span,
-.page--mentor .theme-switch__copy strong {
-  color: #f5eee5;
-}
-
-.page--mentor .nav-link:hover,
-.page--mentor .nav-link.is-active,
+.page--mentor .site-nav,
 .page--mentor .theme-switch,
 .page--mentor .viewer-badge,
 .page--mentor .ghost-button {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+    rgba(255, 255, 255, 0.03);
 }
 
 .page--mentor .theme-switch,
@@ -45,24 +26,13 @@ body.page--mentor {
 .page--mentor .status-chip,
 .page--mentor .tag,
 .page--mentor .hero-fact {
-  color: #f5eee5;
-}
-
-.page--mentor .status-chip,
-.page--mentor .tag,
-.page--mentor .hero-fact {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.page--mentor .section-kicker {
-  color: #9ccfda;
+  color: var(--ink);
 }
 
 .mentor-stage {
   display: grid;
   gap: 24px;
-  width: min(1080px, 100%);
+  width: min(1100px, 100%);
   margin: 0 auto;
 }
 
@@ -81,8 +51,8 @@ body.page--mentor {
 
 .mentor-stage__copy h1 {
   max-width: 12ch;
-  color: #faf4ec;
-  font-size: clamp(2.4rem, 4vw, 4rem);
+  color: var(--ink);
+  font-size: clamp(2.6rem, 4.4vw, 4.5rem);
 }
 
 .mentor-stage__copy p:last-child,
@@ -90,7 +60,7 @@ body.page--mentor {
 .mentor-entry__body li,
 .mentor-empty p {
   margin: 0;
-  color: rgba(240, 232, 224, 0.82);
+  color: var(--ink-soft);
 }
 
 .mentor-stage__meta,
@@ -107,7 +77,7 @@ body.page--mentor {
 
 .mentor-messages {
   display: grid;
-  gap: 28px;
+  gap: 26px;
 }
 
 .mentor-entry--assistant {
@@ -129,13 +99,13 @@ body.page--mentor {
 }
 
 .mentor-entry__meta strong {
-  color: #faf4ec;
-  font-size: 0.94rem;
+  color: var(--ink);
+  font-size: 0.92rem;
 }
 
 .mentor-entry__meta span {
-  color: rgba(240, 232, 224, 0.48);
-  font-size: 0.8rem;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
 }
 
 .mentor-entry__body {
@@ -143,29 +113,33 @@ body.page--mentor {
 }
 
 .mentor-entry--assistant .mentor-entry__body {
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 0 20px;
+  border-bottom: 1px solid var(--line);
 }
 
 .mentor-entry--user .mentor-entry__body {
   width: min(100%, 640px);
   padding: 16px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.05);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    var(--surface-muted);
 }
 
 .mentor-steps {
-  margin: 0;
-  padding-left: 20px;
   display: grid;
   gap: 8px;
+  margin: 0;
+  padding-left: 20px;
 }
 
 .mentor-prompt-chip {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(240, 232, 224, 0.86);
+  border-color: rgba(100, 230, 255, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+    rgba(100, 230, 255, 0.08);
+  color: var(--accent-secondary-strong);
 }
 
 .mentor-chat-dock {
@@ -174,7 +148,7 @@ body.page--mentor {
 }
 
 .mentor-composer {
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(100, 230, 255, 0.14);
 }
 
 .mentor-composer__field {
@@ -187,12 +161,12 @@ body.page--mentor {
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: #faf4ec;
+  color: var(--ink);
   box-shadow: none;
 }
 
 .mentor-composer textarea::placeholder {
-  color: rgba(240, 232, 224, 0.42);
+  color: var(--ink-muted);
 }
 
 .mentor-composer__actions {
@@ -201,14 +175,4 @@ body.page--mentor {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
-}
-
-.page--mentor .field-note,
-.page--mentor .pending-note {
-  color: rgba(240, 232, 224, 0.64);
-}
-
-.page--mentor .pending-note {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
 }

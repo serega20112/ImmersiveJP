@@ -7,6 +7,7 @@ from src.backend.infrastructure.repositories import (
     AbstractProgressRepository,
     AbstractSessionRepository,
 )
+from src.backend.use_case.batch_progress import summarize_completed_batches
 from src.backend.use_case.mappers import to_track_card_dto
 
 
@@ -56,8 +57,12 @@ class GetCardPageUseCase:
             batch_cards=batch_cards,
             batch_completed_ids=batch_completed_ids,
         )
-        completed_batches = completed_total // 10
-        work_ready_batch = completed_batches if completed_batches > 0 else None
+        completed_batches, work_ready_batch = await summarize_completed_batches(
+            self._progress_repository,
+            user_id=user_id,
+            track=track,
+            current_batch=current_batch,
+        )
 
         return TrackCardPageDTO(
             track=track.value,

@@ -11,6 +11,7 @@ from json import JSONDecoder
 import httpx
 
 from src.backend.dependencies.settings import Settings
+from src.backend.dto.learning import TrackWorkResultDTO
 from src.backend.domain.user import User
 from src.backend.dto.profile_dto import ProgressReportDTO
 from src.backend.infrastructure.observability import get_logger, log_event
@@ -23,21 +24,34 @@ class LLMRequestMixin:
         if not Settings.hf_api_token:
             self._log_fallback(payload, reason="missing_token")
             return self._fallback_cards(payload)
+        circuit_reason = await self._get_open_circuit_reason(payload)
+        if circuit_reason:
+            self._log_circuit_open(payload, circuit_reason=circuit_reason)
+            self._log_fallback(payload, reason="circuit_open")
+            return self._fallback_cards(payload)
         prompt = self._build_cards_prompt(payload)
         try:
             parsed = await self._request_llm_json(
                 payload=payload,
-                temperature=0.8,
+                temperature=0.35,
                 system_content=(
-                    "Ты методист по Японии. Отвечай только JSON-массивом без текста вне JSON."
+                    "Ты методист по Японии. Верни только компактный JSON-массив без текста вне JSON. "
+                    "Ровно по одной карточке на каждый запрошенный элемент. "
+                    "Каждая карточка должна содержать topic, explanation, key_terms. "
+                    "examples можно вернуть пустым массивом или дать не больше 2 очень коротких строк. "
+                    "explanation делай кратким и прикладным. key_terms: ровно 3 строки."
                 ),
                 user_content=prompt,
             )
-            return self._normalize_cards(parsed, payload)
+            normalized = self._normalize_cards(parsed, payload)
+            await self._close_circuit(payload)
+            return normalized
         except Exception as error:
+            reason = self._fallback_reason_from_error(error)
+            await self._open_circuit(payload, reason=reason, error=error)
             self._log_fallback(
                 payload,
-                reason=self._fallback_reason_from_error(error),
+                reason=reason,
             )
             return self._fallback_cards(payload)
 
@@ -91,6 +105,37 @@ class LLMRequestMixin:
                 reason=self._fallback_reason_from_error(error),
             )
             return self._fallback_speech_practice(payload)
+
+    async def _request_work_review(
+        self,
+        payload: dict,
+        fallback_result: TrackWorkResultDTO,
+    ) -> TrackWorkResultDTO:
+        if not Settings.hf_api_token:
+            self._log_fallback(payload, reason="missing_token")
+            return fallback_result
+        try:
+            parsed = await self._request_llm_json(
+                payload=payload,
+                temperature=0.2,
+                system_content=(
+                    "Ты проверяешь учебную работу ImmersJP. "
+                    "Верни только JSON-объект с полями summary, verdict, task_results, certificate_statement. "
+                    "task_results: массив объектов с полями task_id, is_correct, feedback. "
+                    "feedback должен быть коротким и конкретным. "
+                    "Для recall сверяйся с expected_answers. "
+                    "Для production и immersion разрешай перефразировку по смыслу, но не засчитывай ответы не по теме. "
+                    "Без markdown, без reasoning, без текста вне JSON."
+                ),
+                user_content=self._build_work_review_prompt(payload, fallback_result),
+            )
+            return self._normalize_work_review(parsed, payload, fallback_result)
+        except Exception as error:
+            self._log_fallback(
+                payload,
+                reason=self._fallback_reason_from_error(error),
+            )
+            return fallback_result
 
     async def _request_llm_json(
         self,
@@ -217,10 +262,122 @@ class LLMRequestMixin:
             **self._payload_log_fields(payload),
         )
 
+    async def _get_open_circuit_reason(self, payload: dict) -> str | None:
+        if str(payload.get("kind") or "") != "cards":
+            return None
+        circuit_state = await self._store.get_json(self._circuit_key(payload))
+        if not isinstance(circuit_state, Mapping):
+            return None
+        reason = str(circuit_state.get("reason") or "").strip()
+        if self._should_bypass_open_circuit(payload, circuit_state, reason=reason):
+            return None
+        return reason or "request_failed"
+
+    async def _open_circuit(
+        self,
+        payload: dict,
+        *,
+        reason: str,
+        error: Exception,
+    ) -> None:
+        if str(payload.get("kind") or "") != "cards":
+            return
+        if not self._should_open_circuit(error):
+            return
+        await self._store.set_json(
+            self._circuit_key(payload),
+            {
+                "reason": reason,
+                "track": payload.get("track"),
+                "batch_size": payload.get("batch_size"),
+            },
+            expire_seconds=Settings.hf_cards_circuit_open_seconds,
+        )
+        log_event(
+            logger,
+            logging.WARNING,
+            "llm.circuit_opened",
+            "Opened LLM circuit for cards",
+            reason=reason,
+            cooldown_seconds=Settings.hf_cards_circuit_open_seconds,
+            model=self._request_runtime(payload)[0],
+            provider=Settings.hf_provider,
+            **self._payload_log_fields(payload),
+        )
+
+    async def _close_circuit(self, payload: dict) -> None:
+        if str(payload.get("kind") or "") != "cards":
+            return
+        await self._store.delete(self._circuit_key(payload))
+
+    def _log_circuit_open(self, payload: dict, *, circuit_reason: str) -> None:
+        log_event(
+            logger,
+            logging.WARNING,
+            "llm.circuit_open",
+            "LLM circuit already open for cards",
+            reason=circuit_reason,
+            cooldown_seconds=Settings.hf_cards_circuit_open_seconds,
+            model=self._request_runtime(payload)[0],
+            provider=Settings.hf_provider,
+            **self._payload_log_fields(payload),
+        )
+
+    @staticmethod
+    def _should_bypass_open_circuit(
+        payload: Mapping[str, object],
+        circuit_state: Mapping[str, object],
+        *,
+        reason: str,
+    ) -> bool:
+        if reason != "timeout":
+            return False
+
+        current_track = str(payload.get("track") or "").strip()
+        stored_track = str(circuit_state.get("track") or "").strip()
+        if not stored_track:
+            return True
+        if current_track and stored_track != current_track:
+            return True
+
+        current_batch_size = LLMRequestMixin._coerce_int(payload.get("batch_size"))
+        stored_batch_size = LLMRequestMixin._coerce_int(circuit_state.get("batch_size"))
+        if stored_batch_size is None:
+            return True
+        if current_batch_size is None:
+            return False
+        return current_batch_size < stored_batch_size
+
+    @staticmethod
+    def _coerce_int(value: object) -> int | None:
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            return value
+        if isinstance(value, float) and value.is_integer():
+            return int(value)
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.isdigit():
+                return int(stripped)
+        return None
+
+    @staticmethod
+    def _circuit_key(payload: dict) -> str:
+        request_model = LLMRequestMixin._request_runtime(payload)[0]
+        provider = (Settings.hf_provider or "").strip() or "default"
+        kind = str(payload.get("kind") or "unknown")
+        return f"llm:circuit:{kind}:{provider}:{request_model}"
+
     @staticmethod
     def _request_runtime(payload: dict) -> tuple[str, float, int, int | None]:
         kind = str(payload.get("kind") or "")
-        if kind == "mentor":
+        if kind == "cards":
+            model = Settings.hf_cards_model.strip() or Settings.hf_model.strip()
+            timeout_seconds = Settings.hf_cards_timeout_seconds
+            retry_attempts = Settings.hf_cards_retry_attempts
+            max_tokens = Settings.hf_cards_max_tokens
+        elif kind == "mentor":
             model = Settings.hf_mentor_model.strip() or Settings.hf_model.strip()
             timeout_seconds = Settings.hf_mentor_timeout_seconds
             retry_attempts = Settings.hf_mentor_retry_attempts
@@ -230,6 +387,15 @@ class LLMRequestMixin:
             timeout_seconds = Settings.hf_speech_timeout_seconds
             retry_attempts = Settings.hf_speech_retry_attempts
             max_tokens = Settings.hf_speech_max_tokens
+        elif kind == "work_review":
+            model = (
+                Settings.hf_work_review_model.strip()
+                or Settings.hf_mentor_model.strip()
+                or Settings.hf_model.strip()
+            )
+            timeout_seconds = Settings.hf_work_review_timeout_seconds
+            retry_attempts = Settings.hf_work_review_retry_attempts
+            max_tokens = Settings.hf_work_review_max_tokens
         else:
             model = Settings.hf_model.strip()
             timeout_seconds = Settings.hf_timeout_seconds
@@ -245,7 +411,7 @@ class LLMRequestMixin:
     @staticmethod
     def _request_reasoning_effort(payload: dict) -> str | None:
         kind = str(payload.get("kind") or "")
-        if kind in {"mentor", "speech"}:
+        if kind in {"cards", "mentor", "speech", "work_review"}:
             return "low"
         return None
 
@@ -299,6 +465,13 @@ class LLMRequestMixin:
         return "request_failed"
 
     @staticmethod
+    def _should_open_circuit(error: Exception) -> bool:
+        return isinstance(
+            error,
+            (httpx.TimeoutException, httpx.TransportError, httpx.HTTPStatusError),
+        )
+
+    @staticmethod
     def _response_error_log_fields(error: Exception) -> dict[str, object]:
         if not isinstance(error, httpx.HTTPStatusError):
             return {}
@@ -327,6 +500,8 @@ class LLMRequestMixin:
             fields["mentor_focus"] = payload.get("mentor_focus")
         if "words" in payload:
             fields["words_count"] = len(payload.get("words") or [])
+        if "tasks" in payload:
+            fields["tasks_count"] = len(payload.get("tasks") or [])
         return fields
 
     @staticmethod

@@ -1,1 +1,1 @@
-﻿from .entity import TrackProgressSnapshot
+from .entity import CARD_BATCH_SIZE, TrackProgressSnapshot

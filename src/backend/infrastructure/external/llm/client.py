@@ -9,7 +9,11 @@ from src.backend.dependencies.settings import Settings
 from src.backend.domain.content import TrackType
 from src.backend.domain.mentor import MentorFocus, MentorMessage
 from src.backend.domain.user import User
-from src.backend.dto.learning import GeneratedCardDraftDTO, SpeechPracticeDTO
+from src.backend.dto.learning import (
+    GeneratedCardDraftDTO,
+    SpeechPracticeDTO,
+    TrackWorkResultDTO,
+)
 from src.backend.dto.mentor_dto import MentorReplyDTO
 from src.backend.dto.profile_dto import (
     AIAdviceDTO,
@@ -35,7 +39,7 @@ logger = get_logger(__name__)
 class HuggingFaceLLMClient(
     LLMRequestMixin, LLMPromptMixin, LLMNormalizationMixin, LLMFallbackMixin
 ):
-    _CARDS_CACHE_VERSION = "cards-v3"
+    _CARDS_CACHE_VERSION = "cards-v4"
     _SPEECH_CACHE_VERSION = "speech-v3"
     _ADVICE_CACHE_VERSION = "advice-v3"
 
@@ -249,6 +253,36 @@ class HuggingFaceLLMClient(
                 reason=self._fallback_reason_from_error(error),
             )
             return self._fallback_mentor_reply(report, plan, message, active_focus)
+
+    async def review_track_work(
+        self,
+        *,
+        user: User,
+        track: TrackType,
+        batch_number: int,
+        tasks: list[dict[str, object]],
+        fallback_result: TrackWorkResultDTO,
+    ) -> TrackWorkResultDTO:
+        payload = {
+            "kind": "work_review",
+            "user_id": user.id,
+            "track": track.value,
+            "batch_number": batch_number,
+            "goal": user.learning_goal.value if user.learning_goal else None,
+            "language_level": (
+                user.language_level.value if user.language_level else None
+            ),
+            "study_timeline": (
+                user.study_timeline.value if user.study_timeline else None
+            ),
+            "diagnostic_level": (
+                user.skill_assessment.estimated_level.value
+                if user.skill_assessment and user.skill_assessment.estimated_level
+                else None
+            ),
+            "tasks": tasks,
+        }
+        return await self._request_work_review(payload, fallback_result)
 
     async def close(self) -> None:
         await self._http_client.aclose()

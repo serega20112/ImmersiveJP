@@ -48,6 +48,7 @@ class TrackPageDTO(BaseModel):
     generated_total: int
     all_current_batch_completed: bool
     can_generate_next: bool
+    generate_action_label: str
     completed_batches: int
     work_ready_batch: int | None = None
     work_href: str | None = None

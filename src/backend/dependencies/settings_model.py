@@ -83,6 +83,11 @@ class AppSettings(BaseSettings):
     hf_api_token: str | None = None
     hf_model: str = "openai/gpt-oss-120b"
     hf_provider: str | None = "fireworks-ai"
+    hf_cards_model: str = "openai/gpt-oss-20b"
+    hf_cards_timeout_seconds: float = 20
+    hf_cards_retry_attempts: int = 1
+    hf_cards_max_tokens: int = 1400
+    hf_cards_circuit_open_seconds: int = 180
     hf_mentor_model: str = "openai/gpt-oss-20b:fireworks-ai"
     hf_mentor_timeout_seconds: float = 18
     hf_mentor_retry_attempts: int = 1
@@ -91,6 +96,10 @@ class AppSettings(BaseSettings):
     hf_speech_timeout_seconds: float = 18
     hf_speech_retry_attempts: int = 1
     hf_speech_max_tokens: int = 420
+    hf_work_review_model: str = "openai/gpt-oss-20b:fireworks-ai"
+    hf_work_review_timeout_seconds: float = 14
+    hf_work_review_retry_attempts: int = 1
+    hf_work_review_max_tokens: int = 700
     hf_api_url: str = "https://router.huggingface.co/v1/chat/completions"
     hf_timeout_seconds: float = 30
     hf_retry_attempts: int = 3
@@ -137,11 +146,30 @@ class AppSettings(BaseSettings):
         "api_rate_limit_requests",
         "api_rate_limit_window_seconds",
         "onboarding_page_cache_ttl_seconds",
+        "hf_cards_retry_attempts",
+        "hf_cards_max_tokens",
+        "hf_cards_circuit_open_seconds",
+        "hf_work_review_retry_attempts",
+        "hf_work_review_max_tokens",
     )
     @classmethod
     def validate_positive_ints(cls, value: int) -> int:
         if value <= 0:
             raise ValueError("Numeric limits must be greater than zero")
+        return value
+
+    @field_validator(
+        "hf_cards_timeout_seconds",
+        "hf_mentor_timeout_seconds",
+        "hf_speech_timeout_seconds",
+        "hf_work_review_timeout_seconds",
+        "hf_timeout_seconds",
+        "hf_retry_backoff_seconds",
+    )
+    @classmethod
+    def validate_positive_floats(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("Timeouts and backoff must be greater than zero")
         return value
 
     @model_validator(mode="after")

@@ -5,16 +5,19 @@ import logging
 from src.backend.dependencies.settings import Settings
 from src.backend.domain.content import TrackType
 from src.backend.dto.learning_dto import TrackWorkPageDTO
+from src.backend.infrastructure.external import HuggingFaceLLMClient
 from src.backend.infrastructure.observability import get_logger, log_event
 from src.backend.infrastructure.repositories import (
     AbstractContentRepository,
     AbstractProgressRepository,
+    AbstractUserRepository,
 )
 from src.backend.use_case.learning.get_track_work_page import TrackWorkUnavailableError
 from src.backend.use_case.learning.work_tasks import (
     build_prepared_work_tasks,
     evaluate_work_submission,
     to_track_work_task_dto,
+    to_track_work_review_payload,
 )
 
 logger = get_logger(__name__)
@@ -27,11 +30,15 @@ class InvalidTrackWorkSubmissionError(Exception):
 class SubmitTrackWorkUseCase:
     def __init__(
         self,
+        user_repository: AbstractUserRepository,
         content_repository: AbstractContentRepository,
         progress_repository: AbstractProgressRepository,
+        llm_client: HuggingFaceLLMClient,
     ):
+        self._user_repository = user_repository
         self._content_repository = content_repository
         self._progress_repository = progress_repository
+        self._llm_client = llm_client
 
     async def execute(
         self,
@@ -56,9 +63,22 @@ class SubmitTrackWorkUseCase:
             raise TrackWorkUnavailableError(
                 "Работа открывается только после полного завершения партии"
             )
+        user = await self._user_repository.get_by_id(user_id)
+        if user is None:
+            raise ValueError("Пользователь не найден")
         review_cards = await self._load_review_cards(user_id, track, batch_number)
         tasks = build_prepared_work_tasks(track, cards, review_cards)
-        result = evaluate_work_submission(tasks, answers, track=track)
+        fallback_result = evaluate_work_submission(tasks, answers, track=track)
+        result = await self._llm_client.review_track_work(
+            user=user,
+            track=track,
+            batch_number=batch_number,
+            tasks=[
+                to_track_work_review_payload(task, submitted_answer=answers.get(task.id))
+                for task in tasks
+            ],
+            fallback_result=fallback_result,
+        )
         log_event(
             logger,
             logging.INFO,

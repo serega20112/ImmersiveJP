@@ -103,8 +103,10 @@ class LearningProvidersMixin:
     @cached_property
     def submit_track_work_use_case(self) -> SubmitTrackWorkUseCase:
         return SubmitTrackWorkUseCase(
+            self.user_repository,
             self.content_repository,
             self.progress_repository,
+            self.root.llm_client,
         )
 
     @cached_property
