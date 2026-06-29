@@ -11,7 +11,6 @@ from src.backend.dto.profile_dto import TrackProgressDTO
 from src.backend.dto.skill_dto import SkillAssessmentDTO
 from src.backend.use_case.key_terms import build_key_term_dtos
 
-
 _LEVEL_TITLES = {
     "zero": "Стартовый",
     "basic": "Базовый",
@@ -119,10 +118,14 @@ def _sanitize_generated_note(text: str) -> str:
     for pattern, replacement in word_replacements.items():
         compact = re.sub(pattern, replacement, compact, flags=re.IGNORECASE)
 
-    compact = re.sub(r"Эта карточка про тему '[^']+'\.\s*", "", compact, flags=re.IGNORECASE)
+    compact = re.sub(
+        r"Эта карточка про тему '[^']+'\.\s*", "", compact, flags=re.IGNORECASE
+    )
 
     sentences = re.split(r"(?<=[.!?])\s+", compact)
-    filtered = [sentence.strip() for sentence in sentences if not _is_noise_sentence(sentence)]
+    filtered = [
+        sentence.strip() for sentence in sentences if not _is_noise_sentence(sentence)
+    ]
     normalized = " ".join(filtered).strip()
     return normalized or compact
 

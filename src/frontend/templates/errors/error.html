@@ -1,7 +1,5 @@
-{% extends "base.html" %}
-{% block title %}{{ page.title }} - ImmersJP{% endblock %}
-{% block body_class %}page--error{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}{{ page.title }} - ImmersJP{%
+endblock %} {% block body_class %}page--error{% endblock %} {% block content %}
 <section class="error-shell reveal">
   <article class="panel panel--hero error-card">
     <p class="section-kicker">Ошибка {{ page.status_code }}</p>
@@ -14,7 +12,9 @@
       {% endif %}
     </div>
     <div class="hero__actions">
-      <a href="{{ page.return_href }}" class="primary-button">{{ page.return_label }}</a>
+      <a href="{{ page.return_href }}" class="primary-button"
+        >{{ page.return_label }}</a
+      >
       <a href="/" class="ghost-button">На главную</a>
     </div>
   </article>

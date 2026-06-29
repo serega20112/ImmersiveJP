@@ -16,7 +16,7 @@ export const initWordChips = () => {
         .map((item) => item.trim())
         .filter(Boolean);
       const hasValue = existingItems.some(
-        (item) => item.toLowerCase() === value.toLowerCase()
+        (item) => item.toLowerCase() === value.toLowerCase(),
       );
 
       if (!hasValue) {

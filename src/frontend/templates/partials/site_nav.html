@@ -45,15 +45,24 @@
     <small>прогресс</small>
   </a>
   {% else %}
-  <a href="/" class="nav-link {% if request.url.path == '/' %}is-active{% endif %}">
+  <a
+    href="/"
+    class="nav-link {% if request.url.path == '/' %}is-active{% endif %}"
+  >
     <span>Главная</span>
     <small>старт</small>
   </a>
-  <a href="/auth/login" class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}">
+  <a
+    href="/auth/login"
+    class="nav-link {% if request.url.path.startswith('/auth/login') %}is-active{% endif %}"
+  >
     <span>Вход</span>
     <small>аккаунт</small>
   </a>
-  <a href="/auth/register" class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}">
+  <a
+    href="/auth/register"
+    class="nav-link nav-link--accent {% if request.url.path.startswith('/auth/register') %}is-active{% endif %}"
+  >
     <span>Начать</span>
     <small>регистрация</small>
   </a>

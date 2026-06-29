@@ -1,21 +1,21 @@
-{% extends "base.html" %}
-{% block title %}{{ page.title }} - ImmersJP{% endblock %}
-{% block body_class %}page--learn{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}{{ page.title }} - ImmersJP{%
+endblock %} {% block body_class %}page--learn{% endblock %} {% block content %}
 <section class="track-hero reveal">
   <div class="panel panel--hero track-hero__main">
     <p class="section-kicker">{{ page.title }}</p>
     <h1>{{ page.subtitle }}</h1>
     <p class="page-lead">
-      Партия {{ page.current_batch if page.current_batch else 'еще не создана' }}.
-      Закрыто {{ page.completed_total }} из {{ page.generated_total }} карточек.
-      Полностью завершено батчей: {{ page.completed_batches }}.
+      Партия {{ page.current_batch if page.current_batch else 'еще не создана'
+      }}. Закрыто {{ page.completed_total }} из {{ page.generated_total }}
+      карточек. Полностью завершено батчей: {{ page.completed_batches }}.
     </p>
     <div class="hero-facts">
       <span class="hero-fact">{{ page.completed_total }} пройдено</span>
       <span class="hero-fact">{{ page.generated_total }} всего</span>
       {% if page.work_ready_batch %}
-      <span class="hero-fact">работа по партии {{ page.work_ready_batch }} готова</span>
+      <span class="hero-fact"
+        >работа по партии {{ page.work_ready_batch }} готова</span
+      >
       {% else %}
       <span class="hero-fact">сначала закрой текущий батч</span>
       {% endif %}
@@ -25,13 +25,22 @@
   <aside class="panel panel--signal track-hero__rail">
     <div class="utility-stack">
       {% if page.track == 'language' %}
-      <a href="{{ url_for('learning.speech_page') }}" class="ghost-button">Речевая практика</a>
-      {% endif %}
-      {% if page.work_href %}
+      <a href="{{ url_for('learning.speech_page') }}" class="ghost-button"
+        >Речевая практика</a
+      >
+      {% endif %} {% if page.work_href %}
       <a href="{{ page.work_href }}" class="primary-button">Открыть работу</a>
       {% endif %}
-      <a href="{{ url_for('learning.download_pdf') }}?track={{ page.track }}" class="ghost-button">Скачать PDF</a>
-      <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}">{{ page.generate_action_label }}</a>
+      <a
+        href="{{ url_for('learning.download_pdf') }}?track={{ page.track }}"
+        class="ghost-button"
+        >Скачать PDF</a
+      >
+      <a
+        href="{{ url_for('learning.next_cards') }}?track={{ page.track }}"
+        class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}"
+        >{{ page.generate_action_label }}</a
+      >
     </div>
     <div class="mini-metrics">
       <div class="mini-metric">
@@ -48,15 +57,12 @@
       </div>
     </div>
     <p class="utility-card__note">
-      {% if page.can_generate_next %}
-      {% if page.generated_total == 0 %}
-      Для этого трека партия еще не создана. Можно запустить первую генерацию вручную.
-      {% else %}
-      Текущая партия закрыта. Сначала можно пройти работу, потом открывать новый батч.
-      {% endif %}
-      {% else %}
-      Новая партия откроется после завершения текущего батча. Работа строится только по завершенным батчам.
-      {% endif %}
+      {% if page.can_generate_next %} {% if page.generated_total == 0 %} Для
+      этого трека партия еще не создана. Можно запустить первую генерацию
+      вручную. {% else %} Текущая партия закрыта. Сначала можно пройти работу,
+      потом открывать новый батч. {% endif %} {% else %} Новая партия откроется
+      после завершения текущего батча. Работа строится только по завершенным
+      батчам. {% endif %}
     </p>
   </aside>
 </section>
@@ -66,28 +72,40 @@
   <div>
     <p class="section-kicker">Речевая практика</p>
     <h2>Повтори слова из этого батча в живом ответе.</h2>
-    <p>Секция собирает предложения и короткие диалоги по словам из уже пройденного материала.</p>
+    <p>
+      Секция собирает предложения и короткие диалоги по словам из уже
+      пройденного материала.
+    </p>
   </div>
-  <a href="{{ url_for('learning.speech_page') }}" class="primary-button">Открыть практику</a>
+  <a href="{{ url_for('learning.speech_page') }}" class="primary-button"
+    >Открыть практику</a
+  >
 </section>
-{% endif %}
-
-{% if not page.cards %}
+{% endif %} {% if not page.cards %}
 <section class="panel empty-state reveal">
   <p class="section-kicker">Пусто</p>
   {% if page.generated_total == 0 %}
   <h2>Первая партия еще не создана.</h2>
   <p>Этот трек можно запустить отдельно, когда он тебе реально нужен.</p>
-  <a href="{{ url_for('learning.next_cards') }}?track={{ page.track }}" class="primary-button">Создать первую партию</a>
+  <a
+    href="{{ url_for('learning.next_cards') }}?track={{ page.track }}"
+    class="primary-button"
+    >Создать первую партию</a
+  >
   {% else %}
   <h2>Карточки пока не готовы.</h2>
-  <p>Вернись чуть позже или открой другой трек, если генерация еще продолжается.</p>
+  <p>
+    Вернись чуть позже или открой другой трек, если генерация еще продолжается.
+  </p>
   {% endif %}
 </section>
 {% else %}
 <section class="preview-grid reveal">
   {% for card in page.cards %}
-  <a href="{{ url_for('learning.card_page', track=page.track, card_id=card.id) }}" class="panel preview-card {% if card.is_completed %}preview-card--done{% endif %}">
+  <a
+    href="{{ url_for('learning.card_page', track=page.track, card_id=card.id) }}"
+    class="panel preview-card {% if card.is_completed %}preview-card--done{% endif %}"
+  >
     <div class="preview-card__meta">
       <span>Карточка {{ card.position }}</span>
       <span>Партия {{ card.batch_number }}</span>
@@ -114,5 +132,4 @@
   </a>
   {% endfor %}
 </section>
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}

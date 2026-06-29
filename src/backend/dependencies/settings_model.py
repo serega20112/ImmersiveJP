@@ -192,7 +192,9 @@ class AppSettings(BaseSettings):
             database=self.postgres_db,
             async_mode=False,
         )
-        raw_database_url = self.database_url or self.database_sync_url or fallback_database_url
+        raw_database_url = (
+            self.database_url or self.database_sync_url or fallback_database_url
+        )
         self.database_url = _normalize_database_url(
             self.database_url or raw_database_url,
             async_mode=True,

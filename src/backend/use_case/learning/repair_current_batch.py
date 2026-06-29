@@ -61,9 +61,7 @@ class RepairCurrentBatchUseCase:
             limit=40,
         )
         clean_previous_topics = [
-            topic
-            for topic in previous_topics
-            if not self._is_placeholder(topic)
+            topic for topic in previous_topics if not self._is_placeholder(topic)
         ]
         drafts = await self._llm_client.generate_cards(
             user=user,

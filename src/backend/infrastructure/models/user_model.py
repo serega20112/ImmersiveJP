@@ -9,6 +9,7 @@ from src.backend.infrastructure.models.timestamp import TimestampMixin
 
 class UserModel(TimestampMixin, Base):
     __tablename__ = "users"
+    documents: Mapped[list["UserDocument"]] = relationship("UserDocument", back_populates="user", cascade="all, delete-orphan")
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(

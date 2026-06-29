@@ -41,7 +41,9 @@ class SendMentorMessageUseCase:
     async def execute(self, user_id: int, message_text: str):
         message = str(message_text or "").strip()
         if not message:
-            raise InvalidMentorMessageError("Сообщение пустое. Сформулируй, что именно не идет.")
+            raise InvalidMentorMessageError(
+                "Сообщение пустое. Сформулируй, что именно не идет."
+            )
         if len(message) > Settings.text_input_limit:
             raise InvalidMentorMessageError(
                 f"Сообщение ограничено {Settings.text_input_limit} символами"

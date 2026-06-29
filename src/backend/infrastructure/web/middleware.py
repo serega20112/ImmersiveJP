@@ -22,7 +22,10 @@ from src.backend.infrastructure.web.error_responses import (
     apply_default_response_headers,
     build_application_error_response,
 )
-from src.backend.infrastructure.web.errors import ApplicationError, RateLimitExceededError
+from src.backend.infrastructure.web.errors import (
+    ApplicationError,
+    RateLimitExceededError,
+)
 
 
 def _is_static_request(request: Request) -> bool:
@@ -105,7 +108,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         forwarded_for = str(request.headers.get("x-forwarded-for") or "").strip()
         client_host = forwarded_for.split(",")[0].strip() if forwarded_for else ""
         if not client_host:
-            client_host = request.client.host if request.client is not None else "unknown"
+            client_host = (
+                request.client.host if request.client is not None else "unknown"
+            )
 
         current_count = await self._rate_limiter.consume(
             scope="http-api",

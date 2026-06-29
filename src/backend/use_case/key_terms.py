@@ -109,7 +109,11 @@ def parse_key_term(raw_term: str) -> tuple[str, str | None]:
     for separator in ("|", " - ", " — ", " – ", ":", " -> "):
         if separator not in cleaned:
             continue
-        parts = [part.strip(" ,.;") for part in cleaned.split(separator) if part.strip(" ,.;")]
+        parts = [
+            part.strip(" ,.;")
+            for part in cleaned.split(separator)
+            if part.strip(" ,.;")
+        ]
         if len(parts) >= 2:
             label = parts[0]
             translation = parts[-1]

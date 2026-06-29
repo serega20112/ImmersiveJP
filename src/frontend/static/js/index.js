@@ -1,5 +1,4 @@
-const assetVersion =
-  document.documentElement.dataset.assetVersion || "dev";
+const assetVersion = document.documentElement.dataset.assetVersion || "dev";
 
 const importModule = (path) => import(`${path}?v=${assetVersion}`);
 

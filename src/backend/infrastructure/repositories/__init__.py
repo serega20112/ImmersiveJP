@@ -1,4 +1,4 @@
-from src.backend.domain.repositories import (
+from src.backend.infrastructure.repositories import (
     AbstractContentRepository,
     AbstractMentorRepository,
     AbstractProgressRepository,

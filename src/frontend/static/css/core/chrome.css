@@ -137,7 +137,11 @@
 }
 
 .nav-link--accent {
-  background: linear-gradient(135deg, var(--accent-soft), rgba(100, 230, 255, 0.1));
+  background: linear-gradient(
+    135deg,
+    var(--accent-soft),
+    rgba(100, 230, 255, 0.1)
+  );
   border-color: rgba(255, 107, 74, 0.16);
 }
 

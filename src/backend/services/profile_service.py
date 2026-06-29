@@ -1,7 +1,11 @@
 ﻿from __future__ import annotations
 
 from src.backend.dto.mentor_dto import MentorPageDTO
-from src.backend.dto.profile_dto import AIAdviceDTO, LearningPlanPageDTO, ProgressReportDTO
+from src.backend.dto.profile_dto import (
+    AIAdviceDTO,
+    LearningPlanPageDTO,
+    ProgressReportDTO,
+)
 from src.backend.use_case.profile import (
     BuildLearningPlanUseCase,
     BuildProgressReportUseCase,

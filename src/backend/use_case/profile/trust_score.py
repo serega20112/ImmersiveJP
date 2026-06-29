@@ -11,7 +11,9 @@ def build_trust_score(
     total_completed: int,
     total_generated: int,
 ) -> TrustScoreDTO:
-    diagnostic_points = min(40, max(0, int((assessment.score if assessment else 0) * 8)))
+    diagnostic_points = min(
+        40, max(0, int((assessment.score if assessment else 0) * 8))
+    )
     completion_points = (
         min(35, round((total_completed / total_generated) * 35))
         if total_generated

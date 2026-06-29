@@ -13,7 +13,9 @@ _request_container_context: ContextVar["RequestContainer | None"] = ContextVar(
 _UNRESOLVED_CURRENT_USER = object()
 
 
-def bind_request_container(container: "RequestContainer") -> Token["RequestContainer | None"]:
+def bind_request_container(
+    container: "RequestContainer",
+) -> Token["RequestContainer | None"]:
     return _request_container_context.set(container)
 
 

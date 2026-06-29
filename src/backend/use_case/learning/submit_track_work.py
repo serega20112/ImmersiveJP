@@ -74,7 +74,9 @@ class SubmitTrackWorkUseCase:
             track=track,
             batch_number=batch_number,
             tasks=[
-                to_track_work_review_payload(task, submitted_answer=answers.get(task.id))
+                to_track_work_review_payload(
+                    task, submitted_answer=answers.get(task.id)
+                )
                 for task in tasks
             ],
             fallback_result=fallback_result,

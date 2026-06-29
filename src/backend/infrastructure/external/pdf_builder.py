@@ -326,9 +326,14 @@ class PdfBuilder:
         return [
             Spacer(1, 58 * mm),
             Paragraph("ImmersJP", styles["cover_brand"]),
-            Paragraph(f"{cls._track_mark(track)} / {track.subtitle}", styles["cover_track"]),
+            Paragraph(
+                f"{cls._track_mark(track)} / {track.subtitle}", styles["cover_track"]
+            ),
             Spacer(1, 10 * mm),
-            Paragraph(f"Личный PDF-конспект по треку «{escape(track.title)}»", styles["cover_title"]),
+            Paragraph(
+                f"Личный PDF-конспект по треку «{escape(track.title)}»",
+                styles["cover_title"],
+            ),
             Paragraph(
                 "Собранный материал рассчитан на спокойное повторение офлайн: тема, разбор, примеры и ключевые слова идут в одном документе без визуального мусора.",
                 styles["cover_body"],
@@ -417,10 +422,12 @@ class PdfBuilder:
     ) -> Table:
         inner_width = content_width - 14 * mm
         rows: list[list[object]] = [
-            [Paragraph(
-                f"Карточка {index:02d} · партия {card.batch_number} · позиция {card.position:02d}",
-                styles["card_meta"],
-            )],
+            [
+                Paragraph(
+                    f"Карточка {index:02d} · партия {card.batch_number} · позиция {card.position:02d}",
+                    styles["card_meta"],
+                )
+            ],
             [Paragraph(escape(card.topic), styles["card_title"])],
             [Paragraph(cls._paragraph_markup(card.explanation), styles["body"])],
             [Paragraph("Примеры употребления", styles["subhead"])],
@@ -431,7 +438,11 @@ class PdfBuilder:
             rows.extend(
                 [
                     [Paragraph("Ключевые слова", styles["subhead"])],
-                    [cls._build_terms_table(card.key_term_items, inner_width, styles, track)],
+                    [
+                        cls._build_terms_table(
+                            card.key_term_items, inner_width, styles, track
+                        )
+                    ],
                 ]
             )
 
@@ -473,9 +484,17 @@ class PdfBuilder:
         for item in examples:
             rows.append(
                 [
-                    Paragraph(cls._paragraph_markup(item.japanese), styles["example_japanese"]),
-                    Paragraph(cls._paragraph_markup(item.romaji or "—"), styles["example_meta"]),
-                    Paragraph(cls._paragraph_markup(item.translation or "—"), styles["example_meta"]),
+                    Paragraph(
+                        cls._paragraph_markup(item.japanese), styles["example_japanese"]
+                    ),
+                    Paragraph(
+                        cls._paragraph_markup(item.romaji or "—"),
+                        styles["example_meta"],
+                    ),
+                    Paragraph(
+                        cls._paragraph_markup(item.translation or "—"),
+                        styles["example_meta"],
+                    ),
                 ]
             )
 
@@ -550,15 +569,37 @@ class PdfBuilder:
                 if not source_value:
                     commands.extend(
                         [
-                            ("BACKGROUND", (col_index, row_index), (col_index, row_index), cls._PANEL),
-                            ("LINEBELOW", (col_index, row_index), (col_index, row_index), 0, cls._PANEL),
+                            (
+                                "BACKGROUND",
+                                (col_index, row_index),
+                                (col_index, row_index),
+                                cls._PANEL,
+                            ),
+                            (
+                                "LINEBELOW",
+                                (col_index, row_index),
+                                (col_index, row_index),
+                                0,
+                                cls._PANEL,
+                            ),
                         ]
                     )
                     continue
                 commands.extend(
                     [
-                        ("BACKGROUND", (col_index, row_index), (col_index, row_index), cls._accent_soft(track)),
-                        ("BOX", (col_index, row_index), (col_index, row_index), 0.45, cls._LINE),
+                        (
+                            "BACKGROUND",
+                            (col_index, row_index),
+                            (col_index, row_index),
+                            cls._accent_soft(track),
+                        ),
+                        (
+                            "BOX",
+                            (col_index, row_index),
+                            (col_index, row_index),
+                            0.45,
+                            cls._LINE,
+                        ),
                     ]
                 )
 
@@ -647,11 +688,15 @@ class PdfBuilder:
 
         canvas.setStrokeColor(colors.HexColor("#F1E7D6"))
         canvas.setLineWidth(0.7)
-        canvas.line(28 * mm, page_height - 28 * mm, page_width - 18 * mm, page_height - 28 * mm)
+        canvas.line(
+            28 * mm, page_height - 28 * mm, page_width - 18 * mm, page_height - 28 * mm
+        )
 
         canvas.setFillColor(colors.HexColor("#EADFC9"))
         canvas.setFont(cls._HEADING_FONT, 26)
-        canvas.drawRightString(page_width - 20 * mm, page_height - 20 * mm, cls._track_mark(track))
+        canvas.drawRightString(
+            page_width - 20 * mm, page_height - 20 * mm, cls._track_mark(track)
+        )
 
         canvas.restoreState()
 
@@ -671,7 +716,9 @@ class PdfBuilder:
         canvas.rect(0, 0, page_width, page_height, fill=1, stroke=0)
 
         canvas.setFillColor(accent)
-        canvas.rect(doc.leftMargin, page_height - 12 * mm, doc.width, 2.3 * mm, fill=1, stroke=0)
+        canvas.rect(
+            doc.leftMargin, page_height - 12 * mm, doc.width, 2.3 * mm, fill=1, stroke=0
+        )
 
         canvas.setStrokeColor(cls._LINE)
         canvas.setLineWidth(0.6)
@@ -679,12 +726,18 @@ class PdfBuilder:
 
         canvas.setFont(cls._HEADING_FONT, 9)
         canvas.setFillColor(accent)
-        canvas.drawString(doc.leftMargin, page_height - 17 * mm, f"ImmersJP / {track.title}")
+        canvas.drawString(
+            doc.leftMargin, page_height - 17 * mm, f"ImmersJP / {track.title}"
+        )
 
         canvas.setFont(cls._BODY_FONT, 8.5)
         canvas.setFillColor(cls._MUTED)
-        canvas.drawRightString(doc.leftMargin + doc.width, page_height - 17 * mm, user_display_name)
-        canvas.drawString(doc.leftMargin, 8 * mm, f"Повторение по треку «{track.title}»")
+        canvas.drawRightString(
+            doc.leftMargin + doc.width, page_height - 17 * mm, user_display_name
+        )
+        canvas.drawString(
+            doc.leftMargin, 8 * mm, f"Повторение по треку «{track.title}»"
+        )
         canvas.drawRightString(doc.leftMargin + doc.width, 8 * mm, f"Стр. {doc.page}")
 
         canvas.restoreState()

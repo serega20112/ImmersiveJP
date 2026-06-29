@@ -1,7 +1,5 @@
-{% extends "base.html" %}
-{% block title %}План - ImmersJP{% endblock %}
-{% block body_class %}page--plan{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}План - ImmersJP{% endblock %} {%
+block body_class %}page--plan{% endblock %} {% block content %}
 <section class="plan-hero reveal">
   <div class="panel panel--hero plan-hero__main">
     <p class="section-kicker">{{ page.title }}</p>
@@ -35,7 +33,12 @@
     {% if page.content_mode.dictionary_links %}
     <div class="plan-dictionary-grid">
       {% for link in page.content_mode.dictionary_links %}
-      <a href="{{ link.href }}" target="_blank" rel="noreferrer" class="plan-dictionary">
+      <a
+        href="{{ link.href }}"
+        target="_blank"
+        rel="noreferrer"
+        class="plan-dictionary"
+      >
         <strong>{{ link.label }}</strong>
         <span>{{ link.note }}</span>
       </a>
@@ -62,7 +65,10 @@
     {% if page.horizon_note %}
     <p class="aside-callout">{{ page.horizon_note }}</p>
     {% else %}
-    <p>План показывает всю дорожку, потому что ты не зафиксировал жесткий дедлайн и система может вести тебя дальше по общей карте.</p>
+    <p>
+      План показывает всю дорожку, потому что ты не зафиксировал жесткий дедлайн
+      и система может вести тебя дальше по общей карте.
+    </p>
     {% endif %}
   </article>
 
@@ -100,7 +106,10 @@
           <h2>{{ stage.title }}</h2>
         </div>
       </div>
-      <span class="status-chip plan-stage__status plan-stage__status--{{ stage.status }}">{{ stage.status_label }}</span>
+      <span
+        class="status-chip plan-stage__status plan-stage__status--{{ stage.status }}"
+        >{{ stage.status_label }}</span
+      >
     </div>
     <p class="plan-stage__summary">{{ stage.summary }}</p>
     {% if stage.focus_note %}

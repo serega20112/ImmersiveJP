@@ -220,9 +220,7 @@ class LLMNormalizationMixin:
                 if task_id:
                     raw_results_by_id[task_id] = item
 
-        fallback_by_id = {
-            item.task_id: item for item in fallback_result.task_results
-        }
+        fallback_by_id = {item.task_id: item for item in fallback_result.task_results}
         normalized_task_results: list[TrackWorkTaskResultDTO] = []
         correct = 0
 
@@ -242,12 +240,15 @@ class LLMNormalizationMixin:
                 )
                 if is_correct is None:
                     is_correct = fallback_item.is_correct
-                feedback = str(
-                    raw_item.get("feedback")
-                    or raw_item.get("note")
-                    or raw_item.get("comment")
-                    or ""
-                ).strip() or fallback_item.feedback
+                feedback = (
+                    str(
+                        raw_item.get("feedback")
+                        or raw_item.get("note")
+                        or raw_item.get("comment")
+                        or ""
+                    ).strip()
+                    or fallback_item.feedback
+                )
                 normalized_item = TrackWorkTaskResultDTO(
                     task_id=task_id,
                     is_correct=is_correct,
@@ -268,9 +269,9 @@ class LLMNormalizationMixin:
         passed = score >= pass_score
         summary = str(parsed_object.get("summary") or "").strip()
         verdict = str(parsed_object.get("verdict") or "").strip()
-        certificate_statement = str(
-            parsed_object.get("certificate_statement") or ""
-        ).strip() or None
+        certificate_statement = (
+            str(parsed_object.get("certificate_statement") or "").strip() or None
+        )
 
         return TrackWorkResultDTO(
             score=score,
@@ -467,7 +468,10 @@ class LLMNormalizationMixin:
 
     @staticmethod
     def _matches_language_scope(text: str, examples: list[str]) -> bool:
-        if any(HuggingFaceLLMClient._contains_japanese_chars(example) for example in examples):
+        if any(
+            HuggingFaceLLMClient._contains_japanese_chars(example)
+            for example in examples
+        ):
             return True
         language_keywords = (
             "фраз",

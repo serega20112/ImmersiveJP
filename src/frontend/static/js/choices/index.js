@@ -37,7 +37,7 @@ export const initChoiceGroups = () => {
   });
 
   const initialDiagnosticLevel = document.querySelector(
-    "[data-diagnostic-level-input]"
+    "[data-diagnostic-level-input]",
   )?.value;
   if (initialDiagnosticLevel) {
     setDiagnosticLevel(initialDiagnosticLevel);

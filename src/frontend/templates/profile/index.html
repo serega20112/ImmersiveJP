@@ -1,14 +1,14 @@
-{% extends "base.html" %}
-{% block title %}Профиль - ImmersJP{% endblock %}
-{% block body_class %}page--profile{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}Профиль - ImmersJP{% endblock %} {%
+block body_class %}page--profile{% endblock %} {% block content %}
 <section class="profile-hero reveal">
   <div class="panel panel--hero profile-hero__main">
     <p class="section-kicker">Профиль</p>
     <h1>Здесь видно, насколько система доверяет твоему текущему ритму.</h1>
     <p class="page-lead">{{ report.next_step }}</p>
     <div class="hero-facts">
-      <span class="hero-fact">{{ report.total_completed }} карточек закрыто</span>
+      <span class="hero-fact"
+        >{{ report.total_completed }} карточек закрыто</span
+      >
       <span class="hero-fact">{{ report.total_generated }} карточек всего</span>
       <span class="hero-fact">{{ report.trust_score.band_title }}</span>
     </div>
@@ -85,7 +85,10 @@
   <article class="panel skill-summary-card">
     <p class="section-kicker">Диагностика</p>
     <h2>Стартовый срез пока не собран.</h2>
-    <p>Пройди онбординг заново, если нужно обновить стартовые настройки и уровень вопросов.</p>
+    <p>
+      Пройди онбординг заново, если нужно обновить стартовые настройки и уровень
+      вопросов.
+    </p>
   </article>
   {% endif %}
 </section>
@@ -96,17 +99,20 @@
     <div class="track-card__head">
       <div>
         <p class="section-kicker">{{ track.title }}</p>
-        <h2>Партия {{ track.current_batch if track.current_batch else 'новый цикл' }}</h2>
+        <h2>
+          Партия {{ track.current_batch if track.current_batch else 'новый цикл'
+          }}
+        </h2>
       </div>
-      <span class="track-card__batch">{{ track.completed_batches }} батчей</span>
+      <span class="track-card__batch"
+        >{{ track.completed_batches }} батчей</span
+      >
     </div>
 
     <p class="track-card__note">
-      {% if track.work_ready_batch %}
-      Работа по партии {{ track.work_ready_batch }} доступна.
-      {% else %}
-      После первой закрытой партии здесь появится работа для проверки материала.
-      {% endif %}
+      {% if track.work_ready_batch %} Работа по партии {{ track.work_ready_batch
+      }} доступна. {% else %} После первой закрытой партии здесь появится работа
+      для проверки материала. {% endif %}
     </p>
 
     <div class="track-card__meter" aria-hidden="true">
@@ -130,9 +136,15 @@
 
     <div class="track-card__footer">
       {% if track.work_ready_batch %}
-      <a href="{{ '/learn/' ~ track.track ~ '/work/' ~ track.work_ready_batch }}" class="ghost-button">Открыть работу</a>
+      <a
+        href="{{ '/learn/' ~ track.track ~ '/work/' ~ track.work_ready_batch }}"
+        class="ghost-button"
+        >Открыть работу</a
+      >
       {% endif %}
-      <a href="{{ '/learn/' ~ track.track }}" class="primary-button">Открыть трек</a>
+      <a href="{{ '/learn/' ~ track.track }}" class="primary-button"
+        >Открыть трек</a
+      >
     </div>
   </article>
   {% endfor %}

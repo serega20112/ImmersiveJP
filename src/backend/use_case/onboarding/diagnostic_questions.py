@@ -8,7 +8,6 @@ from src.backend.dto.onboarding_dto import (
     StudyTimelineOptionDTO,
 )
 
-
 _DIAGNOSTIC_BANKS = {
     LanguageLevel.ZERO: {
         "title": "Стартовый срез",
@@ -184,8 +183,16 @@ _DIAGNOSTIC_BANKS = {
                         "今日は行きません。",
                         "Верная отрицательная форма.",
                     ),
-                    ("kyou_wa_ikimasu", "今日は行きます。", "Это утверждение, не отрицание."),
-                    ("kyou_wa_ikanai_desu", "今日は行かないです。", "Фраза возможна, но не тот регистр и не тот паттерн, который ожидается здесь."),
+                    (
+                        "kyou_wa_ikimasu",
+                        "今日は行きます。",
+                        "Это утверждение, не отрицание.",
+                    ),
+                    (
+                        "kyou_wa_ikanai_desu",
+                        "今日は行かないです。",
+                        "Фраза возможна, но не тот регистр и не тот паттерн, который ожидается здесь.",
+                    ),
                 ),
             },
             {
@@ -322,7 +329,11 @@ _DIAGNOSTIC_BANKS = {
                         "遅くなって失礼しました。",
                         "Краткое и уместное извинение.",
                     ),
-                    ("sumimasen_deshita", "すみませんでした。", "Понять можно, но здесь менее точный выбор."),
+                    (
+                        "sumimasen_deshita",
+                        "すみませんでした。",
+                        "Понять можно, но здесь менее точный выбор.",
+                    ),
                     ("mada_ikimasu", "まだ行きます。", "Смысл не совпадает."),
                 ),
             },
@@ -391,9 +402,7 @@ def evaluate_diagnostic_answers(
 ) -> SkillAssessment:
     bank = _DIAGNOSTIC_BANKS[declared_level]["questions"]
     normalized_answers = {
-        key: value.strip()
-        for key, value in answers.items()
-        if value and value.strip()
+        key: value.strip() for key, value in answers.items() if value and value.strip()
     }
     missing = [item["key"] for item in bank if item["key"] not in normalized_answers]
     if missing:

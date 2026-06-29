@@ -1,14 +1,14 @@
-﻿{% extends "base.html" %}
-{% block title %}Речевая практика - ImmersJP{% endblock %}
-{% block body_class %}page--learn page--speech{% endblock %}
-{% block content %}
+﻿{% extends "base.html" %} {% block title %}Речевая практика - ImmersJP{%
+endblock %} {% block body_class %}page--learn page--speech{% endblock %} {%
+block content %}
 <section class="page-hero reveal">
   <div class="page-hero__copy panel panel--hero">
     <p class="section-kicker">{{ page.title }}</p>
     <h1>Практика речи по словам из карточек.</h1>
     <p class="page-lead">
-      Здесь можно взять слова из текущего языкового блока или добавить свои. Сервис соберет
-      предложения и короткие диалоги, чтобы материал можно было проговаривать вслух.
+      Здесь можно взять слова из текущего языкового блока или добавить свои.
+      Сервис соберет предложения и короткие диалоги, чтобы материал можно было
+      проговаривать вслух.
     </p>
     <div class="hero-facts">
       <span class="hero-fact">10 предложений</span>
@@ -19,13 +19,17 @@
 
   <aside class="panel panel--signal page-hero__side">
     <div class="utility-stack">
-      <a href="{{ url_for('learning.language') }}" class="ghost-button">Назад к языку</a>
+      <a href="{{ url_for('learning.language') }}" class="ghost-button"
+        >Назад к языку</a
+      >
       <a href="{{ url_for('profile.page') }}" class="ghost-button">Профиль</a>
     </div>
     {% if page.skill_summary %}
     <p class="utility-card__note">{{ page.skill_summary }}</p>
     {% else %}
-    <p class="utility-card__note">Раздел работает лучше после первой языковой партии.</p>
+    <p class="utility-card__note">
+      Раздел работает лучше после первой языковой партии.
+    </p>
     {% endif %}
   </aside>
 </section>
@@ -38,7 +42,13 @@
       <p>Подходит японский текст, ромадзи, перевод или смешанный формат.</p>
     </div>
 
-    <form action="{{ url_for('learning.speech_generate') }}" method="post" class="speech-form" data-pending-form data-pending-label="Собираем практику...">
+    <form
+      action="{{ url_for('learning.speech_generate') }}"
+      method="post"
+      class="speech-form"
+      data-pending-form
+      data-pending-label="Собираем практику..."
+    >
       {% include "partials/csrf_field.html" %}
       <label class="field-stack">
         <span>Слова или термины</span>
@@ -48,13 +58,19 @@
           rows="5"
           maxlength="{{ text_input_limit }}"
           placeholder="みず | mizu | вода, たべる | taberu | есть, がっこう | gakkou | школа"
-        >{{ page.words_text }}</textarea>
+        >
+{{ page.words_text }}</textarea
+        >
         <small class="field-note">До {{ text_input_limit }} символов.</small>
       </label>
 
       <div class="form-actions">
-        <button type="submit" class="primary-button" data-pending-button>Собрать практику</button>
-        <p class="pending-note" data-pending-note hidden>Подготовка может занять немного времени.</p>
+        <button type="submit" class="primary-button" data-pending-button>
+          Собрать практику
+        </button>
+        <p class="pending-note" data-pending-note hidden>
+          Подготовка может занять немного времени.
+        </p>
       </div>
     </form>
   </article>
@@ -66,13 +82,19 @@
       <h2>Слова из последней языковой партии.</h2>
       <div class="tag-row suggested-words">
         {% for word in page.suggested_words %}
-        <button type="button" class="word-chip" data-word-chip data-word-target="speech-words" data-word-value="{{ word }}">{{ word }}</button>
+        <button
+          type="button"
+          class="word-chip"
+          data-word-chip
+          data-word-target="speech-words"
+          data-word-value="{{ word }}"
+        >
+          {{ word }}
+        </button>
         {% endfor %}
       </div>
     </section>
-    {% endif %}
-
-    {% if page.latest_topics %}
+    {% endif %} {% if page.latest_topics %}
     <section class="panel">
       <p class="section-kicker">Последние темы</p>
       <div class="tag-row">
@@ -88,7 +110,10 @@
       <ul class="plain-list">
         <li>сначала прочитай все предложения в спокойном темпе</li>
         <li>потом проговори диалоги двумя ролями</li>
-        <li>после этого вернись в карточки и проверь, насколько материал стал понятнее на слух</li>
+        <li>
+          после этого вернись в карточки и проверь, насколько материал стал
+          понятнее на слух
+        </li>
       </ul>
     </section>
   </aside>
@@ -131,8 +156,7 @@
       <strong>{{ sentence.japanese }}</strong>
       {% if sentence.romaji %}
       <span>{{ sentence.romaji }}</span>
-      {% endif %}
-      {% if sentence.translation %}
+      {% endif %} {% if sentence.translation %}
       <p>{{ sentence.translation }}</p>
       {% endif %}
     </article>
@@ -158,8 +182,7 @@
             <strong>{{ turn.japanese }}</strong>
             {% if turn.romaji %}
             <span>{{ turn.romaji }}</span>
-            {% endif %}
-            {% if turn.translation %}
+            {% endif %} {% if turn.translation %}
             <p>{{ turn.translation }}</p>
             {% endif %}
           </div>
@@ -170,5 +193,4 @@
     {% endfor %}
   </div>
 </section>
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}

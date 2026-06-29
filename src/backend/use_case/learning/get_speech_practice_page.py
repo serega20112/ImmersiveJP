@@ -33,11 +33,15 @@ class GetSpeechPracticePageUseCase:
             suggested_words=suggested_words,
             latest_topics=latest_topics,
             skill_summary=(
-                user.skill_assessment.summary if user.skill_assessment is not None else None
+                user.skill_assessment.summary
+                if user.skill_assessment is not None
+                else None
             ),
         )
 
-    async def _build_language_context(self, user_id: int) -> tuple[list[str], list[str]]:
+    async def _build_language_context(
+        self, user_id: int
+    ) -> tuple[list[str], list[str]]:
         session = await self._session_repository.get_track_session(
             user_id,
             TrackType.LANGUAGE,

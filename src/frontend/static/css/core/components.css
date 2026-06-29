@@ -40,28 +40,44 @@
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.12),
+    transparent 72%
+  );
   pointer-events: none;
 }
 
 .panel--hero {
   background:
     radial-gradient(circle at top right, var(--accent-soft), transparent 30%),
-    radial-gradient(circle at 20% 20%, var(--accent-secondary-soft), transparent 26%),
+    radial-gradient(
+      circle at 20% 20%,
+      var(--accent-secondary-soft),
+      transparent 26%
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
     var(--surface-strong);
 }
 
 .panel--signal {
   background:
-    radial-gradient(circle at top left, var(--accent-secondary-soft), transparent 30%),
+    radial-gradient(
+      circle at top left,
+      var(--accent-secondary-soft),
+      transparent 30%
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
     var(--surface-strong);
 }
 
 .panel--accent {
   background:
-    radial-gradient(circle at top right, rgba(240, 201, 104, 0.16), transparent 30%),
+    radial-gradient(
+      circle at top right,
+      rgba(240, 201, 104, 0.16),
+      transparent 30%
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
     var(--surface-strong);
 }
@@ -73,7 +89,11 @@
 }
 
 .panel--night::after {
-  background: radial-gradient(circle, rgba(100, 230, 255, 0.14), transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(100, 230, 255, 0.14),
+    transparent 72%
+  );
 }
 
 .section-kicker {

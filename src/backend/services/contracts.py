@@ -24,7 +24,12 @@ from src.backend.dto.onboarding_dto import (
     OnboardingPageDTO,
     OnboardingResultDTO,
 )
-from src.backend.dto.profile_dto import AIAdviceDTO, DashboardDTO, LearningPlanPageDTO, ProgressReportDTO
+from src.backend.dto.profile_dto import (
+    AIAdviceDTO,
+    DashboardDTO,
+    LearningPlanPageDTO,
+    ProgressReportDTO,
+)
 
 
 class AuthServiceContract(Protocol):
@@ -34,9 +39,13 @@ class AuthServiceContract(Protocol):
 
     async def login(self, payload: LoginDTO) -> AuthResultDTO: ...
 
-    async def logout(self, access_token: str | None, refresh_token: str | None) -> None: ...
+    async def logout(
+        self, access_token: str | None, refresh_token: str | None
+    ) -> None: ...
 
-    async def resolve_current_user(self, access_token: str | None) -> UserViewDTO | None: ...
+    async def resolve_current_user(
+        self, access_token: str | None
+    ) -> UserViewDTO | None: ...
 
 
 class DashboardServiceContract(Protocol):
@@ -53,11 +62,15 @@ class LearningServiceContract(Protocol):
         card_id: int,
     ) -> TrackCardPageDTO: ...
 
-    async def complete_card(self, user_id: int, card_id: int) -> CardCompletionResultDTO: ...
+    async def complete_card(
+        self, user_id: int, card_id: int
+    ) -> CardCompletionResultDTO: ...
 
     async def get_next_cards(self, user_id: int, track: TrackType) -> TrackPageDTO: ...
 
-    async def export_cards_to_pdf(self, user_id: int, track: TrackType) -> PdfDocumentDTO: ...
+    async def export_cards_to_pdf(
+        self, user_id: int, track: TrackType
+    ) -> PdfDocumentDTO: ...
 
     async def get_speech_practice_page(self, user_id: int) -> SpeechPracticePageDTO: ...
 
@@ -86,7 +99,9 @@ class LearningServiceContract(Protocol):
 class OnboardingServiceContract(Protocol):
     async def get_page(self) -> OnboardingPageDTO: ...
 
-    async def complete(self, user_id: int, payload: OnboardingDTO) -> OnboardingResultDTO: ...
+    async def complete(
+        self, user_id: int, payload: OnboardingDTO
+    ) -> OnboardingResultDTO: ...
 
 
 class ProfileServiceContract(Protocol):
@@ -102,4 +117,6 @@ class ProfileServiceContract(Protocol):
 
     async def get_mentor_page(self, user_id: int) -> MentorPageDTO: ...
 
-    async def send_mentor_message(self, user_id: int, message_text: str) -> MentorPageDTO: ...
+    async def send_mentor_message(
+        self, user_id: int, message_text: str
+    ) -> MentorPageDTO: ...

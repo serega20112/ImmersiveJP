@@ -30,7 +30,9 @@ class UserRepository(AbstractUserRepository):
             interests_json=user.interests,
             onboarding_completed=user.onboarding_completed,
             diagnostic_score=(
-                user.skill_assessment.score if user.skill_assessment is not None else None
+                user.skill_assessment.score
+                if user.skill_assessment is not None
+                else None
             ),
             diagnostic_level=(
                 user.skill_assessment.estimated_level.value
@@ -38,7 +40,9 @@ class UserRepository(AbstractUserRepository):
                 else None
             ),
             diagnostic_summary=(
-                user.skill_assessment.summary if user.skill_assessment is not None else None
+                user.skill_assessment.summary
+                if user.skill_assessment is not None
+                else None
             ),
             strengths_json=(
                 list(user.skill_assessment.strengths)

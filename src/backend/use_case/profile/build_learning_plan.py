@@ -15,7 +15,6 @@ from src.backend.use_case.profile.build_progress_report import (
     BuildProgressReportUseCase,
 )
 
-
 _ROADMAP = (
     {
         "index": 0,
@@ -335,7 +334,9 @@ class BuildLearningPlanUseCase:
             raise ValueError("Пользователь не найден")
 
         report = await self._build_progress_report_use_case.execute(user_id)
-        weak_points = list(report.skill_assessment.weak_points) if report.skill_assessment else []
+        weak_points = (
+            list(report.skill_assessment.weak_points) if report.skill_assessment else []
+        )
 
         progress_stage_index = _stage_from_progress(report)
         weak_stage_index = _stage_from_weak_points(weak_points)
@@ -343,10 +344,14 @@ class BuildLearningPlanUseCase:
         recovery_note = None
         if weak_stage_index is not None and weak_stage_index < progress_stage_index:
             current_stage_index = weak_stage_index
-            recovery_note = _recovery_note(weak_points, _ROADMAP[weak_stage_index]["title"])
+            recovery_note = _recovery_note(
+                weak_points, _ROADMAP[weak_stage_index]["title"]
+            )
 
         current_stage = _ROADMAP[current_stage_index]
-        content_mode = _build_content_mode(current_stage_index, report.trust_score.score)
+        content_mode = _build_content_mode(
+            current_stage_index, report.trust_score.score
+        )
         pace_mode = _build_pace_mode(user.study_timeline)
         horizon_stage_index = max(
             current_stage_index,
@@ -406,7 +411,15 @@ def _stage_from_weak_points(weak_points: list[str]) -> int | None:
     stage_map = (
         (0, {"Хирагана", "Катакана", "Чтение слов"}),
         (1, {"Частицы", "Базовый порядок предложения", "Отрицательная форма"}),
-        (2, {"Базовая лексика", "Формулы вежливости", "Вежливая просьба", "Бытовые сцены"}),
+        (
+            2,
+            {
+                "Базовая лексика",
+                "Формулы вежливости",
+                "Вежливая просьба",
+                "Бытовые сцены",
+            },
+        ),
         (4, {"Намерение и план", "Связность фразы", "Точность в контексте"}),
         (5, {"Регистр речи", "Чтение канжи в контексте"}),
     )
@@ -449,7 +462,9 @@ def _next_action(
     return report.next_step
 
 
-def _build_content_mode(current_stage_index: int, trust_score: int) -> PlanContentModeDTO:
+def _build_content_mode(
+    current_stage_index: int, trust_score: int
+) -> PlanContentModeDTO:
     if current_stage_index <= 1 or trust_score < 40:
         return PlanContentModeDTO(
             title="Японский с полной опорой",
@@ -592,8 +607,14 @@ def _build_stage_dtos(
             continue
         status, status_label = _status_for_stage(index, current_stage_index)
         focus_note = None
-        if weak_stage_index is not None and index == weak_stage_index and weak_stage_index < progress_stage_index:
-            focus_note = "Пока здесь есть просадка, план удерживает фокус на повторении базы."
+        if (
+            weak_stage_index is not None
+            and index == weak_stage_index
+            and weak_stage_index < progress_stage_index
+        ):
+            focus_note = (
+                "Пока здесь есть просадка, план удерживает фокус на повторении базы."
+            )
         elif index == 3 and current_stage_index >= 2:
             focus_note = "Кандзи идут параллельной дорожкой и не ждут, пока вся речь станет идеальной."
 

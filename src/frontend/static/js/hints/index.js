@@ -6,7 +6,7 @@ export const initHintToggles = () => {
       const targetKey = button.dataset.hintTarget;
       const hintIndex = button.dataset.hintIndex;
       const hintItem = document.querySelector(
-        `[data-hint-item="${targetKey}"][data-hint-index="${hintIndex}"]`
+        `[data-hint-item="${targetKey}"][data-hint-index="${hintIndex}"]`,
       );
 
       if (!hintItem) {
@@ -19,7 +19,9 @@ export const initHintToggles = () => {
 
       if (wasHidden && !button.dataset.hintUsed) {
         const counterId = button.dataset.hintCounter;
-        const counterInput = counterId ? document.getElementById(counterId) : null;
+        const counterInput = counterId
+          ? document.getElementById(counterId)
+          : null;
 
         if (counterInput) {
           const current = Number(counterInput.value || "0");

@@ -10,7 +10,9 @@ from src.backend.use_case.learning.get_track_page import GetTrackPageUseCase
 
 
 class _EmptyContentRepository:
-    async def list_cards_by_batch(self, user_id: int, track: TrackType, batch_number: int):
+    async def list_cards_by_batch(
+        self, user_id: int, track: TrackType, batch_number: int
+    ):
         return []
 
     async def count_cards(self, user_id: int, track: TrackType) -> int:

@@ -1,7 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Наставник - ImmersJP{% endblock %}
-{% block body_class %}page--mentor{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}Наставник - ImmersJP{% endblock %} {%
+block body_class %}page--mentor{% endblock %} {% block content %}
 <section class="mentor-stage reveal">
   <div class="panel panel--night mentor-stage__hero">
     <div class="mentor-stage__copy">
@@ -15,7 +13,9 @@
       <span class="status-chip">{{ page.pace_title }}</span>
       <span class="status-chip">{{ page.content_mode_title }}</span>
       {% if page.active_focus %}
-      <span class="status-chip status-chip--focus">{{ page.active_focus.title }}</span>
+      <span class="status-chip status-chip--focus"
+        >{{ page.active_focus.title }}</span
+      >
       {% endif %}
     </div>
   </div>
@@ -27,7 +27,10 @@
         {% for message in page.messages %}
         <article class="mentor-entry mentor-entry--{{ message.role }}">
           <div class="mentor-entry__meta">
-            <strong>{% if message.role == 'assistant' %}Наставник{% else %}Ты{% endif %}</strong>
+            <strong
+              >{% if message.role == 'assistant' %}Наставник{% else %}Ты{% endif
+              %}</strong
+            >
             <span>{{ message.created_at_label }}</span>
           </div>
           <div class="mentor-entry__body">
@@ -47,7 +50,10 @@
       <div class="mentor-empty">
         <p class="section-kicker">Старт</p>
         <h2>Начни с конкретного запроса.</h2>
-        <p>Например: «я в кандзи вообще не понимаю, как лучше сместить план?» или «речь отстает, но базу ломать не хочу».</p>
+        <p>
+          Например: «я в кандзи вообще не понимаю, как лучше сместить план?» или
+          «речь отстает, но базу ломать не хочу».
+        </p>
       </div>
       {% endif %}
     </div>
@@ -61,7 +67,9 @@
           data-prompt-chip
           data-prompt-target="mentor-message"
           data-prompt-value="{{ prompt }}"
-        >{{ prompt }}</button>
+        >
+          {{ prompt }}
+        </button>
         {% endfor %}
       </div>
 
@@ -80,13 +88,19 @@
             rows="4"
             maxlength="{{ text_input_limit }}"
             placeholder="Напиши, что сейчас не идет: кандзи, грамматика, речь, чтение или перегруз."
-          >{{ page.draft_message }}</textarea>
+          >
+{{ page.draft_message }}</textarea
+          >
         </label>
         <div class="mentor-composer__actions">
           <small class="field-note">До {{ text_input_limit }} символов.</small>
-          <button type="submit" class="primary-button" data-pending-button>Отправить</button>
+          <button type="submit" class="primary-button" data-pending-button>
+            Отправить
+          </button>
         </div>
-        <p class="pending-note" data-pending-note hidden>Ответ строится из текущего плана, слабых мест и уже закрытых партий.</p>
+        <p class="pending-note" data-pending-note hidden>
+          Ответ строится из текущего плана, слабых мест и уже закрытых партий.
+        </p>
       </form>
     </div>
   </section>

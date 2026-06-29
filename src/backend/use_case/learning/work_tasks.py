@@ -146,9 +146,7 @@ def evaluate_work_submission(
     )
     certificate_statement = None
     if passed and track == TrackType.LANGUAGE and score >= 100:
-        certificate_statement = (
-            "По этой партии система считает, что бытовые конструкции используются без заметной опоры на подсказки."
-        )
+        certificate_statement = "По этой партии система считает, что бытовые конструкции используются без заметной опоры на подсказки."
     return TrackWorkResultDTO(
         score=score,
         pass_score=pass_score,
@@ -188,7 +186,10 @@ def _answers_are_equivalent(
         return False
     if normalized_answer == normalized_expected:
         return True
-    if normalized_expected in normalized_answer or normalized_answer in normalized_expected:
+    if (
+        normalized_expected in normalized_answer
+        or normalized_answer in normalized_expected
+    ):
         return True
     prompt_phrase = _extract_prompt_phrase(task.prompt)
     if (
@@ -331,7 +332,9 @@ def _build_language_work_tasks(
             id="scene",
             kind="production",
             title="Сцена",
-            prompt=_scene_prompt(track=TrackType.LANGUAGE, terms=current_terms[:2], topic=cards[0].topic),
+            prompt=_scene_prompt(
+                track=TrackType.LANGUAGE, terms=current_terms[:2], topic=cards[0].topic
+            ),
             expected_format="1-2 строки, можно в ромадзи",
             source_topic=cards[0].topic,
             placeholder="Напиши короткий ответ. Можно в ромадзи.",

@@ -1,7 +1,15 @@
 body.page--mentor {
   background:
-    radial-gradient(circle at 12% 10%, rgba(255, 107, 74, 0.18), transparent 24%),
-    radial-gradient(circle at 88% 12%, rgba(100, 230, 255, 0.16), transparent 24%),
+    radial-gradient(
+      circle at 12% 10%,
+      rgba(255, 107, 74, 0.18),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 88% 12%,
+      rgba(100, 230, 255, 0.16),
+      transparent 24%
+    ),
     linear-gradient(180deg, #040611, #080d1b 40%, #0c1325);
 }
 

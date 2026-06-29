@@ -73,7 +73,9 @@ class JsonLogFormatter(logging.Formatter):
         if value is None or isinstance(value, (bool, int, float, str)):
             return value
         if isinstance(value, dict):
-            return {str(key): self._normalize_value(item) for key, item in value.items()}
+            return {
+                str(key): self._normalize_value(item) for key, item in value.items()
+            }
         if isinstance(value, (list, tuple, set)):
             return [self._normalize_value(item) for item in value]
         if isinstance(value, datetime):

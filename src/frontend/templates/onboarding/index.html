@@ -1,14 +1,13 @@
-{% extends "base.html" %}
-{% block title %}Онбординг - ImmersJP{% endblock %}
-{% block body_class %}page--onboarding{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}Онбординг - ImmersJP{% endblock %} {%
+block body_class %}page--onboarding{% endblock %} {% block content %}
 <section class="onboarding-hero reveal">
   <div class="panel panel--hero onboarding-hero__main">
     <p class="section-kicker">Онбординг</p>
     <h1>Сначала цель и ритм, потом короткий адаптивный срез.</h1>
     <p class="page-lead">
-      Вопросы в диагностике меняются от выбранного уровня. По этому блоку система оценивает
-      стартовую точку перед первой партией карточек и выбирает темп следующего движения.
+      Вопросы в диагностике меняются от выбранного уровня. По этому блоку
+      система оценивает стартовую точку перед первой партией карточек и выбирает
+      темп следующего движения.
     </p>
     <div class="hero-facts">
       <span class="hero-fact">5 диагностических вопросов</span>
@@ -48,25 +47,45 @@
     </div>
     <div class="choice-grid" data-choice-group>
       <input type="hidden" name="goal" value="" data-choice-input />
-      <button type="button" class="choice-button" data-choice-value="tourism" aria-pressed="false">
+      <button
+        type="button"
+        class="choice-button"
+        data-choice-value="tourism"
+        aria-pressed="false"
+      >
         <span class="choice-button__body">
           <strong>Туризм</strong>
           <small>Навигация, кафе, транспорт и короткие диалоги.</small>
         </span>
       </button>
-      <button type="button" class="choice-button" data-choice-value="relocation" aria-pressed="false">
+      <button
+        type="button"
+        class="choice-button"
+        data-choice-value="relocation"
+        aria-pressed="false"
+      >
         <span class="choice-button__body">
           <strong>Переезд</strong>
           <small>Жилье, документы, быт и городская среда.</small>
         </span>
       </button>
-      <button type="button" class="choice-button" data-choice-value="work" aria-pressed="false">
+      <button
+        type="button"
+        class="choice-button"
+        data-choice-value="work"
+        aria-pressed="false"
+      >
         <span class="choice-button__body">
           <strong>Работа</strong>
           <small>Офисные сцены, деловой язык и рабочая переписка.</small>
         </span>
       </button>
-      <button type="button" class="choice-button" data-choice-value="university" aria-pressed="false">
+      <button
+        type="button"
+        class="choice-button"
+        data-choice-value="university"
+        aria-pressed="false"
+      >
         <span class="choice-button__body">
           <strong>Университет</strong>
           <small>Учебная среда, кампус и академические диалоги.</small>
@@ -81,24 +100,52 @@
       <div class="section-head">
         <p class="section-kicker">Уровень</p>
         <h2>Какой уровень ближе всего сейчас</h2>
-        <p>Диагностика ниже перестроится под этот выбор. Это стартовая гипотеза, а не приговор.</p>
+        <p>
+          Диагностика ниже перестроится под этот выбор. Это стартовая гипотеза,
+          а не приговор.
+        </p>
       </div>
     </div>
-    <div class="choice-grid choice-grid--compact" data-choice-group data-diagnostic-level-group>
-      <input type="hidden" name="language_level" value="zero" data-choice-input data-diagnostic-level-input />
-      <button type="button" class="choice-button is-pressed" data-choice-value="zero" aria-pressed="true">
+    <div
+      class="choice-grid choice-grid--compact"
+      data-choice-group
+      data-diagnostic-level-group
+    >
+      <input
+        type="hidden"
+        name="language_level"
+        value="zero"
+        data-choice-input
+        data-diagnostic-level-input
+      />
+      <button
+        type="button"
+        class="choice-button is-pressed"
+        data-choice-value="zero"
+        aria-pressed="true"
+      >
         <span class="choice-button__body">
           <strong>Ноль</strong>
           <small>Только начинаю, нужна опора на базу.</small>
         </span>
       </button>
-      <button type="button" class="choice-button" data-choice-value="basic" aria-pressed="false">
+      <button
+        type="button"
+        class="choice-button"
+        data-choice-value="basic"
+        aria-pressed="false"
+      >
         <span class="choice-button__body">
           <strong>Базовый</strong>
           <small>Узнаю слова и простые конструкции.</small>
         </span>
       </button>
-      <button type="button" class="choice-button" data-choice-value="intermediate" aria-pressed="false">
+      <button
+        type="button"
+        class="choice-button"
+        data-choice-value="intermediate"
+        aria-pressed="false"
+      >
         <span class="choice-button__body">
           <strong>Средний</strong>
           <small>Нужны связность, регистр и более сложные сцены.</small>
@@ -113,11 +160,19 @@
       <div class="section-head">
         <p class="section-kicker">Срок</p>
         <h2>Какой у тебя горизонт по времени</h2>
-        <p>Это влияет на темп: сколько теории давать за раз, как быстро убирать опоры и насколько агрессивно двигать дальше.</p>
+        <p>
+          Это влияет на темп: сколько теории давать за раз, как быстро убирать
+          опоры и насколько агрессивно двигать дальше.
+        </p>
       </div>
     </div>
     <div class="choice-grid choice-grid--timeline" data-choice-group>
-      <input type="hidden" name="study_timeline" value="one_year" data-choice-input />
+      <input
+        type="hidden"
+        name="study_timeline"
+        value="one_year"
+        data-choice-input
+      />
       {% for option in page.study_timeline_options %}
       <button
         type="button"
@@ -140,7 +195,10 @@
       <div class="section-head">
         <p class="section-kicker">Интересы</p>
         <h2>Что тебе действительно интересно</h2>
-        <p>Можно писать свободно: темы, медиа, профессии, хобби, исторические периоды.</p>
+        <p>
+          Можно писать свободно: темы, медиа, профессии, хобби, исторические
+          периоды.
+        </p>
       </div>
     </div>
     <label class="field-stack">
@@ -162,13 +220,26 @@
       <div class="section-head">
         <p class="section-kicker">Диагностика</p>
         <h2>Короткий срез по текущему уровню</h2>
-        <p>Пять вопросов без лишнего шума. Здесь проверяется, насколько уверенно держится база без дополнительных опор.</p>
+        <p>
+          Пять вопросов без лишнего шума. Здесь проверяется, насколько уверенно
+          держится база без дополнительных опор.
+        </p>
       </div>
     </div>
 
     <div class="diagnostic-groups">
       {% for group in page.diagnostic_groups %}
-      <article class="diagnostic-group {% if group.level == 'zero' %}is-active{% endif %}" data-diagnostic-panel="{{ group.level }}" {% if group.level != 'zero' %}hidden{% endif %}>
+      <article
+        class="diagnostic-group {% if group.level == 'zero' %}is-active{% endif %}"
+        data-diagnostic-panel="{{ group.level }}"
+        {%
+        if
+        group.level
+        !="zero"
+        %}hidden{%
+        endif
+        %}
+      >
         <div class="diagnostic-group__head">
           <p class="section-kicker">{{ group.title }}</p>
           <h3>{{ group.description }}</h3>
@@ -182,9 +253,19 @@
               <p>{{ question.skill_label }}</p>
             </div>
             <div class="choice-grid choice-grid--triple" data-choice-group>
-              <input type="hidden" name="diagnostic_{{ question.key }}" value="" data-choice-input />
+              <input
+                type="hidden"
+                name="diagnostic_{{ question.key }}"
+                value=""
+                data-choice-input
+              />
               {% for option in question.options %}
-              <button type="button" class="choice-button choice-button--dense" data-choice-value="{{ option.value }}" aria-pressed="false">
+              <button
+                type="button"
+                class="choice-button choice-button--dense"
+                data-choice-value="{{ option.value }}"
+                aria-pressed="false"
+              >
                 <span class="choice-button__body">
                   <strong>{{ option.label }}</strong>
                 </span>
@@ -200,7 +281,9 @@
   </section>
 
   <div class="form-actions">
-    <button type="submit" class="primary-button" data-pending-button>Создать стартовые карточки</button>
+    <button type="submit" class="primary-button" data-pending-button>
+      Создать стартовые карточки
+    </button>
     <p class="pending-note" data-pending-note hidden>
       Подготовка первой партии может занять немного времени.
     </p>

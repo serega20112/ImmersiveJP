@@ -82,7 +82,9 @@ class LearningService:
         user_id: int,
         words_text: str,
     ) -> SpeechPracticePageDTO:
-        return await self._generate_speech_practice_use_case.execute(user_id, words_text)
+        return await self._generate_speech_practice_use_case.execute(
+            user_id, words_text
+        )
 
     async def get_track_work_page(
         self,

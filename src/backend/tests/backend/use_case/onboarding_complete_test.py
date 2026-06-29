@@ -3,7 +3,9 @@ from __future__ import annotations
 from src.backend.domain.content import TrackType
 from src.backend.domain.user import LanguageLevel, SkillAssessment
 from src.backend.dto.onboarding_dto import OnboardingDTO
-from src.backend.use_case.onboarding.complete_onboarding import CompleteOnboardingUseCase
+from src.backend.use_case.onboarding.complete_onboarding import (
+    CompleteOnboardingUseCase,
+)
 
 
 class _RecordingUserRepository:

@@ -1,14 +1,14 @@
-{% extends "base.html" %}
-{% block title %}{{ page.title }} - ImmersJP{% endblock %}
-{% block body_class %}page--learn page--work{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}{{ page.title }} - ImmersJP{%
+endblock %} {% block body_class %}page--learn page--work{% endblock %} {% block
+content %}
 <section class="page-hero reveal">
   <div class="page-hero__copy panel panel--hero hero-stack">
     <a href="{{ '/learn/' ~ page.track }}" class="back-link">Назад к треку</a>
     <p class="section-kicker">{{ page.title }}</p>
     <h1>{{ page.subtitle }}</h1>
     <p class="page-lead">
-      Работа строится строго по уже закрытому батчу. Здесь нет нового материала, только проверка того, насколько он реально закрепился.
+      Работа строится строго по уже закрытому батчу. Здесь нет нового материала,
+      только проверка того, насколько он реально закрепился.
     </p>
     <div class="hero-facts">
       <span class="hero-fact">партия {{ page.batch_number }}</span>
@@ -39,10 +39,10 @@
       </div>
     </div>
     <p class="utility-card__note">
-      Работа собрана только из уже пройденного материала. Здесь важнее точность и устойчивость, а не скорость.
-      {% if page.track == 'language' %}
-      Для языкового трека можно отвечать в ромадзи. Японская раскладка не обязательна.
-      {% endif %}
+      Работа собрана только из уже пройденного материала. Здесь важнее точность
+      и устойчивость, а не скорость. {% if page.track == 'language' %} Для
+      языкового трека можно отвечать в ромадзи. Японская раскладка не
+      обязательна. {% endif %}
     </p>
   </aside>
 </section>
@@ -52,8 +52,11 @@
   <div class="work-result__head">
     <p class="section-kicker">Результат</p>
     <h2>{{ page.result.score }} / 100</h2>
-    <span class="status-chip {% if page.result.passed %}status-chip--done{% endif %}">
-      {% if page.result.passed %}Работа зачтена{% else %}Работа не зачтена{% endif %}
+    <span
+      class="status-chip {% if page.result.passed %}status-chip--done{% endif %}"
+    >
+      {% if page.result.passed %}Работа зачтена{% else %}Работа не зачтена{%
+      endif %}
     </span>
   </div>
   <p>{{ page.result.summary }}</p>
@@ -67,7 +70,12 @@
 </section>
 {% endif %}
 
-<form method="post" class="work-sheet reveal" data-pending-form data-pending-label="Проверяем работу...">
+<form
+  method="post"
+  class="work-sheet reveal"
+  data-pending-form
+  data-pending-label="Проверяем работу..."
+>
   {% include "partials/csrf_field.html" %}
   <div class="work-grid">
     {% for task in page.tasks %}
@@ -91,32 +99,51 @@
       <label class="field-stack">
         <span>Ответ</span>
         {% if task.kind in ['production', 'immersion'] %}
-        <textarea name="answer_{{ task.id }}" rows="4" maxlength="{{ text_input_limit }}" placeholder="{{ task.placeholder }}">{{ task.submitted_answer or '' }}</textarea>
+        <textarea
+          name="answer_{{ task.id }}"
+          rows="4"
+          maxlength="{{ text_input_limit }}"
+          placeholder="{{ task.placeholder }}"
+        >
+{{ task.submitted_answer or '' }}</textarea
+        >
         {% else %}
-        <input type="text" name="answer_{{ task.id }}" maxlength="{{ text_input_limit }}" value="{{ task.submitted_answer or '' }}" placeholder="{{ task.placeholder }}" />
+        <input
+          type="text"
+          name="answer_{{ task.id }}"
+          maxlength="{{ text_input_limit }}"
+          value="{{ task.submitted_answer or '' }}"
+          placeholder="{{ task.placeholder }}"
+        />
         {% endif %}
         <small class="field-note">До {{ text_input_limit }} символов.</small>
       </label>
-      {% if page.result %}
-        {% for item in page.result.task_results %}
-          {% if item.task_id == task.id %}
-          <div class="task-review {% if item.is_correct %}task-review--ok{% else %}task-review--bad{% endif %}">
-            <strong>{% if item.is_correct %}Задание зачтено{% else %}Нужно доработать{% endif %}</strong>
-            <p>{{ item.feedback }}</p>
-            {% if item.revealed_answer %}
-            <span>Ориентир: {{ item.revealed_answer }}</span>
-            {% endif %}
-          </div>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
+      {% if page.result %} {% for item in page.result.task_results %} {% if
+      item.task_id == task.id %}
+      <div
+        class="task-review {% if item.is_correct %}task-review--ok{% else %}task-review--bad{% endif %}"
+      >
+        <strong
+          >{% if item.is_correct %}Задание зачтено{% else %}Нужно доработать{%
+          endif %}</strong
+        >
+        <p>{{ item.feedback }}</p>
+        {% if item.revealed_answer %}
+        <span>Ориентир: {{ item.revealed_answer }}</span>
+        {% endif %}
+      </div>
+      {% endif %} {% endfor %} {% endif %}
     </article>
     {% endfor %}
   </div>
 
   <div class="form-actions">
-    <button type="submit" class="primary-button" data-pending-button>Проверить работу</button>
-    <p class="pending-note" data-pending-note hidden>Проверяем ответы и сверяем их с пройденным материалом.</p>
+    <button type="submit" class="primary-button" data-pending-button>
+      Проверить работу
+    </button>
+    <p class="pending-note" data-pending-note hidden>
+      Проверяем ответы и сверяем их с пройденным материалом.
+    </p>
   </div>
 </form>
 {% endblock %}

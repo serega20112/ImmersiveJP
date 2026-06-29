@@ -164,7 +164,9 @@ async def test_cards_circuit_breaker_skips_remote_request_after_timeout(
         request_calls += 1
         raise httpx.ReadTimeout(
             "timed out",
-            request=httpx.Request("POST", "https://router.huggingface.co/v1/chat/completions"),
+            request=httpx.Request(
+                "POST", "https://router.huggingface.co/v1/chat/completions"
+            ),
         )
 
     client._request_llm_json = failing_request  # type: ignore[method-assign]

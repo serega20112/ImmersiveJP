@@ -1,14 +1,12 @@
-{% extends "base.html" %}
-{% block title %}Подтверждение почты - ImmersJP{% endblock %}
-{% block body_class %}page--auth{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}Подтверждение почты - ImmersJP{%
+endblock %} {% block body_class %}page--auth{% endblock %} {% block content %}
 <section class="auth-stage reveal">
   <aside class="panel panel--hero auth-story">
     <p class="section-kicker">Подтверждение</p>
     <h1>Заверши активацию аккаунта.</h1>
     <p class="page-lead">
-      Код отправляется на адрес, указанный при регистрации. После подтверждения откроются вход и
-      сборка стартового учебного контура.
+      Код отправляется на адрес, указанный при регистрации. После подтверждения
+      откроются вход и сборка стартового учебного контура.
     </p>
     <div class="hero-facts">
       <span class="hero-fact">одноразовый код</span>
@@ -37,11 +35,19 @@
 
     <label class="field-stack">
       <span>Код</span>
-      <input type="text" name="code" inputmode="numeric" maxlength="6" required />
+      <input
+        type="text"
+        name="code"
+        inputmode="numeric"
+        maxlength="6"
+        required
+      />
     </label>
 
     <button type="submit" class="primary-button">Подтвердить почту</button>
-    <p class="form-note">После подтверждения можно переходить ко входу и онбордингу.</p>
+    <p class="form-note">
+      После подтверждения можно переходить ко входу и онбордингу.
+    </p>
   </form>
 </section>
 {% endblock %}

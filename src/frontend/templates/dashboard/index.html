@@ -1,11 +1,11 @@
-{% extends "base.html" %}
-{% block title %}Dashboard - ImmersJP{% endblock %}
-{% block body_class %}page--dashboard{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}Dashboard - ImmersJP{% endblock %} {%
+block body_class %}page--dashboard{% endblock %} {% block content %}
 <section class="dashboard-hero reveal">
   <div class="panel panel--hero dashboard-hero__main">
     <p class="section-kicker">Оперативная сводка</p>
-    <h1>{{ dashboard.user_display_name }}, учебный контур сейчас выглядит так.</h1>
+    <h1>
+      {{ dashboard.user_display_name }}, учебный контур сейчас выглядит так.
+    </h1>
     <p class="page-lead">{{ dashboard.recommendation }}</p>
 
     <div class="hero-facts">
@@ -15,7 +15,9 @@
     </div>
 
     <div class="hero__actions">
-      <a href="{{ dashboard.speech_practice_href }}" class="primary-button">Открыть практику</a>
+      <a href="{{ dashboard.speech_practice_href }}" class="primary-button"
+        >Открыть практику</a
+      >
       <a href="/plan" class="ghost-button">Маршрут на срок</a>
       <a href="/mentor" class="ghost-button">Поговорить с наставником</a>
     </div>
@@ -106,15 +108,15 @@
         <p class="section-kicker">{{ section.title }}</p>
         <h2>{{ section.subtitle }}</h2>
       </div>
-      <span class="track-card__batch">{{ section.completed_batches }} батчей</span>
+      <span class="track-card__batch"
+        >{{ section.completed_batches }} батчей</span
+      >
     </div>
 
     <p class="track-card__note">
-      {% if section.work_ready_batch %}
-      Работа по партии {{ section.work_ready_batch }} уже доступна.
-      {% else %}
-      Работа откроется после первой полностью завершенной партии.
-      {% endif %}
+      {% if section.work_ready_batch %} Работа по партии {{
+      section.work_ready_batch }} уже доступна. {% else %} Работа откроется
+      после первой полностью завершенной партии. {% endif %}
     </p>
 
     <div class="track-card__meter" aria-hidden="true">
@@ -139,7 +141,11 @@
     <div class="track-card__footer">
       <a href="{{ section.href }}" class="primary-button">Открыть трек</a>
       {% if section.work_ready_batch %}
-      <a href="{{ '/learn/' ~ section.track ~ '/work/' ~ section.work_ready_batch }}" class="ghost-button">Работа</a>
+      <a
+        href="{{ '/learn/' ~ section.track ~ '/work/' ~ section.work_ready_batch }}"
+        class="ghost-button"
+        >Работа</a
+      >
       {% endif %}
     </div>
   </article>
