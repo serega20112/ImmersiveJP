@@ -47,6 +47,7 @@ class ProfileProvidersMixin:
             self.build_learning_plan_use_case,
             self.get_mentor_page_use_case,
             self.root.llm_client,
+            rag_service=self.rag_service,
         )
 
     @cached_property

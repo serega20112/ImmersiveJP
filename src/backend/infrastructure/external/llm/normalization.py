@@ -721,3 +721,93 @@ class LLMNormalizationMixin:
             summary=summary,
             focus_points=focus_points,
         )
+
+    @staticmethod
+    def _normalize_knowledge_check(raw_items: list) -> list[dict]:
+        valid_kinds = {"translation_ja_ru", "translation_ru_ja", "grammar", "recall", "reading"}
+        normalized = []
+        for i, item in enumerate(raw_items):
+            if not isinstance(item, Mapping):
+                continue
+            item_dict = dict(item)
+            qid = str(item_dict.get("id") or f"q{i+1}").strip()
+            kind = str(item_dict.get("kind") or "recall").strip()
+            if kind not in valid_kinds:
+                kind = "recall"
+            question = str(item_dict.get("question") or "").strip()
+            if not question:
+                continue
+            context = str(item_dict.get("context") or "").strip()
+            expected = str(item_dict.get("expected_answer") or "").strip()
+            raw_hints = item_dict.get("hints") or []
+            hints = [str(h).strip() for h in raw_hints if isinstance(h, str) and h.strip()][:2]
+            normalized.append({
+                "id": qid,
+                "kind": kind,
+                "question": question,
+                "context": context,
+                "expected_answer": expected,
+                "hints": hints,
+            })
+        return normalized[:5]
+
+    @staticmethod
+    def _normalize_knowledge_eval(
+        parsed: object,
+        questions: list[dict],
+        answers: dict[str, str],
+    ) -> dict:
+        default_results = [
+            {
+                "question_id": q["id"],
+                "is_correct": False,
+                "user_answer": answers.get(q["id"], ""),
+                "expected_answer": q.get("expected_answer", ""),
+                "feedback": "Не удалось проверить.",
+            }
+            for q in questions
+        ]
+        parsed_obj = HuggingFaceLLMClient._coerce_object(parsed)
+        raw_results = parsed_obj.get("results") or parsed_obj.get("result") or []
+        if not isinstance(raw_results, list):
+            raw_results = []
+        results_by_id = {str(r.get("question_id", "")): r for r in raw_results if isinstance(r, Mapping)}
+
+        final_results = []
+        for q in questions:
+            qid = q["id"]
+            raw = results_by_id.get(qid, {})
+            if isinstance(raw, Mapping):
+                is_correct = HuggingFaceLLMClient._coerce_bool(raw.get("is_correct"))
+                if is_correct is None:
+                    is_correct = False
+                feedback = str(raw.get("feedback") or "").strip()
+                if not feedback:
+                    feedback = "Ответ не совпал с ожидаемым."
+                final_results.append({
+                    "question_id": qid,
+                    "is_correct": is_correct,
+                    "user_answer": answers.get(qid, ""),
+                    "expected_answer": q.get("expected_answer", ""),
+                    "feedback": feedback,
+                })
+            else:
+                final_results.append({
+                    "question_id": qid,
+                    "is_correct": False,
+                    "user_answer": answers.get(qid, ""),
+                    "expected_answer": q.get("expected_answer", ""),
+                    "feedback": "Не удалось проверить.",
+                })
+
+        correct_count = sum(1 for r in final_results if r["is_correct"])
+        total = len(final_results) or 1
+        score = round((correct_count / total) * 100)
+        summary = str(parsed_obj.get("summary") or "").strip()
+        if not summary:
+            summary = f"Правильно: {correct_count} из {len(questions)}."
+        return {
+            "score": score,
+            "summary": summary,
+            "results": final_results,
+        }

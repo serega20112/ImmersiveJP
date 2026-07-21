@@ -10,6 +10,7 @@ from src.backend.infrastructure.repositories import (
     AbstractMentorRepository,
     AbstractUserRepository,
 )
+from src.backend.services.rag_service import RAGService
 from src.backend.use_case.profile.build_learning_plan import BuildLearningPlanUseCase
 from src.backend.use_case.profile.build_progress_report import (
     BuildProgressReportUseCase,
@@ -30,6 +31,7 @@ class SendMentorMessageUseCase:
         build_learning_plan_use_case: BuildLearningPlanUseCase,
         get_mentor_page_use_case: GetMentorPageUseCase,
         llm_client: HuggingFaceLLMClient,
+        rag_service: RAGService | None = None,
     ):
         self._user_repository = user_repository
         self._mentor_repository = mentor_repository
@@ -37,6 +39,7 @@ class SendMentorMessageUseCase:
         self._build_learning_plan_use_case = build_learning_plan_use_case
         self._get_mentor_page_use_case = get_mentor_page_use_case
         self._llm_client = llm_client
+        self._rag_service = rag_service
 
     async def execute(self, user_id: int, message_text: str):
         message = str(message_text or "").strip()
@@ -62,6 +65,13 @@ class SendMentorMessageUseCase:
 
         report = await self._build_progress_report_use_case.execute(user_id)
         plan = await self._build_learning_plan_use_case.execute(user_id)
+
+        document_context = ""
+        if self._rag_service is not None:
+            context_chunks = await self._rag_service.query(user_id, message)
+            if context_chunks:
+                document_context = "\n---\n".join(context_chunks)
+
         reply = await self._llm_client.generate_mentor_reply(
             user=user,
             report=report,
@@ -69,6 +79,7 @@ class SendMentorMessageUseCase:
             message=message,
             history=history[-6:],
             active_focus=active_focus,
+            document_context=document_context,
         )
 
         updated_history = [

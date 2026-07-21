@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy import Boolean, Integer, JSON, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.infrastructure.files.database import Base
 from src.backend.infrastructure.models.timestamp import TimestampMixin

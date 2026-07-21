@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import Depends
 
 from src.backend.dependencies.request_scope import get_request_container
+from src.backend.infrastructure.repositories import AbstractUserDocumentRepository
 from src.backend.services import (
     AuthServiceContract,
     DashboardServiceContract,
@@ -46,4 +47,13 @@ LearningServiceDependency = Annotated[
 ]
 ProfileServiceDependency = Annotated[
     ProfileServiceContract, Depends(get_profile_service)
+]
+
+
+def get_user_document_repository() -> AbstractUserDocumentRepository:
+    return get_request_container().user_document_repository
+
+
+UserDocumentRepositoryDependency = Annotated[
+    AbstractUserDocumentRepository, Depends(get_user_document_repository)
 ]

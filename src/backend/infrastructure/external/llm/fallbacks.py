@@ -1366,3 +1366,61 @@ class LLMFallbackMixin:
         if active_focus is not None:
             prompts.insert(0, f"Как лучше закрепить фокус: {active_focus.title}?")
         return prompts[:3]
+
+    @staticmethod
+    def _fallback_knowledge_check(payload: dict) -> list[dict]:
+        return [
+            {
+                "id": "q1",
+                "kind": "recall",
+                "question": "Как переводится 食べる на русский?",
+                "context": "",
+                "expected_answer": "есть, кушать",
+                "hints": ["Базовый глагол"],
+            },
+            {
+                "id": "q2",
+                "kind": "translation_ru_ja",
+                "question": "Переведи на японский: «я иду в школу»",
+                "context": "Используй глагол 行く",
+                "expected_answer": "私は学校に行きます",
+                "hints": ["Подлежащее + は + место + に + глагол"],
+            },
+            {
+                "id": "q3",
+                "kind": "grammar",
+                "question": "Какой частицей отмечается объект действия?",
+                "context": "",
+                "expected_answer": "を",
+                "hints": ["Ставится после существительного"],
+            },
+        ]
+
+    @staticmethod
+    def _fallback_knowledge_eval(
+        questions: list[dict],
+        answers: dict[str, str],
+    ) -> dict:
+        results = []
+        correct_count = 0
+        for q in questions:
+            qid = q["id"]
+            user_ans = answers.get(qid, "").strip().lower()
+            expected = q.get("expected_answer", "").strip().lower()
+            is_correct = bool(user_ans and expected and user_ans == expected)
+            if is_correct:
+                correct_count += 1
+            results.append({
+                "question_id": qid,
+                "is_correct": is_correct,
+                "user_answer": answers.get(qid, ""),
+                "expected_answer": q.get("expected_answer", ""),
+                "feedback": "Верно!" if is_correct else "Ответ не совпал с ожидаемым.",
+            })
+        total = len(questions) or 1
+        score = round((correct_count / total) * 100)
+        return {
+            "score": score,
+            "summary": f"Правильно: {correct_count} из {len(questions)}.",
+            "results": results,
+        }

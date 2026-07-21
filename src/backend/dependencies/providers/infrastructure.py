@@ -4,7 +4,13 @@ from functools import cached_property
 
 from src.backend.dependencies.settings import Settings
 from src.backend.infrastructure.cache import KeyValueStore
-from src.backend.infrastructure.external import HuggingFaceLLMClient, Mailer, PdfBuilder
+from src.backend.infrastructure.external import (
+    EmbeddingClient,
+    HuggingFaceLLMClient,
+    Mailer,
+    PdfBuilder,
+    STTClient,
+)
 from src.backend.infrastructure.security import (
     EmailVerificationStore,
     JWTService,
@@ -57,6 +63,14 @@ class RootInfrastructureProvidersMixin:
     @cached_property
     def pdf_builder(self) -> PdfBuilder:
         return PdfBuilder()
+
+    @cached_property
+    def embedding_client(self) -> EmbeddingClient:
+        return EmbeddingClient()
+
+    @cached_property
+    def stt_client(self) -> STTClient:
+        return STTClient()
 
     async def shutdown(self) -> None:
         await self.llm_client.close()

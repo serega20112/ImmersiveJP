@@ -105,6 +105,7 @@ class LLMPromptMixin:
         plan: LearningPlanPageDTO,
         message: str,
         history: list[MentorMessage],
+        document_context: str = "",
     ) -> str:
         history_lines = []
         for item in history[-4:]:
@@ -130,11 +131,69 @@ class LLMPromptMixin:
             f"Прогресс по трекам:\n- " + "\n- ".join(track_lines) + "\n"
             f"Последние сообщения:\n{history_text}\n"
             f"Новый запрос пользователя: {message}\n"
-            "Верни JSON-объект.\n"
+            + (
+                "Контекст из материалов пользователя (используй, если уместно):\n"
+                f"{document_context}\n"
+                if document_context
+                else ""
+            )
+            + "Верни JSON-объект.\n"
             "reply: один короткий абзац до 320 символов.\n"
             "action_steps: ровно 3 коротких шага.\n"
             "suggested_prompts: ровно 2 коротких следующих вопроса.\n"
             "Если пользователь просит усилить кандзи, грамматику или речь, объясни через текущую партию, работу и следующую генерацию, а не через хаотичный прыжок."
+        )
+
+    @staticmethod
+    def _build_knowledge_check_prompt(payload: dict) -> str:
+        weak_points = ", ".join(payload.get("weak_points") or []) or "не выявлены"
+        strengths = ", ".join(payload.get("strengths") or []) or "не выделены"
+        recent_topics = ", ".join(payload.get("recent_topics") or []) or "нет"
+        return (
+            "Составь короткую проверку знаний для ImmersJP.\n"
+            f"Уровень: {HuggingFaceLLMClient._level_label(payload.get('language_level'))}\n"
+            f"Горизонт: {HuggingFaceLLMClient._timeline_label(payload.get('study_timeline'))}\n"
+            f"Слабые места: {weak_points}\n"
+            f"Сильные стороны: {strengths}\n"
+            f"Недавние темы: {recent_topics}\n"
+            f"Фокус: {payload.get('focus_area', 'общая проверка')}\n"
+            "Сгенерируй 5 вопросов на японском языке. Типы вопросов:\n"
+            "- translation_ja_ru: дай японскую фразу, жди перевод на русский\n"
+            "- translation_ru_ja: дай русскую фразу, жди перевод на японский\n"
+            "- grammar: вопрос по грамматической конструкции\n"
+            "- recall: вопрос на знание слова или иероглифа\n"
+            "- reading: вопрос на чтение кандзи\n"
+            "Верни JSON-массив объектов. У каждого объекта:\n"
+            "id: строка вида q1, q2, ...\n"
+            "kind: тип вопроса\n"
+            "question: текст вопроса\n"
+            "context: опциональный контекст (предложение для перевода и т.п.)\n"
+            "expected_answer: правильный ответ\n"
+            "hints: массив подсказок (до 2)\n"
+            "Без markdown, без текста вне JSON."
+        )
+
+    @staticmethod
+    def _build_knowledge_eval_prompt(payload: dict) -> str:
+        questions = payload.get("questions", [])
+        answers = payload.get("answers", {})
+        lines = []
+        for q in questions:
+            qid = q.get("id", "?")
+            expected = q.get("expected_answer", "")
+            user_ans = answers.get(qid, "")
+            lines.append(f"Вопрос {qid} ({q.get('kind', '?')}): {q.get('question', '')}")
+            lines.append(f"  Ожидалось: {expected}")
+            lines.append(f"  Ответ: {user_ans}")
+        return (
+            "Проверь ответы пользователя на вопросы по японскому языку.\n"
+            + "\n".join(lines) + "\n"
+            "Верни JSON-объект с полями:\n"
+            "results: массив объектов с полями question_id, is_correct (bool), feedback (короткое объяснение ошибки или подтверждение)\n"
+            "score: число от 0 до 100\n"
+            "summary: одно короткое предложение общий вывод\n"
+            "Будь строгим в оценке: засчитывай только если смысл передан верно. Мелкие опечатки в ромадзи не считай ошибкой.\n"
+            "Без markdown, без текста вне JSON."
         )
 
     @staticmethod

@@ -7,8 +7,10 @@ from src.backend.repository import (
     MentorRepository,
     ProgressRepository,
     SessionRepository,
+    UserDocumentRepository,
     UserRepository,
 )
+from src.backend.services.rag_service import RAGService
 
 
 class RepositoryProvidersMixin:
@@ -31,3 +33,14 @@ class RepositoryProvidersMixin:
     @cached_property
     def session_repository(self) -> SessionRepository:
         return SessionRepository(self.session)
+
+    @cached_property
+    def user_document_repository(self) -> UserDocumentRepository:
+        return UserDocumentRepository(self.session)
+
+    @cached_property
+    def rag_service(self) -> RAGService:
+        return RAGService(
+            self.user_document_repository,
+            self.root.embedding_client,
+        )

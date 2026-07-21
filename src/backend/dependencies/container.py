@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.backend.dependencies.providers import (
     AuthProvidersMixin,
+    KnowledgeProvidersMixin,
     LearningProvidersMixin,
     OnboardingProvidersMixin,
     ProfileProvidersMixin,
@@ -33,6 +34,7 @@ class Container(RootInfrastructureProvidersMixin):
 class RequestContainer(
     RepositoryProvidersMixin,
     AuthProvidersMixin,
+    KnowledgeProvidersMixin,
     LearningProvidersMixin,
     OnboardingProvidersMixin,
     ProfileProvidersMixin,

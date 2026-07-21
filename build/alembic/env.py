@@ -7,7 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 from src.backend.dependencies.settings import Settings
 from src.backend.infrastructure.files.database import Base
-from src.backend.infrastructure.models import CardCompletionModel, LearningCardModel, LearningSessionModel, UserModel
+from src.backend.infrastructure.models import CardCompletionModel, LearningCardModel, LearningSessionModel, UserDocument, UserModel
 
 config = context.config
 config.set_main_option("sqlalchemy.url", Settings.database_sync_url)

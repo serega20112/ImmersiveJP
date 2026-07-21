@@ -202,6 +202,7 @@ class HuggingFaceLLMClient(
         message: str,
         history: list[MentorMessage],
         active_focus: MentorFocus | None,
+        document_context: str = "",
     ) -> MentorReplyDTO:
         payload = {
             "kind": "mentor",
@@ -227,6 +228,7 @@ class HuggingFaceLLMClient(
                     plan=plan,
                     message=message,
                     history=history,
+                    document_context=document_context,
                 ),
             )
             log_event(
@@ -253,6 +255,98 @@ class HuggingFaceLLMClient(
                 reason=self._fallback_reason_from_error(error),
             )
             return self._fallback_mentor_reply(report, plan, message, active_focus)
+
+    async def generate_knowledge_check(
+        self,
+        *,
+        user: User,
+        weak_points: list[str] | None = None,
+        strengths: list[str] | None = None,
+        recent_topics: list[str] | None = None,
+        focus_area: str = "",
+    ) -> list[dict]:
+        payload = {
+            "kind": "knowledge_check",
+            "user_id": user.id,
+            "goal": user.learning_goal.value if user.learning_goal else None,
+            "language_level": (
+                user.language_level.value if user.language_level else None
+            ),
+            "study_timeline": (
+                user.study_timeline.value if user.study_timeline else None
+            ),
+            "weak_points": weak_points or [],
+            "strengths": strengths or [],
+            "recent_topics": recent_topics or [],
+            "focus_area": focus_area or "общая проверка",
+        }
+        if not Settings.hf_api_token:
+            self._log_fallback(payload, reason="missing_token")
+            return self._fallback_knowledge_check(payload)
+        try:
+            parsed = await self._request_llm_json(
+                payload=payload,
+                temperature=0.5,
+                system_content=(
+                    "Ты преподаватель японского. Верни JSON-массив объектов. "
+                    "Без markdown, без текста вне JSON."
+                ),
+                user_content=self._build_knowledge_check_prompt(payload),
+            )
+            raw_items = parsed if isinstance(parsed, list) else []
+            return self._normalize_knowledge_check(raw_items)
+        except Exception as error:
+            log_event(
+                logger,
+                logging.ERROR,
+                "llm.knowledge_check_exception",
+                "Exception during knowledge check generation",
+                error_type=type(error).__name__,
+                error_message=str(error),
+            )
+            self._log_fallback(payload, reason=self._fallback_reason_from_error(error))
+            return self._fallback_knowledge_check(payload)
+
+    async def evaluate_knowledge_check(
+        self,
+        *,
+        user_id: int = 0,
+        questions: list[dict],
+        answers: dict[str, str],
+    ) -> dict:
+        payload = {
+            "kind": "knowledge_eval",
+            "user_id": user_id,
+        }
+        eval_payload = {
+            "questions": questions,
+            "answers": answers,
+        }
+        if not Settings.hf_api_token:
+            self._log_fallback(payload, reason="missing_token")
+            return self._fallback_knowledge_eval(questions, answers)
+        try:
+            parsed = await self._request_llm_json(
+                payload=payload,
+                temperature=0.2,
+                system_content=(
+                    "Ты преподаватель японского. Верни JSON-объект с полями results, score, summary. "
+                    "Без markdown, без текста вне JSON."
+                ),
+                user_content=self._build_knowledge_eval_prompt(eval_payload),
+            )
+            return self._normalize_knowledge_eval(parsed, questions, answers)
+        except Exception as error:
+            log_event(
+                logger,
+                logging.ERROR,
+                "llm.knowledge_eval_exception",
+                "Exception during knowledge check evaluation",
+                error_type=type(error).__name__,
+                error_message=str(error),
+            )
+            self._log_fallback(payload, reason=self._fallback_reason_from_error(error))
+            return self._fallback_knowledge_eval(questions, answers)
 
     async def review_track_work(
         self,
