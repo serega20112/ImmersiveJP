@@ -13,9 +13,7 @@ def test_settings_normalize_database_urls():
         database_url="postgresql://db-user:db-pass@db-host:5432/immersjp",
     )
 
-    assert settings.database_url == (
-        "postgresql+asyncpg://db-user:db-pass@db-host:5432/immersjp"
-    )
+    assert settings.database_url == ("postgresql+asyncpg://db-user:db-pass@db-host:5432/immersjp")
     assert settings.database_sync_url == (
         "postgresql+psycopg://db-user:db-pass@db-host:5432/immersjp"
     )
@@ -33,9 +31,7 @@ def test_settings_build_database_urls_from_postgres_fields():
         postgres_db="immersjp",
     )
 
-    assert settings.database_url == (
-        "postgresql+asyncpg://db-user:db-pass@postgres:5432/immersjp"
-    )
+    assert settings.database_url == ("postgresql+asyncpg://db-user:db-pass@postgres:5432/immersjp")
     assert settings.database_sync_url == (
         "postgresql+psycopg://db-user:db-pass@postgres:5432/immersjp"
     )
@@ -49,9 +45,7 @@ def test_settings_preserve_explicit_database_sync_url():
         database_sync_url="postgresql://db-user:db-pass@postgres:5432/immersjp",
     )
 
-    assert settings.database_url == (
-        "postgresql+asyncpg://db-user:db-pass@postgres:5432/immersjp"
-    )
+    assert settings.database_url == ("postgresql+asyncpg://db-user:db-pass@postgres:5432/immersjp")
     assert settings.database_sync_url == (
         "postgresql+psycopg://db-user:db-pass@postgres:5432/immersjp"
     )

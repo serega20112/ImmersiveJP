@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from src.backend.domain.user import StudyTimeline
 from src.backend.dto.profile_dto import (
     LearningPlanPageDTO,
     PlanContentModeDTO,
@@ -9,7 +10,6 @@ from src.backend.dto.profile_dto import (
     PlanStageDTO,
     ProgressReportDTO,
 )
-from src.backend.domain.user import StudyTimeline
 from src.backend.infrastructure.repositories import AbstractUserRepository
 from src.backend.use_case.profile.build_progress_report import (
     BuildProgressReportUseCase,
@@ -325,18 +325,33 @@ class BuildLearningPlanUseCase:
         user_repository: AbstractUserRepository,
         build_progress_report_use_case: BuildProgressReportUseCase,
     ):
+        """Initialize the build learning plan use case.
+
+        Args:
+            user_repository: Repository for user data.
+            build_progress_report_use_case: Use case for building progress reports.
+        """
         self._user_repository = user_repository
         self._build_progress_report_use_case = build_progress_report_use_case
 
     async def execute(self, user_id: int) -> LearningPlanPageDTO:
+        """Build a learning plan for a user.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            The learning plan page data.
+
+        Raises:
+            ValueError: If the user is not found.
+        """
         user = await self._user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")
 
         report = await self._build_progress_report_use_case.execute(user_id)
-        weak_points = (
-            list(report.skill_assessment.weak_points) if report.skill_assessment else []
-        )
+        weak_points = list(report.skill_assessment.weak_points) if report.skill_assessment else []
 
         progress_stage_index = _stage_from_progress(report)
         weak_stage_index = _stage_from_weak_points(weak_points)
@@ -344,14 +359,10 @@ class BuildLearningPlanUseCase:
         recovery_note = None
         if weak_stage_index is not None and weak_stage_index < progress_stage_index:
             current_stage_index = weak_stage_index
-            recovery_note = _recovery_note(
-                weak_points, _ROADMAP[weak_stage_index]["title"]
-            )
+            recovery_note = _recovery_note(weak_points, _ROADMAP[weak_stage_index]["title"])
 
         current_stage = _ROADMAP[current_stage_index]
-        content_mode = _build_content_mode(
-            current_stage_index, report.trust_score.score
-        )
+        content_mode = _build_content_mode(current_stage_index, report.trust_score.score)
         pace_mode = _build_pace_mode(user.study_timeline)
         horizon_stage_index = max(
             current_stage_index,
@@ -362,9 +373,7 @@ class BuildLearningPlanUseCase:
         return LearningPlanPageDTO(
             title="Учебный план",
             subtitle=_subtitle_for_plan(current_stage_index, recovery_note is not None),
-            horizon_title=(
-                f"Горизонт на текущий срок: до этапа '{horizon_stage['title']}'"
-            ),
+            horizon_title=(f"Горизонт на текущий срок: до этапа '{horizon_stage['title']}'"),
             horizon_note=_horizon_note(
                 study_timeline=user.study_timeline,
                 horizon_stage_index=horizon_stage_index,
@@ -387,6 +396,14 @@ class BuildLearningPlanUseCase:
 
 
 def _stage_from_progress(report: ProgressReportDTO) -> int:
+    """Determine the learning stage index from progress data.
+
+    Args:
+        report: The progress report.
+
+    Returns:
+        The stage index (0-7).
+    """
     score = report.trust_score.score
     total_completed = report.total_completed
 
@@ -408,6 +425,14 @@ def _stage_from_progress(report: ProgressReportDTO) -> int:
 
 
 def _stage_from_weak_points(weak_points: list[str]) -> int | None:
+    """Determine the stage index from weak points.
+
+    Args:
+        weak_points: List of weak point labels.
+
+    Returns:
+        The stage index, or None if no weak points match.
+    """
     stage_map = (
         (0, {"Хирагана", "Катакана", "Чтение слов"}),
         (1, {"Частицы", "Базовый порядок предложения", "Отрицательная форма"}),
@@ -432,6 +457,15 @@ def _stage_from_weak_points(weak_points: list[str]) -> int | None:
 
 
 def _recovery_note(weak_points: list[str], stage_title: str) -> str:
+    """Build a recovery note for weak points at a stage.
+
+    Args:
+        weak_points: List of weak point labels.
+        stage_title: The title of the stage to recover.
+
+    Returns:
+        The recovery note text.
+    """
     visible = ", ".join(weak_points[:3])
     return (
         f"Сейчас план не толкает тебя дальше по новой сложности. Сначала нужно выровнять блок '{stage_title}'. "
@@ -440,10 +474,21 @@ def _recovery_note(weak_points: list[str], stage_title: str) -> str:
 
 
 def _subtitle_for_plan(current_stage_index: int, recovery_mode: bool) -> str:
+    """Build a subtitle for the learning plan page.
+
+    Args:
+        current_stage_index: The current stage index.
+        recovery_mode: Whether recovery mode is active.
+
+    Returns:
+        The subtitle text.
+    """
     if recovery_mode:
         return "План временно возвращает фокус к базе, пока слабые места не перестанут ломать следующие этапы."
     if current_stage_index <= 1:
-        return "Сначала собирается фундамент: чтение, базовые формы и устойчивый каркас предложения."
+        return (
+            "Сначала собирается фундамент: чтение, базовые формы и устойчивый каркас предложения."
+        )
     if current_stage_index <= 4:
         return "Сейчас задача не просто знать формы, а использовать их в сценах, диалогах и чтении."
     return "План смещается в сторону погружения: меньше опоры на перевод и больше самостоятельной работы с японским."
@@ -454,6 +499,16 @@ def _next_action(
     weak_points: list[str],
     current_stage_title: str,
 ) -> str:
+    """Build the next action recommendation.
+
+    Args:
+        report: The progress report.
+        weak_points: List of weak point labels.
+        current_stage_title: The title of the current stage.
+
+    Returns:
+        The next action text.
+    """
     if weak_points:
         return (
             f"Ближайший фокус: закрыть слабые зоны в блоке '{current_stage_title}' и только потом расширять новый материал. "
@@ -462,9 +517,16 @@ def _next_action(
     return report.next_step
 
 
-def _build_content_mode(
-    current_stage_index: int, trust_score: int
-) -> PlanContentModeDTO:
+def _build_content_mode(current_stage_index: int, trust_score: int) -> PlanContentModeDTO:
+    """Build the content mode configuration.
+
+    Args:
+        current_stage_index: The current stage index.
+        trust_score: The user's trust score.
+
+    Returns:
+        The content mode DTO.
+    """
     if current_stage_index <= 1 or trust_score < 40:
         return PlanContentModeDTO(
             title="Японский с полной опорой",
@@ -488,9 +550,7 @@ def _build_content_mode(
                 "перевод остается рядом для проверки понимания",
                 "ключевые слова идут как японский термин -> русский смысл",
             ],
-            dictionary_links=[
-                PlanDictionaryLinkDTO(**item) for item in _DICTIONARY_LINKS[:2]
-            ],
+            dictionary_links=[PlanDictionaryLinkDTO(**item) for item in _DICTIONARY_LINKS[:2]],
         )
     return PlanContentModeDTO(
         title="Почти чистое погружение",
@@ -507,6 +567,14 @@ def _build_content_mode(
 
 
 def _build_pace_mode(study_timeline: StudyTimeline | None) -> PlanPaceDTO:
+    """Build the pace mode configuration based on study timeline.
+
+    Args:
+        study_timeline: The user's study timeline, or None.
+
+    Returns:
+        The pace mode DTO.
+    """
     timeline = study_timeline or StudyTimeline.FLEXIBLE
 
     if timeline == StudyTimeline.THREE_MONTHS:
@@ -566,6 +634,14 @@ def _build_pace_mode(study_timeline: StudyTimeline | None) -> PlanPaceDTO:
 
 
 def _timeline_horizon_index(study_timeline: StudyTimeline | None) -> int:
+    """Get the horizon stage index for a study timeline.
+
+    Args:
+        study_timeline: The user's study timeline, or None.
+
+    Returns:
+        The horizon stage index.
+    """
     timeline = study_timeline or StudyTimeline.FLEXIBLE
     horizon_map = {
         StudyTimeline.THREE_MONTHS: 1,
@@ -582,6 +658,15 @@ def _horizon_note(
     study_timeline: StudyTimeline | None,
     horizon_stage_index: int,
 ) -> str | None:
+    """Build a horizon note for the learning plan.
+
+    Args:
+        study_timeline: The user's study timeline.
+        horizon_stage_index: The horizon stage index.
+
+    Returns:
+        The horizon note text, or None for flexible timelines.
+    """
     timeline = study_timeline or StudyTimeline.FLEXIBLE
     if timeline == StudyTimeline.FLEXIBLE:
         return None
@@ -600,6 +685,17 @@ def _build_stage_dtos(
     weak_stage_index: int | None,
     visible_horizon_index: int,
 ) -> list[PlanStageDTO]:
+    """Build DTOs for visible learning stages.
+
+    Args:
+        current_stage_index: The current stage index.
+        progress_stage_index: The progress stage index.
+        weak_stage_index: The weak stage index, or None.
+        visible_horizon_index: The maximum visible horizon index.
+
+    Returns:
+        A list of stage DTOs.
+    """
     stages: list[PlanStageDTO] = []
     for stage in _ROADMAP:
         index = stage["index"]
@@ -612,11 +708,11 @@ def _build_stage_dtos(
             and index == weak_stage_index
             and weak_stage_index < progress_stage_index
         ):
-            focus_note = (
-                "Пока здесь есть просадка, план удерживает фокус на повторении базы."
-            )
+            focus_note = "Пока здесь есть просадка, план удерживает фокус на повторении базы."
         elif index == 3 and current_stage_index >= 2:
-            focus_note = "Кандзи идут параллельной дорожкой и не ждут, пока вся речь станет идеальной."
+            focus_note = (
+                "Кандзи идут параллельной дорожкой и не ждут, пока вся речь станет идеальной."
+            )
 
         stages.append(
             PlanStageDTO(
@@ -637,6 +733,15 @@ def _build_stage_dtos(
 
 
 def _status_for_stage(index: int, current_stage_index: int) -> tuple[str, str]:
+    """Determine the status label for a stage.
+
+    Args:
+        index: The stage index.
+        current_stage_index: The current stage index.
+
+    Returns:
+        A tuple of (status_key, status_label).
+    """
     if index < current_stage_index:
         return "done", "опора уже должна держаться"
     if index == current_stage_index:

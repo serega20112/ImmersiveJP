@@ -21,7 +21,6 @@ from src.backend.dto.profile_dto import (
     ProgressReportDTO,
 )
 from src.backend.infrastructure.cache import KeyValueStore
-from src.backend.infrastructure.observability import get_logger, log_event
 from src.backend.infrastructure.external.llm import fallbacks as fallback_module
 from src.backend.infrastructure.external.llm import (
     normalization as normalization_module,
@@ -32,6 +31,7 @@ from src.backend.infrastructure.external.llm.fallbacks import LLMFallbackMixin
 from src.backend.infrastructure.external.llm.normalization import LLMNormalizationMixin
 from src.backend.infrastructure.external.llm.prompts import LLMPromptMixin
 from src.backend.infrastructure.external.llm.requests import LLMRequestMixin
+from src.backend.infrastructure.observability import get_logger, log_event
 
 logger = get_logger(__name__)
 
@@ -43,7 +43,7 @@ class HuggingFaceLLMClient(
     _SPEECH_CACHE_VERSION = "speech-v3"
     _ADVICE_CACHE_VERSION = "advice-v3"
 
-    def __init__(self, store: KeyValueStore):
+    def __init__(self, store: KeyValueStore) -> None:
         self._store = store
         self._http_client = httpx.AsyncClient(timeout=Settings.hf_timeout_seconds)
 
@@ -64,12 +64,8 @@ class HuggingFaceLLMClient(
             "batch_number": batch_number,
             "batch_size": batch_size,
             "goal": user.learning_goal.value if user.learning_goal else None,
-            "language_level": (
-                user.language_level.value if user.language_level else None
-            ),
-            "study_timeline": (
-                user.study_timeline.value if user.study_timeline else None
-            ),
+            "language_level": (user.language_level.value if user.language_level else None),
+            "study_timeline": (user.study_timeline.value if user.study_timeline else None),
             "interests": user.interests,
             "previous_topics": previous_topics,
             "diagnostic_level": (
@@ -80,9 +76,7 @@ class HuggingFaceLLMClient(
             "diagnostic_summary": (
                 user.skill_assessment.summary if user.skill_assessment else None
             ),
-            "strengths": (
-                list(user.skill_assessment.strengths) if user.skill_assessment else []
-            ),
+            "strengths": (list(user.skill_assessment.strengths) if user.skill_assessment else []),
             "weak_points": (
                 list(user.skill_assessment.weak_points) if user.skill_assessment else []
             ),
@@ -103,20 +97,14 @@ class HuggingFaceLLMClient(
         )
         return generated
 
-    async def generate_advice(
-        self, user: User, report: ProgressReportDTO
-    ) -> AIAdviceDTO:
+    async def generate_advice(self, user: User, report: ProgressReportDTO) -> AIAdviceDTO:
         payload = {
             "kind": "advice",
             "version": self._ADVICE_CACHE_VERSION,
             "user_id": user.id,
             "goal": user.learning_goal.value if user.learning_goal else None,
-            "language_level": (
-                user.language_level.value if user.language_level else None
-            ),
-            "study_timeline": (
-                user.study_timeline.value if user.study_timeline else None
-            ),
+            "language_level": (user.language_level.value if user.language_level else None),
+            "study_timeline": (user.study_timeline.value if user.study_timeline else None),
             "interests": user.interests,
             "report": report.model_dump(),
             "diagnostic_level": (
@@ -127,9 +115,7 @@ class HuggingFaceLLMClient(
             "diagnostic_summary": (
                 user.skill_assessment.summary if user.skill_assessment else None
             ),
-            "strengths": (
-                list(user.skill_assessment.strengths) if user.skill_assessment else []
-            ),
+            "strengths": (list(user.skill_assessment.strengths) if user.skill_assessment else []),
             "weak_points": (
                 list(user.skill_assessment.weak_points) if user.skill_assessment else []
             ),
@@ -142,9 +128,7 @@ class HuggingFaceLLMClient(
 
         self._log_cache_miss(payload)
         advice = await self._request_advice(user, report)
-        await self._store.set_json(
-            cache_key, advice.model_dump(), expire_seconds=6 * 60 * 60
-        )
+        await self._store.set_json(cache_key, advice.model_dump(), expire_seconds=6 * 60 * 60)
         return advice
 
     async def generate_speech_practice(
@@ -157,12 +141,8 @@ class HuggingFaceLLMClient(
             "version": self._SPEECH_CACHE_VERSION,
             "user_id": user.id,
             "goal": user.learning_goal.value if user.learning_goal else None,
-            "language_level": (
-                user.language_level.value if user.language_level else None
-            ),
-            "study_timeline": (
-                user.study_timeline.value if user.study_timeline else None
-            ),
+            "language_level": (user.language_level.value if user.language_level else None),
+            "study_timeline": (user.study_timeline.value if user.study_timeline else None),
             "interests": user.interests,
             "words": words,
             "diagnostic_level": (
@@ -173,9 +153,7 @@ class HuggingFaceLLMClient(
             "diagnostic_summary": (
                 user.skill_assessment.summary if user.skill_assessment else None
             ),
-            "strengths": (
-                list(user.skill_assessment.strengths) if user.skill_assessment else []
-            ),
+            "strengths": (list(user.skill_assessment.strengths) if user.skill_assessment else []),
             "weak_points": (
                 list(user.skill_assessment.weak_points) if user.skill_assessment else []
             ),
@@ -188,9 +166,7 @@ class HuggingFaceLLMClient(
 
         self._log_cache_miss(payload)
         practice = await self._request_speech_practice(payload)
-        await self._store.set_json(
-            cache_key, practice.model_dump(), expire_seconds=12 * 60 * 60
-        )
+        await self._store.set_json(cache_key, practice.model_dump(), expire_seconds=12 * 60 * 60)
         return practice
 
     async def generate_mentor_reply(
@@ -269,12 +245,8 @@ class HuggingFaceLLMClient(
             "kind": "knowledge_check",
             "user_id": user.id,
             "goal": user.learning_goal.value if user.learning_goal else None,
-            "language_level": (
-                user.language_level.value if user.language_level else None
-            ),
-            "study_timeline": (
-                user.study_timeline.value if user.study_timeline else None
-            ),
+            "language_level": (user.language_level.value if user.language_level else None),
+            "study_timeline": (user.study_timeline.value if user.study_timeline else None),
             "weak_points": weak_points or [],
             "strengths": strengths or [],
             "recent_topics": recent_topics or [],
@@ -363,12 +335,8 @@ class HuggingFaceLLMClient(
             "track": track.value,
             "batch_number": batch_number,
             "goal": user.learning_goal.value if user.learning_goal else None,
-            "language_level": (
-                user.language_level.value if user.language_level else None
-            ),
-            "study_timeline": (
-                user.study_timeline.value if user.study_timeline else None
-            ),
+            "language_level": (user.language_level.value if user.language_level else None),
+            "study_timeline": (user.study_timeline.value if user.study_timeline else None),
             "diagnostic_level": (
                 user.skill_assessment.estimated_level.value
                 if user.skill_assessment and user.skill_assessment.estimated_level

@@ -1,1 +1,1 @@
-from .settings_model import AppSettings, PROJECT_ROOT, Settings, get_settings
+from src.backend.dependencies.settings_model import AppSettings, Settings, get_settings

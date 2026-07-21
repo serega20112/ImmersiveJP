@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Callable
+from collections.abc import Callable
 from uuid import uuid4
 
 from fastapi import Request
@@ -108,9 +108,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         forwarded_for = str(request.headers.get("x-forwarded-for") or "").strip()
         client_host = forwarded_for.split(",")[0].strip() if forwarded_for else ""
         if not client_host:
-            client_host = (
-                request.client.host if request.client is not None else "unknown"
-            )
+            client_host = request.client.host if request.client is not None else "unknown"
 
         current_count = await self._rate_limiter.consume(
             scope="http-api",

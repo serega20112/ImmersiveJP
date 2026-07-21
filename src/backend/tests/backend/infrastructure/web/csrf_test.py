@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import pytest
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import PlainTextResponse
-
-import pytest
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.testclient import TestClient
 

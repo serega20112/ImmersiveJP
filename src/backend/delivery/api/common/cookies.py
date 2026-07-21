@@ -14,6 +14,13 @@ def set_auth_cookies(
     access_token: str,
     refresh_token: str,
 ) -> None:
+    """Set auth cookies on a redirect response.
+
+    Args:
+        response: The redirect response to set cookies on.
+        access_token: The access token to set.
+        refresh_token: The refresh token to set.
+    """
     cookie_kwargs = {
         "httponly": True,
         "samesite": Settings.cookie_samesite,
@@ -25,6 +32,11 @@ def set_auth_cookies(
 
 
 def clear_auth_cookies(response: RedirectResponse) -> None:
+    """Clear auth cookies from a redirect response.
+
+    Args:
+        response: The redirect response to clear cookies on.
+    """
     cookie_kwargs = {
         "samesite": Settings.cookie_samesite,
         "secure": Settings.cookie_secure,

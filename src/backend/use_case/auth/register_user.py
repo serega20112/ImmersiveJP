@@ -1,11 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.backend.domain.common import normalize_email
 from src.backend.domain.user import User
 from src.backend.dto.auth_dto import RegistrationDTO, UserViewDTO
-from src.backend.infrastructure.security import EmailVerificationStore, PasswordService
-from src.backend.infrastructure.repositories import AbstractUserRepository
 from src.backend.infrastructure.external import Mailer
+from src.backend.infrastructure.repositories import AbstractUserRepository
+from src.backend.infrastructure.security import EmailVerificationStore, PasswordService
 from src.backend.use_case.mappers import to_user_view_dto
 
 
@@ -25,12 +25,32 @@ class RegisterUserUseCase:
         verification_store: EmailVerificationStore,
         mailer: Mailer,
     ):
+        """Initialize the register user use case.
+
+        Args:
+            user_repository: Repository for user data.
+            password_service: Service for password hashing.
+            verification_store: Store for email verification codes.
+            mailer: Service for sending emails.
+        """
         self._user_repository = user_repository
         self._password_service = password_service
         self._verification_store = verification_store
         self._mailer = mailer
 
     async def execute(self, payload: RegistrationDTO) -> UserViewDTO:
+        """Register a new user and send a verification email.
+
+        Args:
+            payload: The registration data.
+
+        Returns:
+            The created user view data.
+
+        Raises:
+            InvalidRegistrationDataError: If registration data is invalid.
+            EmailAlreadyExistsError: If the email is already taken.
+        """
         try:
             email = normalize_email(payload.email)
         except ValueError as error:
@@ -38,13 +58,9 @@ class RegisterUserUseCase:
         password = payload.password.strip()
         display_name = payload.display_name.strip()
         if len(password) < 8:
-            raise InvalidRegistrationDataError(
-                "Пароль должен быть не короче 8 символов"
-            )
+            raise InvalidRegistrationDataError("Пароль должен быть не короче 8 символов")
         if len(display_name) < 2 or len(display_name) > 40:
-            raise InvalidRegistrationDataError(
-                "Имя должно быть длиной от 2 до 40 символов"
-            )
+            raise InvalidRegistrationDataError("Имя должно быть длиной от 2 до 40 символов")
         existing_user = await self._user_repository.get_by_email(email)
         if existing_user is not None:
             raise EmailAlreadyExistsError("Пользователь с таким email уже существует")

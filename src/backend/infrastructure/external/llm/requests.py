@@ -11,8 +11,8 @@ from json import JSONDecoder
 import httpx
 
 from src.backend.dependencies.settings import Settings
-from src.backend.dto.learning import TrackWorkResultDTO
 from src.backend.domain.user import User
+from src.backend.dto.learning import TrackWorkResultDTO
 from src.backend.dto.profile_dto import ProgressReportDTO
 from src.backend.infrastructure.observability import get_logger, log_event
 
@@ -55,13 +55,9 @@ class LLMRequestMixin:
             )
             return self._fallback_cards(payload)
 
-    async def _request_advice(
-        self, user: User, report: ProgressReportDTO
-    ) -> AIAdviceDTO:
+    async def _request_advice(self, user: User, report: ProgressReportDTO) -> AIAdviceDTO:
         if not Settings.hf_api_token:
-            self._log_fallback(
-                {"kind": "advice", "user_id": user.id}, reason="missing_token"
-            )
+            self._log_fallback({"kind": "advice", "user_id": user.id}, reason="missing_token")
             return self._fallback_advice(user, report)
         try:
             parsed = await self._request_llm_json(
@@ -144,11 +140,9 @@ class LLMRequestMixin:
         temperature: float,
         system_content: str,
         user_content: str,
-    ):
+    ) -> object:
         last_error: Exception | None = None
-        request_model, timeout_seconds, retry_attempts, max_tokens = (
-            self._request_runtime(payload)
-        )
+        request_model, timeout_seconds, retry_attempts, max_tokens = self._request_runtime(payload)
         request_body = {
             "model": request_model,
             "temperature": temperature,
@@ -197,9 +191,7 @@ class LLMRequestMixin:
                     ),
                     content_length=len(content),
                     parsed_type=type(parsed).__name__,
-                    parsed_keys=(
-                        list(parsed.keys())[:8] if isinstance(parsed, Mapping) else None
-                    ),
+                    parsed_keys=(list(parsed.keys())[:8] if isinstance(parsed, Mapping) else None),
                     **self._payload_log_fields(payload),
                 )
                 return parsed
@@ -535,9 +527,7 @@ class LLMRequestMixin:
                 "Assistant message missing content; "
                 f"finish_reason={finish_reason}; reasoning_only_response=true"
             )
-        raise ValueError(
-            f"Assistant message missing content; finish_reason={finish_reason}"
-        )
+        raise ValueError(f"Assistant message missing content; finish_reason={finish_reason}")
 
     @staticmethod
     def _extract_choice_content(
@@ -545,9 +535,7 @@ class LLMRequestMixin:
         message: object,
     ) -> str:
         if isinstance(message, Mapping):
-            content = HuggingFaceLLMClient._stringify_message_content(
-                message.get("content")
-            )
+            content = HuggingFaceLLMClient._stringify_message_content(message.get("content"))
             if content:
                 return content
 
@@ -598,7 +586,7 @@ class LLMRequestMixin:
         return ""
 
     @staticmethod
-    def _extract_json(raw_content: str):
+    def _extract_json(raw_content: str) -> object:
         decoder = JSONDecoder()
         for marker in ("[", "{"):
             start = raw_content.find(marker)

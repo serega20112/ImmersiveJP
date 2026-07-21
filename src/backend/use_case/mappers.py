@@ -19,6 +19,14 @@ _LEVEL_TITLES = {
 
 
 def to_user_view_dto(user: User) -> UserViewDTO:
+    """Convert a User entity to a UserViewDTO.
+
+    Args:
+        user: The user entity.
+
+    Returns:
+        The user view DTO.
+    """
     return UserViewDTO(
         id=int(user.id or 0),
         email=user.email,
@@ -33,6 +41,15 @@ def to_user_view_dto(user: User) -> UserViewDTO:
 
 
 def to_track_card_dto(card: LearningCard, completed_ids: set[int]) -> TrackCardDTO:
+    """Convert a LearningCard to a TrackCardDTO.
+
+    Args:
+        card: The learning card entity.
+        completed_ids: Set of completed card IDs.
+
+    Returns:
+        The track card DTO.
+    """
     cleaned_explanation = _sanitize_generated_note(card.explanation)
     return TrackCardDTO(
         id=int(card.id or 0),
@@ -50,6 +67,14 @@ def to_track_card_dto(card: LearningCard, completed_ids: set[int]) -> TrackCardD
 
 
 def to_track_progress_dto(snapshot: TrackProgressSnapshot) -> TrackProgressDTO:
+    """Convert a TrackProgressSnapshot to a TrackProgressDTO.
+
+    Args:
+        snapshot: The track progress snapshot.
+
+    Returns:
+        The track progress DTO.
+    """
     return TrackProgressDTO(
         track=snapshot.track.value,
         title=snapshot.track.title,
@@ -65,6 +90,14 @@ def to_track_progress_dto(snapshot: TrackProgressSnapshot) -> TrackProgressDTO:
 def to_skill_assessment_dto(
     assessment: SkillAssessment | None,
 ) -> SkillAssessmentDTO | None:
+    """Convert a SkillAssessment to a SkillAssessmentDTO.
+
+    Args:
+        assessment: The skill assessment entity, or None.
+
+    Returns:
+        The skill assessment DTO, or None.
+    """
     if assessment is None or assessment.estimated_level is None:
         return None
     return SkillAssessmentDTO(
@@ -78,6 +111,15 @@ def to_skill_assessment_dto(
 
 
 def _build_preview(text: str, max_length: int = 170) -> str:
+    """Build a truncated preview of a text.
+
+    Args:
+        text: The text to truncate.
+        max_length: Maximum length of the preview.
+
+    Returns:
+        The truncated preview string.
+    """
     compact = " ".join(text.split())
     if len(compact) <= max_length:
         return compact
@@ -88,6 +130,14 @@ def _build_preview(text: str, max_length: int = 170) -> str:
 
 
 def _sanitize_generated_note(text: str) -> str:
+    """Sanitize generated note text by replacing tokens and removing noise.
+
+    Args:
+        text: The raw generated text.
+
+    Returns:
+        The cleaned text.
+    """
     compact = " ".join((text or "").split())
     if not compact:
         return ""
@@ -118,19 +168,23 @@ def _sanitize_generated_note(text: str) -> str:
     for pattern, replacement in word_replacements.items():
         compact = re.sub(pattern, replacement, compact, flags=re.IGNORECASE)
 
-    compact = re.sub(
-        r"Эта карточка про тему '[^']+'\.\s*", "", compact, flags=re.IGNORECASE
-    )
+    compact = re.sub(r"Эта карточка про тему '[^']+'\.\s*", "", compact, flags=re.IGNORECASE)
 
     sentences = re.split(r"(?<=[.!?])\s+", compact)
-    filtered = [
-        sentence.strip() for sentence in sentences if not _is_noise_sentence(sentence)
-    ]
+    filtered = [sentence.strip() for sentence in sentences if not _is_noise_sentence(sentence)]
     normalized = " ".join(filtered).strip()
     return normalized or compact
 
 
 def _is_noise_sentence(sentence: str) -> bool:
+    """Check if a sentence is noise that should be filtered out.
+
+    Args:
+        sentence: The sentence to check.
+
+    Returns:
+        True if the sentence is noise.
+    """
     normalized = sentence.casefold()
     noise_fragments = (
         "смотри на тему",
@@ -154,6 +208,14 @@ def _is_noise_sentence(sentence: str) -> bool:
 
 
 def _to_card_example_dto(example: str) -> CardExampleDTO:
+    """Convert a raw example string to a CardExampleDTO.
+
+    Args:
+        example: The raw example string (format: "japanese|romaji|translation").
+
+    Returns:
+        The card example DTO.
+    """
     parts = [part.strip() for part in example.split("|")]
     if len(parts) >= 3:
         japanese, romaji, translation = parts[:3]

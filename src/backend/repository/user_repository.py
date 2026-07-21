@@ -16,9 +16,22 @@ from src.backend.infrastructure.repositories import AbstractUserRepository
 
 class UserRepository(AbstractUserRepository):
     def __init__(self, session: AsyncSession):
+        """Initialize the user repository.
+
+        Args:
+            session: The async database session.
+        """
         self._session = session
 
     async def add(self, user: User) -> User:
+        """Add a new user to the database.
+
+        Args:
+            user: The user entity to add.
+
+        Returns:
+            The created user entity.
+        """
         model = UserModel(
             email=user.email,
             password_hash=user.password_hash,
@@ -30,9 +43,7 @@ class UserRepository(AbstractUserRepository):
             interests_json=user.interests,
             onboarding_completed=user.onboarding_completed,
             diagnostic_score=(
-                user.skill_assessment.score
-                if user.skill_assessment is not None
-                else None
+                user.skill_assessment.score if user.skill_assessment is not None else None
             ),
             diagnostic_level=(
                 user.skill_assessment.estimated_level.value
@@ -40,14 +51,10 @@ class UserRepository(AbstractUserRepository):
                 else None
             ),
             diagnostic_summary=(
-                user.skill_assessment.summary
-                if user.skill_assessment is not None
-                else None
+                user.skill_assessment.summary if user.skill_assessment is not None else None
             ),
             strengths_json=(
-                list(user.skill_assessment.strengths)
-                if user.skill_assessment is not None
-                else None
+                list(user.skill_assessment.strengths) if user.skill_assessment is not None else None
             ),
             weak_points_json=(
                 list(user.skill_assessment.weak_points)
@@ -62,23 +69,41 @@ class UserRepository(AbstractUserRepository):
         return self._to_entity(model)
 
     async def get_by_email(self, email: str) -> User | None:
-        result = await self._session.execute(
-            select(UserModel).where(UserModel.email == email)
-        )
+        """Get a user by their email address.
+
+        Args:
+            email: The email address.
+
+        Returns:
+            The user entity, or None if not found.
+        """
+        result = await self._session.execute(select(UserModel).where(UserModel.email == email))
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
 
     async def get_by_id(self, user_id: int) -> User | None:
-        result = await self._session.execute(
-            select(UserModel).where(UserModel.id == user_id)
-        )
+        """Get a user by their ID.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            The user entity, or None if not found.
+        """
+        result = await self._session.execute(select(UserModel).where(UserModel.id == user_id))
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
 
     async def mark_email_verified(self, user_id: int) -> User:
-        result = await self._session.execute(
-            select(UserModel).where(UserModel.id == user_id)
-        )
+        """Mark a user's email as verified.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            The updated user entity.
+        """
+        result = await self._session.execute(select(UserModel).where(UserModel.id == user_id))
         model = result.scalar_one()
         model.is_email_verified = True
         await self._session.commit()
@@ -94,9 +119,20 @@ class UserRepository(AbstractUserRepository):
         interests: list[str],
         skill_assessment: SkillAssessment,
     ) -> User:
-        result = await self._session.execute(
-            select(UserModel).where(UserModel.id == user_id)
-        )
+        """Update a user's learning profile after onboarding.
+
+        Args:
+            user_id: ID of the user.
+            goal: The learning goal.
+            language_level: The language level.
+            study_timeline: The study timeline.
+            interests: List of interests.
+            skill_assessment: The skill assessment data.
+
+        Returns:
+            The updated user entity.
+        """
+        result = await self._session.execute(select(UserModel).where(UserModel.id == user_id))
         model = result.scalar_one()
         model.learning_goal = goal.value
         model.language_level = language_level.value
@@ -118,21 +154,23 @@ class UserRepository(AbstractUserRepository):
 
     @staticmethod
     def _to_entity(model: UserModel) -> User:
+        """Convert a UserModel to a User entity.
+
+        Args:
+            model: The database model.
+
+        Returns:
+            The user entity.
+        """
         return User(
             id=model.id,
             email=model.email,
             password_hash=model.password_hash,
             display_name=model.display_name,
             is_email_verified=model.is_email_verified,
-            learning_goal=(
-                LearningGoal(model.learning_goal) if model.learning_goal else None
-            ),
-            language_level=(
-                LanguageLevel(model.language_level) if model.language_level else None
-            ),
-            study_timeline=(
-                StudyTimeline(model.study_timeline) if model.study_timeline else None
-            ),
+            learning_goal=(LearningGoal(model.learning_goal) if model.learning_goal else None),
+            language_level=(LanguageLevel(model.language_level) if model.language_level else None),
+            study_timeline=(StudyTimeline(model.study_timeline) if model.study_timeline else None),
             interests=list(model.interests_json or []),
             onboarding_completed=model.onboarding_completed,
             skill_assessment=_to_skill_assessment(model),
@@ -142,6 +180,14 @@ class UserRepository(AbstractUserRepository):
 
 
 def _to_skill_assessment(model: UserModel) -> SkillAssessment | None:
+    """Convert a UserModel to a SkillAssessment entity.
+
+    Args:
+        model: The database model.
+
+    Returns:
+        The skill assessment entity, or None if no data.
+    """
     if (
         model.diagnostic_score is None
         and model.diagnostic_level is None
@@ -152,9 +198,7 @@ def _to_skill_assessment(model: UserModel) -> SkillAssessment | None:
         return None
     return SkillAssessment(
         score=int(model.diagnostic_score or 0),
-        estimated_level=(
-            LanguageLevel(model.diagnostic_level) if model.diagnostic_level else None
-        ),
+        estimated_level=(LanguageLevel(model.diagnostic_level) if model.diagnostic_level else None),
         summary=model.diagnostic_summary or "",
         strengths=list(model.strengths_json or []),
         weak_points=list(model.weak_points_json or []),

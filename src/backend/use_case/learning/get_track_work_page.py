@@ -22,6 +22,12 @@ class GetTrackWorkPageUseCase:
         content_repository: AbstractContentRepository,
         progress_repository: AbstractProgressRepository,
     ):
+        """Initialize the get track work page use case.
+
+        Args:
+            content_repository: Repository for content data.
+            progress_repository: Repository for progress data.
+        """
         self._content_repository = content_repository
         self._progress_repository = progress_repository
 
@@ -31,6 +37,19 @@ class GetTrackWorkPageUseCase:
         track: TrackType,
         batch_number: int,
     ) -> TrackWorkPageDTO:
+        """Get the track work page for a specific batch.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+            batch_number: The batch number.
+
+        Returns:
+            The track work page data.
+
+        Raises:
+            TrackWorkUnavailableError: If the batch is not available for work.
+        """
         cards = await self._content_repository.list_cards_by_batch(
             user_id,
             track,
@@ -64,6 +83,16 @@ class GetTrackWorkPageUseCase:
         track: TrackType,
         batch_number: int,
     ) -> list:
+        """Load review cards from the previous batch if completed.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+            batch_number: The current batch number.
+
+        Returns:
+            A list of review cards from the previous batch.
+        """
         if batch_number <= 1:
             return []
         previous_batch = batch_number - 1

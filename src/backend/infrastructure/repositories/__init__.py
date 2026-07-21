@@ -1,3 +1,6 @@
+from src.backend.infrastructure.repositories.abstract_user_document_repository import (
+    AbstractUserDocumentRepository,
+)
 from src.backend.infrastructure.repositories.content_repository import (
     AbstractContentRepository,
 )
@@ -13,15 +16,12 @@ from src.backend.infrastructure.repositories.session_repository import (
 from src.backend.infrastructure.repositories.user_repository import (
     AbstractUserRepository,
 )
-from src.backend.infrastructure.repositories.abstract_user_document_repository import (
-    AbstractUserDocumentRepository,
-)
 
 __all__ = [
     "AbstractContentRepository",
     "AbstractMentorRepository",
     "AbstractProgressRepository",
     "AbstractSessionRepository",
-    "AbstractUserRepository",
     "AbstractUserDocumentRepository",
+    "AbstractUserRepository",
 ]

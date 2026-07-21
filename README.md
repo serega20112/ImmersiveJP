@@ -1,12 +1,44 @@
 ﻿# ImmersJP
 
-ImmersJP — бесплатная адаптивная платформа погружения в Японию. Приложение соединяет язык, культуру и историю в один маршрут, а ИИ собирает карточки-конспекты под цель, уровень и интересы пользователя. Пройденные материалы можно выгружать в PDF.
+Бесплатная адаптивная платформа погружения в Японию. ИИ собирает карточки-конспекты под цель, уровень и интересы пользователя.
 
-Документы по проекту:
+## Быстрый старт
 
-- [docs/README.md](docs/README.md)
-- [docs/architecture/overview.md](docs/architecture/overview.md)
-- [docs/api/endpoints.md](docs/api/endpoints.md)
-- [docs/database/schema.md](docs/database/schema.md)
-- [docs/deployment/overview.md](docs/deployment/overview.md)
-- [docs/development/conventions.md](docs/development/conventions.md)
+```powershell
+# 1. Скопировать .env
+cp .env.example .env
+
+# 2. Установить зависимости
+pip install -r requirements.txt
+
+# 3. Прогнать миграции
+alembic -c build/alembic/alembic.ini upgrade head
+
+# 4. Запустить
+python -m src.main
+```
+
+Открой `http://localhost:8000`.
+
+### Docker
+
+```powershell
+docker compose up --build
+```
+
+## Структура проекта
+
+```
+src/backend/
+├── delivery/        # HTTP-слой (маршруты, шаблоны)
+├── dependencies/    # DI-контейнер и провайдеры
+├── domain/          # Доменные сущности
+├── dto/             # Контракты между слоями
+├── infrastructure/  # БД, Redis, LLM, безопасность, логи
+├── repository/      # Реализации репозиториев
+├── services/        # Делегаты между routes и use case
+├── use_case/        # Бизнес-сценарии
+└── tests/           # Тесты
+```
+
+Подробнее — в [документации](docs/README.md).

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from hashlib import sha256
 
@@ -6,7 +6,7 @@ from src.backend.infrastructure.cache import KeyValueStore
 
 
 class TokenBlocklist:
-    def __init__(self, store: KeyValueStore):
+    def __init__(self, store: KeyValueStore) -> None:
         self._store = store
 
     async def revoke(self, token: str, ttl_seconds: int) -> None:

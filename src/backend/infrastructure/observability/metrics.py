@@ -11,10 +11,10 @@ def _escape_label(value: str) -> str:
 class HttpMetricsCollector:
     def __init__(self) -> None:
         self._lock = Lock()
-        self._requests = Counter()
-        self._duration_sum = defaultdict(float)
-        self._duration_count = Counter()
-        self._rate_limited = Counter()
+        self._requests: Counter[tuple[str, str, str]] = Counter()
+        self._duration_sum: defaultdict[tuple[str, str], float] = defaultdict(float)
+        self._duration_count: Counter[tuple[str, str]] = Counter()
+        self._rate_limited: Counter[str] = Counter()
 
     def record_request(
         self,
@@ -48,13 +48,7 @@ class HttpMetricsCollector:
         ]
         for (method, route, status_code), value in sorted(requests):
             lines.append(
-                'immersjp_http_requests_total{method="%s",route="%s",status_code="%s"} %s'
-                % (
-                    _escape_label(method),
-                    _escape_label(route),
-                    _escape_label(status_code),
-                    value,
-                )
+                f'immersjp_http_requests_total{{method="{_escape_label(method)}",route="{_escape_label(route)}",status_code="{_escape_label(status_code)}"}} {value}'
             )
 
         lines.extend(
@@ -63,10 +57,9 @@ class HttpMetricsCollector:
                 "# TYPE immersjp_http_request_duration_ms_sum counter",
             ]
         )
-        for (method, route), value in sorted(duration_sum.items()):
+        for (method, route), value in sorted(duration_sum.items()):  # type: ignore[assignment]
             lines.append(
-                'immersjp_http_request_duration_ms_sum{method="%s",route="%s"} %.2f'
-                % (_escape_label(method), _escape_label(route), value)
+                f'immersjp_http_request_duration_ms_sum{{method="{_escape_label(method)}",route="{_escape_label(route)}"}} {value:.2f}'
             )
 
         lines.extend(
@@ -77,8 +70,7 @@ class HttpMetricsCollector:
         )
         for (method, route), value in sorted(duration_count.items()):
             lines.append(
-                'immersjp_http_request_duration_ms_count{method="%s",route="%s"} %s'
-                % (_escape_label(method), _escape_label(route), value)
+                f'immersjp_http_request_duration_ms_count{{method="{_escape_label(method)}",route="{_escape_label(route)}"}} {value}'
             )
 
         lines.extend(
@@ -89,8 +81,7 @@ class HttpMetricsCollector:
         )
         for route, value in sorted(rate_limited):
             lines.append(
-                'immersjp_http_rate_limited_total{route="%s"} %s'
-                % (_escape_label(route), value)
+                f'immersjp_http_rate_limited_total{{route="{_escape_label(route)}"}} {value}'
             )
 
         return "\n".join(lines) + "\n"

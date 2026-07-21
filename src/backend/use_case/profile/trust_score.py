@@ -11,13 +11,20 @@ def build_trust_score(
     total_completed: int,
     total_generated: int,
 ) -> TrustScoreDTO:
-    diagnostic_points = min(
-        40, max(0, int((assessment.score if assessment else 0) * 8))
-    )
+    """Build a trust score from user assessment and progress data.
+
+    Args:
+        assessment: The user's skill assessment, or None.
+        snapshots: Progress snapshots for each track.
+        total_completed: Total number of completed cards.
+        total_generated: Total number of generated cards.
+
+    Returns:
+        The computed trust score data.
+    """
+    diagnostic_points = min(40, max(0, int((assessment.score if assessment else 0) * 8)))
     completion_points = (
-        min(35, round((total_completed / total_generated) * 35))
-        if total_generated
-        else 0
+        min(35, round((total_completed / total_generated) * 35)) if total_generated else 0
     )
     completed_batches = sum(item.completed_batches for item in snapshots)
     stability_points = min(15, completed_batches * 5)
@@ -87,6 +94,14 @@ def build_trust_score(
 
 
 def _band_for_score(score: int) -> tuple[str, str, str]:
+    """Return the trust score band based on the numeric score.
+
+    Args:
+        score: The trust score (0-100).
+
+    Returns:
+        A tuple of (band_key, band_title, summary).
+    """
     if score < 40:
         return (
             "starter",

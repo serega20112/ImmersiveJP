@@ -16,8 +16,8 @@ from src.backend.use_case.learning.get_track_work_page import TrackWorkUnavailab
 from src.backend.use_case.learning.work_tasks import (
     build_prepared_work_tasks,
     evaluate_work_submission,
-    to_track_work_task_dto,
     to_track_work_review_payload,
+    to_track_work_task_dto,
 )
 
 logger = get_logger(__name__)
@@ -35,6 +35,14 @@ class SubmitTrackWorkUseCase:
         progress_repository: AbstractProgressRepository,
         llm_client: HuggingFaceLLMClient,
     ):
+        """Initialize the submit track work use case.
+
+        Args:
+            user_repository: Repository for user data.
+            content_repository: Repository for content data.
+            progress_repository: Repository for progress data.
+            llm_client: Client for LLM work review.
+        """
         self._user_repository = user_repository
         self._content_repository = content_repository
         self._progress_repository = progress_repository
@@ -47,6 +55,21 @@ class SubmitTrackWorkUseCase:
         batch_number: int,
         answers: dict[str, str],
     ) -> TrackWorkPageDTO:
+        """Submit answers for a track work batch and get results.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+            batch_number: The batch number.
+            answers: Dictionary of task ID to answer text.
+
+        Returns:
+            The track work page with results.
+
+        Raises:
+            InvalidTrackWorkSubmissionError: If answers are invalid.
+            TrackWorkUnavailableError: If the batch is not available for work.
+        """
         self._validate_answers(answers)
         cards = await self._content_repository.list_cards_by_batch(
             user_id,
@@ -74,9 +97,7 @@ class SubmitTrackWorkUseCase:
             track=track,
             batch_number=batch_number,
             tasks=[
-                to_track_work_review_payload(
-                    task, submitted_answer=answers.get(task.id)
-                )
+                to_track_work_review_payload(task, submitted_answer=answers.get(task.id))
                 for task in tasks
             ],
             fallback_result=fallback_result,
@@ -108,6 +129,14 @@ class SubmitTrackWorkUseCase:
 
     @staticmethod
     def _validate_answers(answers: dict[str, str]) -> None:
+        """Validate that all answers are within the text length limit.
+
+        Args:
+            answers: Dictionary of task ID to answer text.
+
+        Raises:
+            InvalidTrackWorkSubmissionError: If any answer exceeds the limit.
+        """
         for value in answers.values():
             if len(str(value).strip()) > Settings.text_input_limit:
                 raise InvalidTrackWorkSubmissionError(
@@ -120,6 +149,16 @@ class SubmitTrackWorkUseCase:
         track: TrackType,
         batch_number: int,
     ) -> list:
+        """Load review cards from the previous batch if completed.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+            batch_number: The current batch number.
+
+        Returns:
+            A list of review cards from the previous batch.
+        """
         if batch_number <= 1:
             return []
         previous_batch = batch_number - 1

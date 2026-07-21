@@ -6,10 +6,9 @@ from src.backend.delivery.api.common.navigation import (
 )
 from src.backend.delivery.api.common.services import (
     get_auth_service,
-    get_current_user,
     get_dashboard_service,
     get_learning_service,
     get_onboarding_service,
     get_profile_service,
-    resolve_current_user,
 )
+from src.backend.dependencies.current_user import get_current_user, resolve_current_user

@@ -15,5 +15,7 @@ PyJWT==2.10.1
 reportlab==4.4.3
 email-validator==2.3.0
 itsdangerous==2.1.2
+elasticsearch[async]>=8.17,<10
+pre-commit==4.2.0
 pytest==8.4.2
 pytest-asyncio==1.2.0

@@ -27,12 +27,28 @@ class CompleteOnboardingUseCase:
         user_repository: AbstractUserRepository,
         generate_cards_use_case: GenerateCardsUseCase,
     ):
+        """Initialize the complete onboarding use case.
+
+        Args:
+            user_repository: Repository for user data.
+            generate_cards_use_case: Use case for generating learning cards.
+        """
         self._user_repository = user_repository
         self._generate_cards_use_case = generate_cards_use_case
 
-    async def execute(
-        self, user_id: int, payload: OnboardingDTO
-    ) -> OnboardingResultDTO:
+    async def execute(self, user_id: int, payload: OnboardingDTO) -> OnboardingResultDTO:
+        """Complete the onboarding process for a user.
+
+        Args:
+            user_id: ID of the user.
+            payload: The onboarding form data.
+
+        Returns:
+            The onboarding result data.
+
+        Raises:
+            InvalidOnboardingDataError: If onboarding data is invalid.
+        """
         try:
             goal = LearningGoal(payload.goal)
             language_level = LanguageLevel(payload.language_level)
@@ -88,6 +104,14 @@ class CompleteOnboardingUseCase:
 
     @staticmethod
     def _parse_interests(raw_value: str) -> list[str]:
+        """Parse a raw interests string into a deduplicated list.
+
+        Args:
+            raw_value: Raw comma or newline separated interests.
+
+        Returns:
+            A list of unique interest strings.
+        """
         prepared = raw_value.replace("\r", "\n").replace(";", ",")
         items: list[str] = []
         seen: set[str] = set()

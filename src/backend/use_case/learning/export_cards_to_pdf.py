@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.backend.domain.content import TrackType
 from src.backend.dto.learning_dto import PdfDocumentDTO
@@ -21,11 +21,30 @@ class ExportCardsToPDFUseCase:
         content_repository: AbstractContentRepository,
         pdf_builder: PdfBuilder,
     ):
+        """Initialize the export cards to PDF use case.
+
+        Args:
+            user_repository: Repository for user data.
+            content_repository: Repository for content data.
+            pdf_builder: Service for building PDF documents.
+        """
         self._user_repository = user_repository
         self._content_repository = content_repository
         self._pdf_builder = pdf_builder
 
     async def execute(self, user_id: int, track: TrackType) -> PdfDocumentDTO:
+        """Export completed cards to a PDF document.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+
+        Returns:
+            The PDF document data.
+
+        Raises:
+            NoCompletedCardsError: If no completed cards are available.
+        """
         user = await self._user_repository.get_by_id(user_id)
         if user is None:
             raise NoCompletedCardsError("Пользователь не найден")

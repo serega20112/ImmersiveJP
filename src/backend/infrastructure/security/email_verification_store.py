@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import secrets
 
@@ -6,7 +6,7 @@ from src.backend.infrastructure.cache import KeyValueStore
 
 
 class EmailVerificationStore:
-    def __init__(self, store: KeyValueStore, ttl_seconds: int):
+    def __init__(self, store: KeyValueStore, ttl_seconds: int) -> None:
         self._store = store
         self._ttl_seconds = ttl_seconds
 

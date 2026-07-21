@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from src.backend.infrastructure.cache import KeyValueStore
-from src.backend.services.onboarding_service import OnboardingService
 from src.backend.dto.onboarding_dto import (
     OnboardingPageDTO,
     StudyTimelineOptionDTO,
 )
+from src.backend.infrastructure.cache import KeyValueStore
+from src.backend.services.onboarding_service import OnboardingService
 
 
 class _StubCompleteOnboardingUseCase:

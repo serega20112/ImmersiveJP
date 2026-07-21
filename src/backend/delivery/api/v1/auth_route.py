@@ -2,28 +2,27 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter
-from fastapi import Form
-from fastapi import Request
+from fastapi import APIRouter, Form, Request, status
 from fastapi.responses import RedirectResponse
 
+from src.backend.delivery.api.v1.helpers import (
+    clear_auth_cookies,
+    redirect_to_route,
+    set_auth_cookies,
+)
 from src.backend.dependencies.service_dependencies import AuthServiceDependency
-from src.backend.delivery.api.v1.helpers import clear_auth_cookies
-from src.backend.delivery.api.v1.helpers import redirect_to_route
-from src.backend.delivery.api.v1.helpers import set_auth_cookies
-from src.backend.dto.auth_dto import LoginDTO
-from src.backend.dto.auth_dto import RegistrationDTO
-from src.backend.dto.auth_dto import VerificationDTO
+from src.backend.dto.auth_dto import LoginDTO, RegistrationDTO, VerificationDTO
 from src.backend.infrastructure.web import (
     ACCESS_TOKEN_COOKIE_NAME,
     REFRESH_TOKEN_COOKIE_NAME,
     flash,
     render_template,
 )
-from src.backend.use_case.auth.login_user import EmailNotVerifiedError
-from src.backend.use_case.auth.login_user import InvalidCredentialsError
-from src.backend.use_case.auth.register_user import EmailAlreadyExistsError
-from src.backend.use_case.auth.register_user import InvalidRegistrationDataError
+from src.backend.use_case.auth.login_user import EmailNotVerifiedError, InvalidCredentialsError
+from src.backend.use_case.auth.register_user import (
+    EmailAlreadyExistsError,
+    InvalidRegistrationDataError,
+)
 from src.backend.use_case.auth.verify_email import InvalidVerificationCodeError
 
 auth_router = APIRouter(prefix="/auth")
@@ -31,6 +30,14 @@ auth_router = APIRouter(prefix="/auth")
 
 @auth_router.get("/register", name="auth.register_page")
 async def register_page(request: Request):
+    """Render the registration page.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The rendered registration template.
+    """
     return await render_template(request, "auth/register.html")
 
 
@@ -42,6 +49,18 @@ async def register_user(
     password: Annotated[str, Form()],
     display_name: Annotated[str, Form()],
 ):
+    """Handle user registration form submission.
+
+    Args:
+        request: The incoming request.
+        auth_service: The auth service dependency.
+        email: The user's email address.
+        password: The user's password.
+        display_name: The user's display name.
+
+    Returns:
+        A redirect response.
+    """
     try:
         await auth_service.register(
             RegistrationDTO(
@@ -57,7 +76,7 @@ async def register_user(
         )
         return RedirectResponse(
             url=f"{request.app.url_path_for('auth.verify_email_page')}?email={email}",
-            status_code=303,
+            status_code=status.HTTP_303_SEE_OTHER,
         )
     except (EmailAlreadyExistsError, InvalidRegistrationDataError) as error:
         flash(request, str(error), "error")
@@ -66,6 +85,14 @@ async def register_user(
 
 @auth_router.get("/login", name="auth.login_page")
 async def login_page(request: Request):
+    """Render the login page.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The rendered login template.
+    """
     return await render_template(request, "auth/login.html")
 
 
@@ -76,6 +103,17 @@ async def login_user(
     email: Annotated[str, Form()],
     password: Annotated[str, Form()],
 ):
+    """Handle user login form submission.
+
+    Args:
+        request: The incoming request.
+        auth_service: The auth service dependency.
+        email: The user's email address.
+        password: The user's password.
+
+    Returns:
+        A redirect response with auth cookies.
+    """
     try:
         auth_result = await auth_service.login(LoginDTO(email=email, password=password))
         flash(request, f"С возвращением, {auth_result.user.display_name}.", "success")
@@ -91,6 +129,15 @@ async def login_user(
 
 @auth_router.post("/logout", name="auth.logout_user")
 async def logout_user(request: Request, auth_service: AuthServiceDependency):
+    """Handle user logout.
+
+    Args:
+        request: The incoming request.
+        auth_service: The auth service dependency.
+
+    Returns:
+        A redirect response with cleared auth cookies.
+    """
     await auth_service.logout(
         request.cookies.get(ACCESS_TOKEN_COOKIE_NAME),
         request.cookies.get(REFRESH_TOKEN_COOKIE_NAME),
@@ -102,6 +149,14 @@ async def logout_user(request: Request, auth_service: AuthServiceDependency):
 
 @auth_router.get("/verify-email", name="auth.verify_email_page")
 async def verify_email_page(request: Request):
+    """Render the email verification page.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The rendered verification template.
+    """
     return await render_template(
         request,
         "auth/verify_email.html",
@@ -116,6 +171,17 @@ async def verify_email(
     email: Annotated[str, Form()],
     code: Annotated[str, Form()],
 ):
+    """Handle email verification form submission.
+
+    Args:
+        request: The incoming request.
+        auth_service: The auth service dependency.
+        email: The user's email address.
+        code: The verification code.
+
+    Returns:
+        A redirect response.
+    """
     try:
         await auth_service.verify_email(VerificationDTO(email=email, code=code))
         flash(request, "Почта подтверждена. Теперь можно войти.", "success")
@@ -124,5 +190,5 @@ async def verify_email(
         flash(request, str(error), "error")
         return RedirectResponse(
             url=f"{request.app.url_path_for('auth.verify_email_page')}?email={email}",
-            status_code=303,
+            status_code=status.HTTP_303_SEE_OTHER,
         )

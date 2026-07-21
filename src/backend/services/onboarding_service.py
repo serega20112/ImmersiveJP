@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from src.backend.infrastructure.cache import KeyValueStore
 from src.backend.dependencies.settings import Settings
 from src.backend.dto.onboarding_dto import (
     OnboardingDTO,
     OnboardingPageDTO,
     OnboardingResultDTO,
 )
+from src.backend.infrastructure.cache import KeyValueStore
 from src.backend.use_case.onboarding import (
     CompleteOnboardingUseCase,
     GetOnboardingPageUseCase,
@@ -20,11 +20,23 @@ class OnboardingService:
         get_onboarding_page_use_case: GetOnboardingPageUseCase,
         cache_store: KeyValueStore,
     ):
+        """Initialize the onboarding service.
+
+        Args:
+            complete_onboarding_use_case: Use case for completing onboarding.
+            get_onboarding_page_use_case: Use case for getting onboarding page.
+            cache_store: Key-value store for caching.
+        """
         self._complete_onboarding_use_case = complete_onboarding_use_case
         self._get_onboarding_page_use_case = get_onboarding_page_use_case
         self._cache_store = cache_store
 
     async def get_page(self) -> OnboardingPageDTO:
+        """Get the onboarding page with caching.
+
+        Returns:
+            The onboarding page data.
+        """
         cache_ttl = Settings.onboarding_page_cache_ttl_seconds
         cache_key = "onboarding:page"
         cached_page = await self._cache_store.get_json(cache_key)
@@ -39,7 +51,14 @@ class OnboardingService:
         )
         return page
 
-    async def complete(
-        self, user_id: int, payload: OnboardingDTO
-    ) -> OnboardingResultDTO:
+    async def complete(self, user_id: int, payload: OnboardingDTO) -> OnboardingResultDTO:
+        """Complete the onboarding process for a user.
+
+        Args:
+            user_id: ID of the user.
+            payload: The onboarding form data.
+
+        Returns:
+            The onboarding result data.
+        """
         return await self._complete_onboarding_use_case.execute(user_id, payload)

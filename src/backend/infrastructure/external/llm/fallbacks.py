@@ -333,16 +333,12 @@ class LLMFallbackMixin:
                 ),
             ],
         }
-        previous_topics = {
-            item.casefold() for item in payload.get("previous_topics") or []
-        }
+        previous_topics = {item.casefold() for item in payload.get("previous_topics") or []}
         if excluded_topics:
             previous_topics.update(topic.casefold() for topic in excluded_topics)
         seen_example_signatures = set(excluded_example_signatures or set())
         selected: list[GeneratedCardDraftDTO] = []
-        for topic, explanation, examples, key_terms in library.get(
-            payload["track"], []
-        ):
+        for topic, explanation, examples, key_terms in library.get(payload["track"], []):
             normalized_topic = topic.casefold()
             if normalized_topic in previous_topics:
                 continue
@@ -358,9 +354,7 @@ class LLMFallbackMixin:
                         base_text=explanation,
                         interests=interests,
                         goal=str(payload.get("goal") or "погружение"),
-                        language_level=str(
-                            payload.get("language_level") or "без уровня"
-                        ),
+                        language_level=str(payload.get("language_level") or "без уровня"),
                         study_timeline=str(payload.get("study_timeline") or "flexible"),
                         skill_summary=str(payload.get("diagnostic_summary") or ""),
                     ),
@@ -389,9 +383,7 @@ class LLMFallbackMixin:
                 normalized_topic = draft.topic.casefold()
                 if normalized_topic in previous_topics:
                     continue
-                example_signature = HuggingFaceLLMClient._example_signature(
-                    draft.examples
-                )
+                example_signature = HuggingFaceLLMClient._example_signature(draft.examples)
                 if example_signature and example_signature in seen_example_signatures:
                     continue
                 previous_topics.add(normalized_topic)
@@ -738,7 +730,7 @@ class LLMFallbackMixin:
                 ),
             ]
 
-        for context_title, context_text, examples, base_terms in contexts:
+        for context_title, context_text, _examples, base_terms in contexts:
             for angle_title, angle_text in angles:
                 topic = f"{context_title}: {angle_title}"
                 normalized_topic = topic.casefold()
@@ -750,9 +742,7 @@ class LLMFallbackMixin:
                     angle_title=angle_title,
                     base_terms=base_terms,
                 )
-                example_signature = HuggingFaceLLMClient._example_signature(
-                    generated_examples
-                )
+                example_signature = HuggingFaceLLMClient._example_signature(generated_examples)
                 if example_signature and example_signature in seen_example_signatures:
                     continue
                 explanation = HuggingFaceLLMClient._expand_fallback_note(
@@ -820,15 +810,10 @@ class LLMFallbackMixin:
     @staticmethod
     def _fallback_speech_practice(payload: dict) -> SpeechPracticeDTO:
         seed_words = [
-            HuggingFaceLLMClient._parse_seed_word(word)
-            for word in payload.get("words") or []
+            HuggingFaceLLMClient._parse_seed_word(word) for word in payload.get("words") or []
         ]
         if not seed_words:
-            seed_words = [
-                HuggingFaceLLMClient._parse_seed_word(
-                    "日本語 | nihongo | японский язык"
-                )
-            ]
+            seed_words = [HuggingFaceLLMClient._parse_seed_word("日本語 | nihongo | японский язык")]
 
         sentence_templates = [
             (
@@ -1027,9 +1012,7 @@ class LLMFallbackMixin:
                 )
                 for speaker, japanese, romaji, translation in turns_template
             ]
-            dialogues.append(
-                SpeechDialogueDTO(title=title, scenario=scenario, turns=turns)
-            )
+            dialogues.append(SpeechDialogueDTO(title=title, scenario=scenario, turns=turns))
 
         return SpeechPracticeDTO(
             words=[word["surface"] for word in seed_words],
@@ -1328,14 +1311,14 @@ class LLMFallbackMixin:
         normalized = message.casefold()
         if "кандз" in normalized or "kanji" in normalized:
             reply = (
-                f"Кандзи лучше не врезать отдельным хаотичным блоком. Сначала добей текущую языковую партию и работу по ней, "
-                f"потому что именно через них система понимает, насколько можно усиливать чтение. Фокус уже смещен на кандзи: "
-                f"следующие языковые партии будут сильнее тянуть чтение знаков и узнавание их в словах."
+                "Кандзи лучше не врезать отдельным хаотичным блоком. Сначала добей текущую языковую партию и работу по ней, "
+                "потому что именно через них система понимает, насколько можно усиливать чтение. Фокус уже смещен на кандзи: "
+                "следующие языковые партии будут сильнее тянуть чтение знаков и узнавание их в словах."
             )
         elif "частиц" in normalized or "граммат" in normalized:
             reply = (
-                f"Сейчас невыгодно прыгать дальше по плану, пока не держатся частицы и каркас предложения. "
-                f"Сначала закрой текущий language batch, затем работа покажет, где именно ломается грамматика, и уже после этого новая партия пойдет с большим упором на этот блок."
+                "Сейчас невыгодно прыгать дальше по плану, пока не держатся частицы и каркас предложения. "
+                "Сначала закрой текущий language batch, затем работа покажет, где именно ломается грамматика, и уже после этого новая партия пойдет с большим упором на этот блок."
             )
         else:
             reply = (
@@ -1349,9 +1332,7 @@ class LLMFallbackMixin:
                 "После этого пройди речевую практику или работу по уже закрытому батчу.",
                 f"Открой следующую языковую партию: она пойдет с фокусом на '{focus_title}'.",
             ],
-            suggested_prompts=HuggingFaceLLMClient._mentor_prompt_suggestions(
-                active_focus
-            ),
+            suggested_prompts=HuggingFaceLLMClient._mentor_prompt_suggestions(active_focus),
         )
 
     @staticmethod
@@ -1410,13 +1391,15 @@ class LLMFallbackMixin:
             is_correct = bool(user_ans and expected and user_ans == expected)
             if is_correct:
                 correct_count += 1
-            results.append({
-                "question_id": qid,
-                "is_correct": is_correct,
-                "user_answer": answers.get(qid, ""),
-                "expected_answer": q.get("expected_answer", ""),
-                "feedback": "Верно!" if is_correct else "Ответ не совпал с ожидаемым.",
-            })
+            results.append(
+                {
+                    "question_id": qid,
+                    "is_correct": is_correct,
+                    "user_answer": answers.get(qid, ""),
+                    "expected_answer": q.get("expected_answer", ""),
+                    "feedback": "Верно!" if is_correct else "Ответ не совпал с ожидаемым.",
+                }
+            )
         total = len(questions) or 1
         score = round((correct_count / total) * 100)
         return {

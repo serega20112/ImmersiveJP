@@ -17,12 +17,26 @@ class RepairCurrentBatchUseCase:
         session_repository: AbstractSessionRepository,
         llm_client: HuggingFaceLLMClient,
     ):
+        """Initialize the repair current batch use case.
+
+        Args:
+            user_repository: Repository for user data.
+            content_repository: Repository for content data.
+            session_repository: Repository for session data.
+            llm_client: Client for LLM card generation.
+        """
         self._user_repository = user_repository
         self._content_repository = content_repository
         self._session_repository = session_repository
         self._llm_client = llm_client
 
     async def execute(self, user_id: int, track: TrackType) -> None:
+        """Repair broken cards in the current batch.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+        """
         session = await self._session_repository.get_track_session(user_id, track)
         if session is None or session.last_generated_batch <= 0:
             return
@@ -89,12 +103,28 @@ class RepairCurrentBatchUseCase:
 
     @staticmethod
     def _is_placeholder(topic: str) -> bool:
+        """Check if a topic is a placeholder.
+
+        Args:
+            topic: The topic string to check.
+
+        Returns:
+            True if the topic is a placeholder.
+        """
         return topic.strip().casefold().startswith("резервная тема")
 
     @staticmethod
     def _find_duplicate_example_cards(
         batch_cards: list[LearningCard],
     ) -> list[LearningCard]:
+        """Find cards with duplicate examples in a batch.
+
+        Args:
+            batch_cards: List of learning cards to check.
+
+        Returns:
+            A list of cards that have duplicate examples.
+        """
         seen_signatures: set[tuple[str, ...]] = set()
         duplicates: list[LearningCard] = []
         for card in sorted(batch_cards, key=lambda item: item.position):
@@ -109,6 +139,14 @@ class RepairCurrentBatchUseCase:
 
     @staticmethod
     def _example_signature(card: LearningCard) -> tuple[str, ...]:
+        """Build a deduplication signature from a card's examples.
+
+        Args:
+            card: The learning card.
+
+        Returns:
+            A tuple of normalized example strings.
+        """
         normalized = [
             " ".join(str(example).split()).casefold()
             for example in card.examples

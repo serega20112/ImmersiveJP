@@ -5,10 +5,12 @@ from typing import Annotated
 from fastapi import Depends
 
 from src.backend.dependencies.request_scope import get_request_container
+from src.backend.infrastructure.external import STTClient
 from src.backend.infrastructure.repositories import AbstractUserDocumentRepository
 from src.backend.services import (
     AuthServiceContract,
     DashboardServiceContract,
+    KnowledgeServiceContract,
     LearningServiceContract,
     OnboardingServiceContract,
     ProfileServiceContract,
@@ -36,18 +38,24 @@ def get_profile_service() -> ProfileServiceContract:
 
 
 AuthServiceDependency = Annotated[AuthServiceContract, Depends(get_auth_service)]
-OnboardingServiceDependency = Annotated[
-    OnboardingServiceContract, Depends(get_onboarding_service)
-]
-DashboardServiceDependency = Annotated[
-    DashboardServiceContract, Depends(get_dashboard_service)
-]
-LearningServiceDependency = Annotated[
-    LearningServiceContract, Depends(get_learning_service)
-]
-ProfileServiceDependency = Annotated[
-    ProfileServiceContract, Depends(get_profile_service)
-]
+OnboardingServiceDependency = Annotated[OnboardingServiceContract, Depends(get_onboarding_service)]
+DashboardServiceDependency = Annotated[DashboardServiceContract, Depends(get_dashboard_service)]
+LearningServiceDependency = Annotated[LearningServiceContract, Depends(get_learning_service)]
+ProfileServiceDependency = Annotated[ProfileServiceContract, Depends(get_profile_service)]
+
+
+def get_knowledge_service() -> KnowledgeServiceContract:
+    return get_request_container().knowledge_service
+
+
+KnowledgeServiceDependency = Annotated[KnowledgeServiceContract, Depends(get_knowledge_service)]
+
+
+def get_stt_client() -> STTClient:
+    return get_request_container().root.stt_client
+
+
+STTClientDependency = Annotated[STTClient, Depends(get_stt_client)]
 
 
 def get_user_document_repository() -> AbstractUserDocumentRepository:

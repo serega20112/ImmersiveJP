@@ -11,7 +11,7 @@ class KokoroClient:
     Provides text-to-speech synthesis with Russian language support.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.api_key = os.getenv("KOKORO_API_KEY", "")
         self.base_url = os.getenv("KOKORO_URL", "https://api.kokoro.ai/tts")
         self.voice = os.getenv("KOKORO_VOICE", "ru-RU-Dmitry")

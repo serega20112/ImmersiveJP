@@ -3,8 +3,10 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
+
+from src.backend.dependencies.settings import Settings
 
 _DEFAULT_RECORD_FIELDS = {
     "args",
@@ -37,7 +39,7 @@ _CONFIGURED = False
 class JsonLogFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
+            "timestamp": datetime.now(UTC).isoformat(timespec="milliseconds"),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -73,9 +75,7 @@ class JsonLogFormatter(logging.Formatter):
         if value is None or isinstance(value, (bool, int, float, str)):
             return value
         if isinstance(value, dict):
-            return {
-                str(key): self._normalize_value(item) for key, item in value.items()
-            }
+            return {str(key): self._normalize_value(item) for key, item in value.items()}
         if isinstance(value, (list, tuple, set)):
             return [self._normalize_value(item) for item in value]
         if isinstance(value, datetime):
@@ -96,6 +96,15 @@ def configure_logging(level_name: str = "INFO") -> None:
     root_logger.handlers.clear()
     root_logger.setLevel(level)
     root_logger.addHandler(handler)
+
+    if Settings.elasticsearch_enabled:
+        from src.backend.infrastructure.observability.elastic_search import (
+            ElasticsearchLogHandler,
+        )
+
+        es_handler = ElasticsearchLogHandler()
+        es_handler.setLevel(level)
+        root_logger.addHandler(es_handler)
 
     for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
         logger = logging.getLogger(logger_name)

@@ -10,9 +10,7 @@ from src.backend.infrastructure.files.database import Base
 
 class CardCompletionModel(Base):
     __tablename__ = "card_completions"
-    __table_args__ = (
-        UniqueConstraint("user_id", "card_id", name="uq_card_completion_user_card"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "card_id", name="uq_card_completion_user_card"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(

@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import Request
+from fastapi import APIRouter, Depends, Request
 
 from src.backend.dependencies.auth_dependencies import require_onboarded_user
 from src.backend.dependencies.service_dependencies import DashboardServiceDependency
@@ -20,5 +18,15 @@ async def dashboard_page(
     current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
     dashboard_service: DashboardServiceDependency,
 ):
+    """Render the dashboard page.
+
+    Args:
+        request: The incoming request.
+        current_user: The authenticated and onboarded user.
+        dashboard_service: The dashboard service dependency.
+
+    Returns:
+        The rendered dashboard template.
+    """
     dashboard = await dashboard_service.get_dashboard(current_user.id)
     return await render_template(request, "dashboard/index.html", dashboard=dashboard)

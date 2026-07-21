@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-import time
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -48,9 +48,7 @@ def create_app() -> FastAPI:
     app.state.root_container = container
     app.state.asset_version = str(int(time.time()))
     app.state.metrics_collector = HttpMetricsCollector()
-    app.mount(
-        "/static", StaticFiles(directory=str(FRONTEND_ROOT / "static")), name="static"
-    )
+    app.mount("/static", StaticFiles(directory=str(FRONTEND_ROOT / "static")), name="static")
     app.add_middleware(
         RequestContainerMiddleware,
         root_container=container,

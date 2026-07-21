@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.backend.domain.content import TrackType
 from src.backend.dto.learning_dto import TrackPageDTO
@@ -18,11 +18,27 @@ class GetTrackPageUseCase:
         progress_repository: AbstractProgressRepository,
         session_repository: AbstractSessionRepository,
     ):
+        """Initialize the get track page use case.
+
+        Args:
+            content_repository: Repository for content data.
+            progress_repository: Repository for progress data.
+            session_repository: Repository for session data.
+        """
         self._content_repository = content_repository
         self._progress_repository = progress_repository
         self._session_repository = session_repository
 
     async def execute(self, user_id: int, track: TrackType) -> TrackPageDTO:
+        """Get the track page for a user and track.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+
+        Returns:
+            The track page data.
+        """
         session = await self._session_repository.get_track_session(user_id, track)
         current_batch = session.last_generated_batch if session is not None else 0
         cards = []
@@ -36,9 +52,7 @@ class GetTrackPageUseCase:
         completed_ids = set(
             await self._progress_repository.list_completed_card_ids(user_id, card_ids)
         )
-        completed_total = await self._progress_repository.get_completed_count(
-            user_id, track
-        )
+        completed_total = await self._progress_repository.get_completed_count(user_id, track)
         generated_total = await self._content_repository.count_cards(user_id, track)
         all_current_batch_completed = bool(cards) and all(
             int(card.id or 0) in completed_ids for card in cards

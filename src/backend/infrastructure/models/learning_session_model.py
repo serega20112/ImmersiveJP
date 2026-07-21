@@ -10,9 +10,7 @@ from src.backend.infrastructure.files.database import Base
 
 class LearningSessionModel(Base):
     __tablename__ = "learning_sessions"
-    __table_args__ = (
-        UniqueConstraint("user_id", "track", name="uq_learning_session_user_track"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "track", name="uq_learning_session_user_track"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(

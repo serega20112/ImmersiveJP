@@ -4,7 +4,6 @@ from datetime import datetime
 
 from src.backend.dependencies.settings import Settings
 from src.backend.domain.mentor import MentorFocus, MentorMessage
-from src.backend.dto.mentor_dto import MentorReplyDTO
 from src.backend.infrastructure.external import HuggingFaceLLMClient
 from src.backend.infrastructure.repositories import (
     AbstractMentorRepository,
@@ -33,6 +32,17 @@ class SendMentorMessageUseCase:
         llm_client: HuggingFaceLLMClient,
         rag_service: RAGService | None = None,
     ):
+        """Initialize the send mentor message use case.
+
+        Args:
+            user_repository: Repository for user data.
+            mentor_repository: Repository for mentor data.
+            build_progress_report_use_case: Use case for building progress reports.
+            build_learning_plan_use_case: Use case for building learning plans.
+            get_mentor_page_use_case: Use case for getting the mentor page.
+            llm_client: Client for LLM chat completions.
+            rag_service: Optional RAG service for document context.
+        """
         self._user_repository = user_repository
         self._mentor_repository = mentor_repository
         self._build_progress_report_use_case = build_progress_report_use_case
@@ -42,11 +52,21 @@ class SendMentorMessageUseCase:
         self._rag_service = rag_service
 
     async def execute(self, user_id: int, message_text: str):
+        """Send a mentor message and return the updated mentor page.
+
+        Args:
+            user_id: ID of the user.
+            message_text: The message text to send.
+
+        Returns:
+            The updated mentor page data.
+
+        Raises:
+            InvalidMentorMessageError: If the message is invalid.
+        """
         message = str(message_text or "").strip()
         if not message:
-            raise InvalidMentorMessageError(
-                "Сообщение пустое. Сформулируй, что именно не идет."
-            )
+            raise InvalidMentorMessageError("Сообщение пустое. Сформулируй, что именно не идет.")
         if len(message) > Settings.text_input_limit:
             raise InvalidMentorMessageError(
                 f"Сообщение ограничено {Settings.text_input_limit} символами"
@@ -101,7 +121,14 @@ class SendMentorMessageUseCase:
 
     @staticmethod
     def _detect_focus(message: str) -> MentorFocus | None:
-        normalized = message.casefold()
+        """Detect the mentor focus from a message.
+
+        Args:
+            message: The message text to analyze.
+
+        Returns:
+            The detected mentor focus, or None.
+        """
         mapping = (
             (
                 ("кандзи", "kanji", "кандз"),
@@ -128,7 +155,8 @@ class SendMentorMessageUseCase:
                 ),
             ),
         )
+        normalized_message = message.casefold()
         for keywords, focus in mapping:
-            if any(keyword in normalized for keyword in keywords):
+            if any(keyword in normalized_message for keyword in keywords):
                 return focus
         return None

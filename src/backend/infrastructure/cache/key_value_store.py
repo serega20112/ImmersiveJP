@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import time
@@ -19,9 +19,7 @@ class KeyValueStore:
         self._namespace = namespace
         self._required = required
         self._redis = (
-            redis_asyncio.from_url(redis_url, decode_responses=True)
-            if redis_url
-            else None
+            redis_asyncio.from_url(redis_url, decode_responses=True) if redis_url else None
         )
         self._memory: dict[str, tuple[Any, float | None]] = {}
 

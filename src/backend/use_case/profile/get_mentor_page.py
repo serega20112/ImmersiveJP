@@ -16,11 +16,27 @@ class GetMentorPageUseCase:
         build_progress_report_use_case: BuildProgressReportUseCase,
         build_learning_plan_use_case: BuildLearningPlanUseCase,
     ):
+        """Initialize the get mentor page use case.
+
+        Args:
+            mentor_repository: Repository for mentor data.
+            build_progress_report_use_case: Use case for building progress reports.
+            build_learning_plan_use_case: Use case for building learning plans.
+        """
         self._mentor_repository = mentor_repository
         self._build_progress_report_use_case = build_progress_report_use_case
         self._build_learning_plan_use_case = build_learning_plan_use_case
 
     async def execute(self, user_id: int, draft_message: str = "") -> MentorPageDTO:
+        """Get the mentor page for a user.
+
+        Args:
+            user_id: ID of the user.
+            draft_message: Optional pre-filled draft message.
+
+        Returns:
+            The mentor page data.
+        """
         report = await self._build_progress_report_use_case.execute(user_id)
         plan = await self._build_learning_plan_use_case.execute(user_id)
         history = await self._mentor_repository.get_messages(user_id)
@@ -40,6 +56,14 @@ class GetMentorPageUseCase:
 
     @staticmethod
     def _to_message_dto(message: MentorMessage) -> MentorMessageDTO:
+        """Convert a MentorMessage to a MentorMessageDTO.
+
+        Args:
+            message: The mentor message entity.
+
+        Returns:
+            The mentor message DTO.
+        """
         return MentorMessageDTO(
             role=message.role,
             content=message.content,
@@ -49,6 +73,14 @@ class GetMentorPageUseCase:
 
     @staticmethod
     def _to_focus_dto(focus: MentorFocus | None) -> MentorFocusDTO | None:
+        """Convert a MentorFocus to a MentorFocusDTO.
+
+        Args:
+            focus: The mentor focus entity, or None.
+
+        Returns:
+            The mentor focus DTO, or None.
+        """
         if focus is None:
             return None
         return MentorFocusDTO(
@@ -60,6 +92,14 @@ class GetMentorPageUseCase:
 
     @staticmethod
     def _suggested_prompts(active_focus: MentorFocus | None) -> list[str]:
+        """Build suggested prompts for the mentor page.
+
+        Args:
+            active_focus: The current mentor focus, or None.
+
+        Returns:
+            A list of suggested prompt strings.
+        """
         prompts = [
             "Я в кандзи сильно проседаю, что сейчас делать?",
             "У меня частицы путаются. Как лучше это добить по плану?",

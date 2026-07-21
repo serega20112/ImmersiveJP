@@ -33,21 +33,21 @@ def _normalize_database_url(value: str | None, *, async_mode: bool) -> str:
     if not raw_value:
         raise ValueError("Database URL normalization requires a non-empty value")
     if raw_value.startswith("postgres://"):
-        raw_value = f"postgresql://{raw_value[len('postgres://'):]}"
+        raw_value = f"postgresql://{raw_value[len('postgres://') :]}"
     if async_mode:
         if raw_value.startswith("postgresql+asyncpg://"):
             return raw_value
         if raw_value.startswith("postgresql+psycopg://"):
-            return f"postgresql+asyncpg://{raw_value[len('postgresql+psycopg://'):]}"
+            return f"postgresql+asyncpg://{raw_value[len('postgresql+psycopg://') :]}"
         if raw_value.startswith("postgresql://"):
-            return f"postgresql+asyncpg://{raw_value[len('postgresql://'):]}"
+            return f"postgresql+asyncpg://{raw_value[len('postgresql://') :]}"
         return raw_value
     if raw_value.startswith("postgresql+psycopg://"):
         return raw_value
     if raw_value.startswith("postgresql+asyncpg://"):
-        return f"postgresql+psycopg://{raw_value[len('postgresql+asyncpg://'):]}"
+        return f"postgresql+psycopg://{raw_value[len('postgresql+asyncpg://') :]}"
     if raw_value.startswith("postgresql://"):
-        return f"postgresql+psycopg://{raw_value[len('postgresql://'):]}"
+        return f"postgresql+psycopg://{raw_value[len('postgresql://') :]}"
     return raw_value
 
 
@@ -82,6 +82,10 @@ class AppSettings(BaseSettings):
     redis_enabled: bool = True
     redis_required: bool = False
     redis_url: str | None = "redis://localhost:6379/0"
+
+    elasticsearch_enabled: bool = False
+    elasticsearch_url: str | None = None
+    elasticsearch_log_index: str = "immersjp-logs"
 
     hf_api_token: str | None = None
     hf_model: str = "openai/gpt-oss-120b"
@@ -138,9 +142,7 @@ class AppSettings(BaseSettings):
         normalized = value.strip().lower()
         allowed = {"lax", "strict", "none"}
         if normalized not in allowed:
-            raise ValueError(
-                f"COOKIE_SAMESITE must be one of: {', '.join(sorted(allowed))}"
-            )
+            raise ValueError(f"COOKIE_SAMESITE must be one of: {', '.join(sorted(allowed))}")
         return normalized
 
     @field_validator(
@@ -176,7 +178,7 @@ class AppSettings(BaseSettings):
         return value
 
     @model_validator(mode="after")
-    def normalize_database_urls(self) -> "AppSettings":
+    def normalize_database_urls(self) -> AppSettings:
         if not self.app_debug:
             for secret_name in ("secret_key", "session_secret"):
                 secret = getattr(self, secret_name)
@@ -192,9 +194,7 @@ class AppSettings(BaseSettings):
             database=self.postgres_db,
             async_mode=False,
         )
-        raw_database_url = (
-            self.database_url or self.database_sync_url or fallback_database_url
-        )
+        raw_database_url = self.database_url or self.database_sync_url or fallback_database_url
         self.database_url = _normalize_database_url(
             self.database_url or raw_database_url,
             async_mode=True,

@@ -13,6 +13,11 @@ class SubmitKnowledgeCheckUseCase:
         self,
         llm_client: HuggingFaceLLMClient,
     ):
+        """Initialize the submit knowledge check use case.
+
+        Args:
+            llm_client: Client for LLM chat completions.
+        """
         self._llm_client = llm_client
 
     async def execute(
@@ -20,6 +25,15 @@ class SubmitKnowledgeCheckUseCase:
         questions: list[KnowledgeQuestionDTO],
         answers: dict[str, str],
     ) -> KnowledgeCheckPageDTO:
+        """Submit answers to a knowledge check and evaluate them.
+
+        Args:
+            questions: The list of knowledge check questions.
+            answers: Dictionary of question ID to answer text.
+
+        Returns:
+            The knowledge check page with results.
+        """
         questions_raw = [
             {
                 "id": q.id,

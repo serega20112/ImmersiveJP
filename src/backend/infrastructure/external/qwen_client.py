@@ -18,7 +18,7 @@ class QwenClient:
     Used for analyzing user documents and extracting learning insights.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.api_key = os.getenv("OPENROUTER_API_KEY", "")
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
         self.model = os.getenv(
@@ -125,7 +125,7 @@ class QwenClient:
         system_prompt = (
             "Ты - помощник по созданию вопросов по учебным материалам. "
             "Создай вопросы для проверки понимания текста. "
-            "Ответь строго в формате JSON: {\"questions\": [\"вопрос 1\", \"вопрос 2\"]}"
+            'Ответь строго в формате JSON: {"questions": ["вопрос 1", "вопрос 2"]}'
         )
 
         user_prompt = f"Создай {count} вопросов по следующему тексту:\n\n{content[:4000]}"

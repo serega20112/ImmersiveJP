@@ -4,7 +4,7 @@ from passlib.context import CryptContext
 
 
 class PasswordService:
-    def __init__(self):
+    def __init__(self) -> None:
         self._context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
     def hash_password(self, password: str) -> str:

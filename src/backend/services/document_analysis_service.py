@@ -20,6 +20,11 @@ class DocumentAnalysisService:
     """Service for analyzing user documents and extracting learning insights."""
 
     def __init__(self, qwen_client: QwenClient):
+        """Initialize the document analysis service.
+
+        Args:
+            qwen_client: Client for Qwen LLM document analysis.
+        """
         self._qwen_client = qwen_client
 
     async def analyze(

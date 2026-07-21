@@ -1,4 +1,4 @@
-﻿from .auth import (
+from .auth import (
     LoginUserUseCase,
     RegisterUserUseCase,
     ResolveCurrentUserUseCase,

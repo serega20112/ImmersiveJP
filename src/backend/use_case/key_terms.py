@@ -75,6 +75,14 @@ _TERM_TRANSLATIONS = {
 
 
 def build_key_term_dtos(raw_terms: list[str]) -> list[KeyTermDTO]:
+    """Build key term DTOs from raw term strings.
+
+    Args:
+        raw_terms: List of raw term strings.
+
+    Returns:
+        A list of key term DTOs.
+    """
     items: list[KeyTermDTO] = []
     seen: set[str] = set()
     for raw_term in raw_terms:
@@ -96,6 +104,14 @@ def build_key_term_dtos(raw_terms: list[str]) -> list[KeyTermDTO]:
 
 
 def parse_key_term(raw_term: str) -> tuple[str, str | None]:
+    """Parse a raw term string into label and translation.
+
+    Args:
+        raw_term: The raw term string (e.g. "挨拶 (приветствие)").
+
+    Returns:
+        A tuple of (label, translation).
+    """
     cleaned = " ".join(str(raw_term or "").split()).strip(" ,.;")
     if not cleaned:
         return "", None
@@ -109,11 +125,7 @@ def parse_key_term(raw_term: str) -> tuple[str, str | None]:
     for separator in ("|", " - ", " — ", " – ", ":", " -> "):
         if separator not in cleaned:
             continue
-        parts = [
-            part.strip(" ,.;")
-            for part in cleaned.split(separator)
-            if part.strip(" ,.;")
-        ]
+        parts = [part.strip(" ,.;") for part in cleaned.split(separator) if part.strip(" ,.;")]
         if len(parts) >= 2:
             label = parts[0]
             translation = parts[-1]
@@ -130,11 +142,27 @@ def parse_key_term(raw_term: str) -> tuple[str, str | None]:
 
 
 def key_term_prompt_value(raw_term: str) -> str:
+    """Get the prompt value for a key term (translation or label).
+
+    Args:
+        raw_term: The raw term string.
+
+    Returns:
+        The prompt value string.
+    """
     label, translation = parse_key_term(raw_term)
     return translation or label
 
 
 def key_term_input_value(raw_term: str) -> str:
+    """Get the input display value for a key term.
+
+    Args:
+        raw_term: The raw term string.
+
+    Returns:
+        The formatted display string.
+    """
     label, translation = parse_key_term(raw_term)
     if label and translation:
         return f"{label} - {translation}"
@@ -142,6 +170,15 @@ def key_term_input_value(raw_term: str) -> str:
 
 
 def _normalize_term_key(label: str, translation: str | None) -> str:
+    """Normalize a term key for deduplication.
+
+    Args:
+        label: The term label.
+        translation: The term translation, or None.
+
+    Returns:
+        The normalized key string.
+    """
     combined = f"{label}|{translation or ''}"
     compact = re.sub(r"\s+", " ", combined.strip().casefold())
     return compact.replace("ё", "е")

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import Boolean, Integer, JSON, String, Text
+from sqlalchemy import JSON, Boolean, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.backend.infrastructure.files.database import Base
@@ -9,7 +9,9 @@ from src.backend.infrastructure.models.timestamp import TimestampMixin
 
 class UserModel(TimestampMixin, Base):
     __tablename__ = "users"
-    documents: Mapped[list["UserDocument"]] = relationship("UserDocument", back_populates="user", cascade="all, delete-orphan")
+    documents: Mapped[list[UserDocument]] = relationship(
+        "UserDocument", back_populates="user", cascade="all, delete-orphan"
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(
@@ -28,9 +30,7 @@ class UserModel(TimestampMixin, Base):
     learning_goal: Mapped[str | None] = mapped_column(String(32), nullable=True)
     language_level: Mapped[str | None] = mapped_column(String(32), nullable=True)
     study_timeline: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    interests_json: Mapped[list[str]] = mapped_column(
-        JSON, default=list, nullable=False
-    )
+    interests_json: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     onboarding_completed: Mapped[bool] = mapped_column(
         Boolean,
         default=False,

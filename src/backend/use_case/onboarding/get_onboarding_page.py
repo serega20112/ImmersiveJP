@@ -9,6 +9,11 @@ from src.backend.use_case.onboarding.diagnostic_questions import (
 
 class GetOnboardingPageUseCase:
     async def execute(self) -> OnboardingPageDTO:
+        """Get the onboarding page with diagnostic questions.
+
+        Returns:
+            The onboarding page data.
+        """
         return OnboardingPageDTO(
             diagnostic_groups=build_onboarding_question_groups(),
             study_timeline_options=build_study_timeline_options(),

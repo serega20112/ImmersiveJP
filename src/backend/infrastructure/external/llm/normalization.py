@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
 import re
+from collections.abc import Mapping
 
 from src.backend.domain.mentor import MentorFocus
 from src.backend.domain.user import User
@@ -73,9 +73,7 @@ class LLMNormalizationMixin:
                     topic=topic,
                 )
                 continue
-            example_signature = HuggingFaceLLMClient._example_signature(
-                normalized_examples
-            )
+            example_signature = HuggingFaceLLMClient._example_signature(normalized_examples)
             if example_signature and example_signature in seen_example_signatures:
                 continue
             seen_topics.add(normalized_topic)
@@ -101,9 +99,7 @@ class LLMNormalizationMixin:
                 topic_key = draft.topic.casefold()
                 if topic_key in seen_topics:
                     continue
-                example_signature = HuggingFaceLLMClient._example_signature(
-                    draft.examples
-                )
+                example_signature = HuggingFaceLLMClient._example_signature(draft.examples)
                 if example_signature and example_signature in seen_example_signatures:
                     continue
                 seen_topics.add(topic_key)
@@ -159,11 +155,7 @@ class LLMNormalizationMixin:
                 reply_length=len(reply),
                 action_steps_count=len(action_steps),
                 action_steps=action_steps,
-                parsed_keys=(
-                    list(parsed_object.keys())
-                    if isinstance(parsed_object, dict)
-                    else []
-                ),
+                parsed_keys=(list(parsed_object.keys()) if isinstance(parsed_object, dict) else []),
                 parsed_type=type(parsed).__name__,
                 raw_parsed=str(parsed)[:500] if parsed else None,
             )
@@ -174,8 +166,7 @@ class LLMNormalizationMixin:
             reply=reply,
             action_steps=action_steps,
             suggested_prompts=(
-                suggested_prompts
-                or HuggingFaceLLMClient._mentor_prompt_suggestions(active_focus)
+                suggested_prompts or HuggingFaceLLMClient._mentor_prompt_suggestions(active_focus)
             ),
         )
 
@@ -253,9 +244,7 @@ class LLMNormalizationMixin:
                     task_id=task_id,
                     is_correct=is_correct,
                     feedback=feedback,
-                    revealed_answer=(
-                        None if is_correct else fallback_item.revealed_answer
-                    ),
+                    revealed_answer=(None if is_correct else fallback_item.revealed_answer),
                 )
             if normalized_item.is_correct:
                 correct += 1
@@ -420,9 +409,7 @@ class LLMNormalizationMixin:
                 if separator not in cleaned:
                     continue
                 parts = [
-                    part.strip(" ,.;")
-                    for part in cleaned.split(separator)
-                    if part.strip(" ,.;")
+                    part.strip(" ,.;") for part in cleaned.split(separator) if part.strip(" ,.;")
                 ]
                 if len(parts) >= 2:
                     label = parts[0]
@@ -430,14 +417,9 @@ class LLMNormalizationMixin:
                     break
 
             if translation is None:
-                translation = translation_map.get(label) or translation_map.get(
-                    label.casefold()
-                )
+                translation = translation_map.get(label) or translation_map.get(label.casefold())
 
-            if translation and translation != label:
-                prepared = f"{label} | {translation}"
-            else:
-                prepared = label
+            prepared = f"{label} | {translation}" if translation and translation != label else label
 
             signature = HuggingFaceLLMClient._normalize_example_signature(prepared)
             if signature in seen:
@@ -468,10 +450,7 @@ class LLMNormalizationMixin:
 
     @staticmethod
     def _matches_language_scope(text: str, examples: list[str]) -> bool:
-        if any(
-            HuggingFaceLLMClient._contains_japanese_chars(example)
-            for example in examples
-        ):
+        if any(HuggingFaceLLMClient._contains_japanese_chars(example) for example in examples):
             return True
         language_keywords = (
             "фраз",
@@ -645,7 +624,9 @@ class LLMNormalizationMixin:
     @staticmethod
     def _default_work_verdict(passed: bool) -> str:
         if passed:
-            return "Система видит, что этот набор уже можно использовать в коротких ответах и сценах."
+            return (
+                "Система видит, что этот набор уже можно использовать в коротких ответах и сценах."
+            )
         return "Система пока не уверена, что этот набор закрепился в практике."
 
     @staticmethod
@@ -704,9 +685,7 @@ class LLMNormalizationMixin:
             limit=3,
         )
         headline = str(
-            parsed_object.get("headline")
-            or parsed_object.get("title")
-            or "Следующий шаг"
+            parsed_object.get("headline") or parsed_object.get("title") or "Следующий шаг"
         ).strip()
         summary = str(
             parsed_object.get("summary")
@@ -730,7 +709,7 @@ class LLMNormalizationMixin:
             if not isinstance(item, Mapping):
                 continue
             item_dict = dict(item)
-            qid = str(item_dict.get("id") or f"q{i+1}").strip()
+            qid = str(item_dict.get("id") or f"q{i + 1}").strip()
             kind = str(item_dict.get("kind") or "recall").strip()
             if kind not in valid_kinds:
                 kind = "recall"
@@ -741,14 +720,16 @@ class LLMNormalizationMixin:
             expected = str(item_dict.get("expected_answer") or "").strip()
             raw_hints = item_dict.get("hints") or []
             hints = [str(h).strip() for h in raw_hints if isinstance(h, str) and h.strip()][:2]
-            normalized.append({
-                "id": qid,
-                "kind": kind,
-                "question": question,
-                "context": context,
-                "expected_answer": expected,
-                "hints": hints,
-            })
+            normalized.append(
+                {
+                    "id": qid,
+                    "kind": kind,
+                    "question": question,
+                    "context": context,
+                    "expected_answer": expected,
+                    "hints": hints,
+                }
+            )
         return normalized[:5]
 
     @staticmethod
@@ -757,7 +738,7 @@ class LLMNormalizationMixin:
         questions: list[dict],
         answers: dict[str, str],
     ) -> dict:
-        default_results = [
+        [
             {
                 "question_id": q["id"],
                 "is_correct": False,
@@ -771,7 +752,9 @@ class LLMNormalizationMixin:
         raw_results = parsed_obj.get("results") or parsed_obj.get("result") or []
         if not isinstance(raw_results, list):
             raw_results = []
-        results_by_id = {str(r.get("question_id", "")): r for r in raw_results if isinstance(r, Mapping)}
+        results_by_id = {
+            str(r.get("question_id", "")): r for r in raw_results if isinstance(r, Mapping)
+        }
 
         final_results = []
         for q in questions:
@@ -784,21 +767,25 @@ class LLMNormalizationMixin:
                 feedback = str(raw.get("feedback") or "").strip()
                 if not feedback:
                     feedback = "Ответ не совпал с ожидаемым."
-                final_results.append({
-                    "question_id": qid,
-                    "is_correct": is_correct,
-                    "user_answer": answers.get(qid, ""),
-                    "expected_answer": q.get("expected_answer", ""),
-                    "feedback": feedback,
-                })
+                final_results.append(
+                    {
+                        "question_id": qid,
+                        "is_correct": is_correct,
+                        "user_answer": answers.get(qid, ""),
+                        "expected_answer": q.get("expected_answer", ""),
+                        "feedback": feedback,
+                    }
+                )
             else:
-                final_results.append({
-                    "question_id": qid,
-                    "is_correct": False,
-                    "user_answer": answers.get(qid, ""),
-                    "expected_answer": q.get("expected_answer", ""),
-                    "feedback": "Не удалось проверить.",
-                })
+                final_results.append(
+                    {
+                        "question_id": qid,
+                        "is_correct": False,
+                        "user_answer": answers.get(qid, ""),
+                        "expected_answer": q.get("expected_answer", ""),
+                        "feedback": "Не удалось проверить.",
+                    }
+                )
 
         correct_count = sum(1 for r in final_results if r["is_correct"])
         total = len(final_results) or 1

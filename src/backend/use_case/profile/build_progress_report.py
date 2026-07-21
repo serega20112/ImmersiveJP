@@ -22,12 +22,31 @@ class BuildProgressReportUseCase:
         session_repository: AbstractSessionRepository,
         user_repository: AbstractUserRepository,
     ):
+        """Initialize the build progress report use case.
+
+        Args:
+            content_repository: Repository for content data.
+            progress_repository: Repository for progress data.
+            session_repository: Repository for session data.
+            user_repository: Repository for user data.
+        """
         self._content_repository = content_repository
         self._progress_repository = progress_repository
         self._session_repository = session_repository
         self._user_repository = user_repository
 
     async def execute(self, user_id: int) -> ProgressReportDTO:
+        """Build a progress report for a user.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            The progress report data.
+
+        Raises:
+            ValueError: If the user is not found.
+        """
         user = await self._user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")
@@ -39,9 +58,7 @@ class BuildProgressReportUseCase:
             session = await self._session_repository.get_track_session(user_id, track)
             current_batch = session.last_generated_batch if session else 0
             generated_cards = await self._content_repository.count_cards(user_id, track)
-            completed_cards = await self._progress_repository.get_completed_count(
-                user_id, track
-            )
+            completed_cards = await self._progress_repository.get_completed_count(user_id, track)
             completed_batches, work_ready_batch = await summarize_completed_batches(
                 self._progress_repository,
                 user_id=user_id,
@@ -64,9 +81,7 @@ class BuildProgressReportUseCase:
             key=lambda item: item.completion_rate if item.generated_cards else -1,
         )
         completion_rate = (
-            round((total_completed / total_generated) * 100, 1)
-            if total_generated
-            else 0.0
+            round((total_completed / total_generated) * 100, 1) if total_generated else 0.0
         )
         trust_score = build_trust_score(
             assessment=user.skill_assessment,

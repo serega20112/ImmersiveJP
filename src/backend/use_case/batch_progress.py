@@ -11,6 +11,17 @@ async def summarize_completed_batches(
     track: TrackType,
     current_batch: int,
 ) -> tuple[int, int | None]:
+    """Summarize completed batches and find the latest work-ready batch.
+
+    Args:
+        progress_repository: Repository for progress data.
+        user_id: ID of the user.
+        track: The learning track type.
+        current_batch: The current batch number.
+
+    Returns:
+        A tuple of (completed_batches_count, work_ready_batch_number).
+    """
     if current_batch <= 0:
         return 0, None
 

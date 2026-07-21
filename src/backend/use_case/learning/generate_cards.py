@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 
@@ -34,6 +34,16 @@ class GenerateCardsUseCase:
         llm_client: HuggingFaceLLMClient,
         rate_limiter: RateLimiter,
     ):
+        """Initialize the generate cards use case.
+
+        Args:
+            user_repository: Repository for user data.
+            content_repository: Repository for content data.
+            session_repository: Repository for session data.
+            mentor_repository: Repository for mentor data.
+            llm_client: Client for LLM card generation.
+            rate_limiter: Rate limiter for LLM requests.
+        """
         self._user_repository = user_repository
         self._content_repository = content_repository
         self._session_repository = session_repository
@@ -47,6 +57,20 @@ class GenerateCardsUseCase:
         track: TrackType,
         batch_size: int = CARD_BATCH_SIZE,
     ) -> list[TrackCardDTO]:
+        """Generate a new batch of learning cards for a user.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+            batch_size: Number of cards to generate.
+
+        Returns:
+            A list of generated track card DTOs.
+
+        Raises:
+            LlmRateLimitExceededError: If the LLM rate limit is exceeded.
+            ValueError: If the user is not found.
+        """
         is_allowed = await self._rate_limiter.is_allowed(
             scope="llm-generation",
             key=str(user_id),
@@ -62,9 +86,7 @@ class GenerateCardsUseCase:
 
         session = await self._session_repository.get_track_session(user_id, track)
         next_batch = session.last_generated_batch + 1 if session else 1
-        previous_topics = await self._content_repository.list_recent_topics(
-            user_id, track
-        )
+        previous_topics = await self._content_repository.list_recent_topics(user_id, track)
         active_focus = await self._mentor_repository.get_focus(user_id)
         drafts = await self._llm_client.generate_cards(
             user=user,

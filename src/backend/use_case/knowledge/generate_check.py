@@ -13,6 +13,13 @@ class GenerateKnowledgeCheckUseCase:
         build_progress_report_use_case: BuildProgressReportUseCase,
         llm_client: HuggingFaceLLMClient,
     ):
+        """Initialize the generate knowledge check use case.
+
+        Args:
+            user_repository: Repository for user data.
+            build_progress_report_use_case: Use case for building progress reports.
+            llm_client: Client for LLM chat completions.
+        """
         self._user_repository = user_repository
         self._build_progress_report_use_case = build_progress_report_use_case
         self._llm_client = llm_client
@@ -22,6 +29,18 @@ class GenerateKnowledgeCheckUseCase:
         user_id: int,
         focus_area: str = "",
     ) -> KnowledgeCheckPageDTO:
+        """Generate a knowledge check with questions for a user.
+
+        Args:
+            user_id: ID of the user.
+            focus_area: Optional area to focus questions on.
+
+        Returns:
+            The knowledge check page with questions.
+
+        Raises:
+            ValueError: If the user is not found.
+        """
         user = await self._user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")

@@ -2,17 +2,14 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import Request
+from fastapi import APIRouter, Depends, Request
 
+from src.backend.delivery.api.v1.helpers import redirect_to_route
 from src.backend.dependencies.auth_dependencies import require_registered_user
 from src.backend.dependencies.service_dependencies import OnboardingServiceDependency
-from src.backend.delivery.api.v1.helpers import redirect_to_route
 from src.backend.dto.auth_dto import UserViewDTO
 from src.backend.dto.onboarding_dto import OnboardingDTO
-from src.backend.infrastructure.web import flash
-from src.backend.infrastructure.web import render_template
+from src.backend.infrastructure.web import flash, render_template
 from src.backend.use_case.onboarding.complete_onboarding import (
     InvalidOnboardingDataError,
 )
@@ -26,6 +23,16 @@ async def onboarding_page(
     current_user: Annotated[UserViewDTO, Depends(require_registered_user)],
     onboarding_service: OnboardingServiceDependency,
 ):
+    """Render the onboarding page.
+
+    Args:
+        request: The incoming request.
+        current_user: The registered user.
+        onboarding_service: The onboarding service dependency.
+
+    Returns:
+        The rendered onboarding template or a redirect.
+    """
     if current_user.onboarding_completed:
         return redirect_to_route(request, "dashboard.dashboard_page")
     page = await onboarding_service.get_page()
@@ -38,6 +45,16 @@ async def complete_onboarding(
     current_user: Annotated[UserViewDTO, Depends(require_registered_user)],
     onboarding_service: OnboardingServiceDependency,
 ):
+    """Handle onboarding form submission.
+
+    Args:
+        request: The incoming request.
+        current_user: The registered user.
+        onboarding_service: The onboarding service dependency.
+
+    Returns:
+        A redirect response.
+    """
     form = await request.form()
     diagnostic_answers = {
         key.removeprefix("diagnostic_"): str(value)
@@ -53,9 +70,7 @@ async def complete_onboarding(
                 study_timeline=str(form.get("study_timeline", "")),
                 interests_text=str(form.get("interests_text", "")),
                 diagnostic_answers=diagnostic_answers,
-                diagnostic_hints_used=int(
-                    str(form.get("diagnostic_hints_used", "0")) or 0
-                ),
+                diagnostic_hints_used=int(str(form.get("diagnostic_hints_used", "0")) or 0),
             ),
         )
         flash(request, result.skill_assessment.summary, "success")

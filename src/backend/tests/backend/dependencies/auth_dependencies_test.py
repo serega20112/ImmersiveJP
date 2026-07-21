@@ -3,8 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
-from fastapi import FastAPI
-from fastapi import Request
+from fastapi import FastAPI, Request
 
 from src.backend.dependencies.auth_dependencies import (
     require_authenticated_user,

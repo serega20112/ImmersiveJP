@@ -1,9 +1,7 @@
-from typing import List, Optional
-
 from sqlalchemy.orm import Session
 
 from src.backend.infrastructure.models.user_document_model import UserDocument
-from src.backend.infrastructure.models.user_model import UserModel
+
 
 class UserDocumentRepository:
     def __init__(self, db: Session):
@@ -16,10 +14,10 @@ class UserDocumentRepository:
         self.db.refresh(doc)
         return doc
 
-    def get_by_user(self, user_id: int) -> List[UserDocument]:
+    def get_by_user(self, user_id: int) -> list[UserDocument]:
         return self.db.query(UserDocument).filter(UserDocument.user_id == user_id).all()
 
-    def get(self, doc_id: int) -> Optional[UserDocument]:
+    def get(self, doc_id: int) -> UserDocument | None:
         return self.db.query(UserDocument).filter(UserDocument.id == doc_id).first()
 
     def delete(self, doc_id: int) -> None:

@@ -10,6 +10,7 @@ from src.backend.dto.auth_dto import (
     UserViewDTO,
     VerificationDTO,
 )
+from src.backend.dto.knowledge_dto import KnowledgeCheckPageDTO, KnowledgeQuestionDTO
 from src.backend.dto.learning_dto import (
     CardCompletionResultDTO,
     PdfDocumentDTO,
@@ -39,13 +40,9 @@ class AuthServiceContract(Protocol):
 
     async def login(self, payload: LoginDTO) -> AuthResultDTO: ...
 
-    async def logout(
-        self, access_token: str | None, refresh_token: str | None
-    ) -> None: ...
+    async def logout(self, access_token: str | None, refresh_token: str | None) -> None: ...
 
-    async def resolve_current_user(
-        self, access_token: str | None
-    ) -> UserViewDTO | None: ...
+    async def resolve_current_user(self, access_token: str | None) -> UserViewDTO | None: ...
 
 
 class DashboardServiceContract(Protocol):
@@ -62,15 +59,11 @@ class LearningServiceContract(Protocol):
         card_id: int,
     ) -> TrackCardPageDTO: ...
 
-    async def complete_card(
-        self, user_id: int, card_id: int
-    ) -> CardCompletionResultDTO: ...
+    async def complete_card(self, user_id: int, card_id: int) -> CardCompletionResultDTO: ...
 
     async def get_next_cards(self, user_id: int, track: TrackType) -> TrackPageDTO: ...
 
-    async def export_cards_to_pdf(
-        self, user_id: int, track: TrackType
-    ) -> PdfDocumentDTO: ...
+    async def export_cards_to_pdf(self, user_id: int, track: TrackType) -> PdfDocumentDTO: ...
 
     async def get_speech_practice_page(self, user_id: int) -> SpeechPracticePageDTO: ...
 
@@ -99,9 +92,7 @@ class LearningServiceContract(Protocol):
 class OnboardingServiceContract(Protocol):
     async def get_page(self) -> OnboardingPageDTO: ...
 
-    async def complete(
-        self, user_id: int, payload: OnboardingDTO
-    ) -> OnboardingResultDTO: ...
+    async def complete(self, user_id: int, payload: OnboardingDTO) -> OnboardingResultDTO: ...
 
 
 class ProfileServiceContract(Protocol):
@@ -117,6 +108,18 @@ class ProfileServiceContract(Protocol):
 
     async def get_mentor_page(self, user_id: int) -> MentorPageDTO: ...
 
-    async def send_mentor_message(
-        self, user_id: int, message_text: str
-    ) -> MentorPageDTO: ...
+    async def send_mentor_message(self, user_id: int, message_text: str) -> MentorPageDTO: ...
+
+
+class KnowledgeServiceContract(Protocol):
+    async def generate_check(
+        self,
+        user_id: int,
+        focus_area: str = "",
+    ) -> KnowledgeCheckPageDTO: ...
+
+    async def submit_check(
+        self,
+        questions: list[KnowledgeQuestionDTO],
+        answers: dict[str, str],
+    ) -> KnowledgeCheckPageDTO: ...

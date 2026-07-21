@@ -17,11 +17,29 @@ class GetSpeechPracticePageUseCase:
         content_repository: AbstractContentRepository,
         session_repository: AbstractSessionRepository,
     ):
+        """Initialize the get speech practice page use case.
+
+        Args:
+            user_repository: Repository for user data.
+            content_repository: Repository for content data.
+            session_repository: Repository for session data.
+        """
         self._user_repository = user_repository
         self._content_repository = content_repository
         self._session_repository = session_repository
 
     async def execute(self, user_id: int) -> SpeechPracticePageDTO:
+        """Get the speech practice page for a user.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            The speech practice page data.
+
+        Raises:
+            ValueError: If the user is not found.
+        """
         user = await self._user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")
@@ -33,15 +51,19 @@ class GetSpeechPracticePageUseCase:
             suggested_words=suggested_words,
             latest_topics=latest_topics,
             skill_summary=(
-                user.skill_assessment.summary
-                if user.skill_assessment is not None
-                else None
+                user.skill_assessment.summary if user.skill_assessment is not None else None
             ),
         )
 
-    async def _build_language_context(
-        self, user_id: int
-    ) -> tuple[list[str], list[str]]:
+    async def _build_language_context(self, user_id: int) -> tuple[list[str], list[str]]:
+        """Build suggested words and latest topics from the user's cards.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            A tuple of (suggested_words, latest_topics).
+        """
         session = await self._session_repository.get_track_session(
             user_id,
             TrackType.LANGUAGE,

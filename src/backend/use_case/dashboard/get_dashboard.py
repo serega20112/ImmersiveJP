@@ -14,10 +14,27 @@ class GetDashboardUseCase:
         user_repository: AbstractUserRepository,
         build_progress_report_use_case: BuildProgressReportUseCase,
     ):
+        """Initialize the get dashboard use case.
+
+        Args:
+            user_repository: Repository for user data.
+            build_progress_report_use_case: Use case for building progress reports.
+        """
         self._user_repository = user_repository
         self._build_progress_report_use_case = build_progress_report_use_case
 
     async def execute(self, user_id: int) -> DashboardDTO:
+        """Build the dashboard for a user.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            The dashboard data.
+
+        Raises:
+            ValueError: If the user is not found.
+        """
         user = await self._user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")
@@ -52,6 +69,14 @@ class GetDashboardUseCase:
 
     @staticmethod
     def _subtitle_for_track(track: str) -> str:
+        """Get the subtitle for a track name.
+
+        Args:
+            track: The track key.
+
+        Returns:
+            The track subtitle.
+        """
         subtitles = {
             "language": "Фразы, грамматика и примеры",
             "culture": "Быт, нормы и повседневные сцены",

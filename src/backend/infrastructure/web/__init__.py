@@ -6,7 +6,7 @@ from .constants import (
     SESSION_COOKIE_NAME,
 )
 from .csrf import ensure_csrf_token, validate_csrf
-from .exceptions import register_exception_handlers
 from .errors import ApplicationError, RateLimitExceededError, SecurityViolationError
+from .exceptions import register_exception_handlers
 from .redirects import RouteRedirectError
 from .templating import flash, render_error_page, render_template

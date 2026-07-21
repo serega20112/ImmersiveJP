@@ -343,6 +343,11 @@ _DIAGNOSTIC_BANKS = {
 
 
 def build_onboarding_question_groups() -> list[DiagnosticQuestionGroupDTO]:
+    """Build diagnostic question groups for all language levels.
+
+    Returns:
+        A list of diagnostic question group DTOs.
+    """
     groups: list[DiagnosticQuestionGroupDTO] = []
     for level in LanguageLevel:
         bank = _DIAGNOSTIC_BANKS[level]
@@ -358,6 +363,11 @@ def build_onboarding_question_groups() -> list[DiagnosticQuestionGroupDTO]:
 
 
 def build_study_timeline_options() -> list[StudyTimelineOptionDTO]:
+    """Build study timeline option DTOs.
+
+    Returns:
+        A list of study timeline option DTOs.
+    """
     options = (
         (
             StudyTimeline.THREE_MONTHS,
@@ -400,6 +410,16 @@ def evaluate_diagnostic_answers(
     declared_level: LanguageLevel,
     hints_used: int = 0,
 ) -> SkillAssessment:
+    """Evaluate diagnostic answers and produce a skill assessment.
+
+    Args:
+        answers: Dictionary of question key to answer value.
+        declared_level: The user's declared language level.
+        hints_used: Number of hints used during the assessment.
+
+    Returns:
+        The computed skill assessment.
+    """
     bank = _DIAGNOSTIC_BANKS[declared_level]["questions"]
     normalized_answers = {
         key: value.strip() for key, value in answers.items() if value and value.strip()
@@ -441,6 +461,14 @@ def evaluate_diagnostic_answers(
 
 
 def _to_question_dto(item: dict) -> DiagnosticQuestionDTO:
+    """Convert a raw question dict to a DiagnosticQuestionDTO.
+
+    Args:
+        item: The raw question dictionary.
+
+    Returns:
+        The diagnostic question DTO.
+    """
     return DiagnosticQuestionDTO(
         key=item["key"],
         prompt=item["prompt"],
@@ -458,6 +486,15 @@ def _to_question_dto(item: dict) -> DiagnosticQuestionDTO:
 
 
 def _level_from_score(declared_level: LanguageLevel, score: int) -> LanguageLevel:
+    """Estimate the language level from a diagnostic score.
+
+    Args:
+        declared_level: The user's declared language level.
+        score: The raw diagnostic score.
+
+    Returns:
+        The estimated language level.
+    """
     if declared_level == LanguageLevel.ZERO:
         if score <= 2:
             return LanguageLevel.ZERO
@@ -485,6 +522,20 @@ def _build_summary(
     weak_points: list[str],
     hints_used: int,
 ) -> str:
+    """Build a summary text from diagnostic results.
+
+    Args:
+        raw_score: The raw diagnostic score.
+        penalty: The hints penalty.
+        declared_level: The user's declared level.
+        estimated_level: The estimated level.
+        strengths: List of strengths.
+        weak_points: List of weak points.
+        hints_used: Number of hints used.
+
+    Returns:
+        The summary text.
+    """
     adjusted_score = max(0, raw_score - penalty)
     parts = [
         f"Быстрый тест: {raw_score}/5.",
@@ -504,6 +555,14 @@ def _build_summary(
 
 
 def _level_title(level: LanguageLevel) -> str:
+    """Get the Russian title for a language level.
+
+    Args:
+        level: The language level.
+
+    Returns:
+        The level title string.
+    """
     return {
         LanguageLevel.ZERO: "стартовый",
         LanguageLevel.BASIC: "базовый",

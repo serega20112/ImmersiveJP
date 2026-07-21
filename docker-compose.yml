@@ -46,6 +46,19 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+  elasticsearch:
+    image: elasticsearch:8.17.3
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
 volumes:
   postgres_data:
   redis_data:
+  es_data:

@@ -84,18 +84,17 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(Exception)
     async def handle_unexpected_exception(request: Request, exc: Exception):
+        request_id = getattr(request.state, "request_id", None)
         logger.error(
             "Unhandled application exception",
             exc_info=exc,
             extra={
                 "event": "http.unhandled_exception",
                 "extra_fields": {
-                    "request_id": getattr(request.state, "request_id", None),
+                    "request_id": request_id,
                     "path": request.url.path,
                     "method": request.method,
-                    "user_id": getattr(
-                        getattr(request.state, "current_user", None), "id", None
-                    ),
+                    "user_id": getattr(getattr(request.state, "current_user", None), "id", None),
                     "error_type": type(exc).__name__,
                 },
             },
@@ -105,7 +104,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=500,
             title="Что-то сломалось на сервере",
             message=(
-                "Запрос не удалось завершить. Ничего не потеряно, но это место лучше повторить чуть позже."
+                f"Произошла непредвиденная ошибка. Пожалуйста, обратитесь в поддержку, указав этот код: {request_id}"
             ),
         )
         return response

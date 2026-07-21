@@ -12,6 +12,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import (
     HRFlowable,
     PageBreak,
@@ -36,7 +37,7 @@ class PdfBuilder:
     _LINE = colors.HexColor("#D7C9B2")
     _SAND = colors.HexColor("#EFE5D5")
 
-    def __init__(self):
+    def __init__(self) -> None:
         registered = set(pdfmetrics.getRegisteredFontNames())
         if self._BODY_FONT not in registered:
             pdfmetrics.registerFont(UnicodeCIDFont(self._BODY_FONT))
@@ -105,10 +106,10 @@ class PdfBuilder:
             )
             story.append(Spacer(1, 7 * mm))
 
-        def draw_cover(canvas, doc):
+        def draw_cover(canvas: Canvas, doc: SimpleDocTemplate) -> None:
             cls._draw_cover_page(canvas, doc, track)
 
-        def draw_page(canvas, doc):
+        def draw_page(canvas: Canvas, doc: SimpleDocTemplate) -> None:
             cls._draw_content_page(canvas, doc, track, user_display_name)
 
         document.build(story, onFirstPage=draw_cover, onLaterPages=draw_page)
@@ -326,9 +327,7 @@ class PdfBuilder:
         return [
             Spacer(1, 58 * mm),
             Paragraph("ImmersJP", styles["cover_brand"]),
-            Paragraph(
-                f"{cls._track_mark(track)} / {track.subtitle}", styles["cover_track"]
-            ),
+            Paragraph(f"{cls._track_mark(track)} / {track.subtitle}", styles["cover_track"]),
             Spacer(1, 10 * mm),
             Paragraph(
                 f"Личный PDF-конспект по треку «{escape(track.title)}»",
@@ -438,11 +437,7 @@ class PdfBuilder:
             rows.extend(
                 [
                     [Paragraph("Ключевые слова", styles["subhead"])],
-                    [
-                        cls._build_terms_table(
-                            card.key_term_items, inner_width, styles, track
-                        )
-                    ],
+                    [cls._build_terms_table(card.key_term_items, inner_width, styles, track)],
                 ]
             )
 
@@ -484,9 +479,7 @@ class PdfBuilder:
         for item in examples:
             rows.append(
                 [
-                    Paragraph(
-                        cls._paragraph_markup(item.japanese), styles["example_japanese"]
-                    ),
+                    Paragraph(cls._paragraph_markup(item.japanese), styles["example_japanese"]),
                     Paragraph(
                         cls._paragraph_markup(item.romaji or "—"),
                         styles["example_meta"],
@@ -564,7 +557,7 @@ class PdfBuilder:
         ]
 
         for row_index, row in enumerate(rows):
-            for col_index, term in enumerate(row):
+            for col_index, _term in enumerate(row):
                 source_value = prepared_terms[row_index * columns + col_index]
                 if not source_value:
                     commands.extend(
@@ -671,7 +664,12 @@ class PdfBuilder:
         return panel
 
     @classmethod
-    def _draw_cover_page(cls, canvas, doc, track: TrackType) -> None:
+    def _draw_cover_page(
+        cls,
+        canvas: Canvas,
+        doc: SimpleDocTemplate,
+        track: TrackType,
+    ) -> None:
         page_width, page_height = A4
         accent = cls._accent(track)
         accent_deep = cls._accent_deep(track)
@@ -688,23 +686,19 @@ class PdfBuilder:
 
         canvas.setStrokeColor(colors.HexColor("#F1E7D6"))
         canvas.setLineWidth(0.7)
-        canvas.line(
-            28 * mm, page_height - 28 * mm, page_width - 18 * mm, page_height - 28 * mm
-        )
+        canvas.line(28 * mm, page_height - 28 * mm, page_width - 18 * mm, page_height - 28 * mm)
 
         canvas.setFillColor(colors.HexColor("#EADFC9"))
         canvas.setFont(cls._HEADING_FONT, 26)
-        canvas.drawRightString(
-            page_width - 20 * mm, page_height - 20 * mm, cls._track_mark(track)
-        )
+        canvas.drawRightString(page_width - 20 * mm, page_height - 20 * mm, cls._track_mark(track))
 
         canvas.restoreState()
 
     @classmethod
     def _draw_content_page(
         cls,
-        canvas,
-        doc,
+        canvas: Canvas,
+        doc: SimpleDocTemplate,
         track: TrackType,
         user_display_name: str,
     ) -> None:
@@ -716,9 +710,7 @@ class PdfBuilder:
         canvas.rect(0, 0, page_width, page_height, fill=1, stroke=0)
 
         canvas.setFillColor(accent)
-        canvas.rect(
-            doc.leftMargin, page_height - 12 * mm, doc.width, 2.3 * mm, fill=1, stroke=0
-        )
+        canvas.rect(doc.leftMargin, page_height - 12 * mm, doc.width, 2.3 * mm, fill=1, stroke=0)
 
         canvas.setStrokeColor(cls._LINE)
         canvas.setLineWidth(0.6)
@@ -726,18 +718,12 @@ class PdfBuilder:
 
         canvas.setFont(cls._HEADING_FONT, 9)
         canvas.setFillColor(accent)
-        canvas.drawString(
-            doc.leftMargin, page_height - 17 * mm, f"ImmersJP / {track.title}"
-        )
+        canvas.drawString(doc.leftMargin, page_height - 17 * mm, f"ImmersJP / {track.title}")
 
         canvas.setFont(cls._BODY_FONT, 8.5)
         canvas.setFillColor(cls._MUTED)
-        canvas.drawRightString(
-            doc.leftMargin + doc.width, page_height - 17 * mm, user_display_name
-        )
-        canvas.drawString(
-            doc.leftMargin, 8 * mm, f"Повторение по треку «{track.title}»"
-        )
+        canvas.drawRightString(doc.leftMargin + doc.width, page_height - 17 * mm, user_display_name)
+        canvas.drawString(doc.leftMargin, 8 * mm, f"Повторение по треку «{track.title}»")
         canvas.drawRightString(doc.leftMargin + doc.width, 8 * mm, f"Стр. {doc.page}")
 
         canvas.restoreState()
@@ -756,7 +742,7 @@ class PdfBuilder:
         return labels[track]
 
     @classmethod
-    def _accent(cls, track: TrackType):
+    def _accent(cls, track: TrackType) -> colors.HexColor:
         palette = {
             TrackType.LANGUAGE: colors.HexColor("#B14A32"),
             TrackType.CULTURE: colors.HexColor("#4A627B"),
@@ -765,7 +751,7 @@ class PdfBuilder:
         return palette[track]
 
     @classmethod
-    def _accent_soft(cls, track: TrackType):
+    def _accent_soft(cls, track: TrackType) -> colors.HexColor:
         palette = {
             TrackType.LANGUAGE: colors.HexColor("#F0DDD7"),
             TrackType.CULTURE: colors.HexColor("#DEE6EE"),
@@ -774,7 +760,7 @@ class PdfBuilder:
         return palette[track]
 
     @classmethod
-    def _accent_deep(cls, track: TrackType):
+    def _accent_deep(cls, track: TrackType) -> colors.HexColor:
         palette = {
             TrackType.LANGUAGE: colors.HexColor("#7D2F1E"),
             TrackType.CULTURE: colors.HexColor("#2F445B"),

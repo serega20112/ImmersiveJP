@@ -135,8 +135,8 @@ def test_cards_runtime_uses_dedicated_settings(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(Settings, "hf_cards_max_tokens", 1400)
     monkeypatch.setattr(Settings, "hf_provider", "fireworks-ai")
 
-    model, timeout_seconds, retry_attempts, max_tokens = (
-        HuggingFaceLLMClient._request_runtime({"kind": "cards"})
+    model, timeout_seconds, retry_attempts, max_tokens = HuggingFaceLLMClient._request_runtime(
+        {"kind": "cards"}
     )
 
     assert model == "openai/gpt-oss-20b:fireworks-ai"
@@ -164,9 +164,7 @@ async def test_cards_circuit_breaker_skips_remote_request_after_timeout(
         request_calls += 1
         raise httpx.ReadTimeout(
             "timed out",
-            request=httpx.Request(
-                "POST", "https://router.huggingface.co/v1/chat/completions"
-            ),
+            request=httpx.Request("POST", "https://router.huggingface.co/v1/chat/completions"),
         )
 
     client._request_llm_json = failing_request  # type: ignore[method-assign]

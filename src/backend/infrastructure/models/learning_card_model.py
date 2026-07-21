@@ -3,10 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     DateTime,
     ForeignKey,
     Integer,
-    JSON,
     String,
     Text,
     UniqueConstraint,
@@ -38,9 +38,7 @@ class LearningCardModel(Base):
     topic: Mapped[str] = mapped_column(String(255), nullable=False)
     explanation: Mapped[str] = mapped_column(Text, nullable=False)
     examples_json: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
-    key_terms_json: Mapped[list[str]] = mapped_column(
-        JSON, default=list, nullable=False
-    )
+    key_terms_json: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     batch_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

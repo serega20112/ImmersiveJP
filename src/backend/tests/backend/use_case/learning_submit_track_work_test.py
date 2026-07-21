@@ -35,9 +35,7 @@ class _ContentRepository:
         return [
             card
             for card in self.cards
-            if card.user_id == user_id
-            and card.track == track
-            and card.batch_number == batch_number
+            if card.user_id == user_id and card.track == track and card.batch_number == batch_number
         ]
 
 

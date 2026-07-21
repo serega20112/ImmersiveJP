@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.backend.domain.content import TrackType
 from src.backend.dto.learning_dto import TrackPageDTO
@@ -22,12 +22,32 @@ class GetNextCardsUseCase:
         generate_cards_use_case: GenerateCardsUseCase,
         get_track_page_use_case: GetTrackPageUseCase,
     ):
+        """Initialize the get next cards use case.
+
+        Args:
+            session_repository: Repository for session data.
+            progress_repository: Repository for progress data.
+            generate_cards_use_case: Use case for generating cards.
+            get_track_page_use_case: Use case for getting the track page.
+        """
         self._session_repository = session_repository
         self._progress_repository = progress_repository
         self._generate_cards_use_case = generate_cards_use_case
         self._get_track_page_use_case = get_track_page_use_case
 
     async def execute(self, user_id: int, track: TrackType) -> TrackPageDTO:
+        """Generate the next batch of cards and return the track page.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+
+        Returns:
+            The updated track page data.
+
+        Raises:
+            CurrentBatchNotCompletedError: If the current batch is not completed.
+        """
         session = await self._session_repository.get_track_session(user_id, track)
         if session is not None and session.last_generated_batch > 0:
             is_completed = await self._progress_repository.is_batch_completed(
@@ -36,8 +56,6 @@ class GetNextCardsUseCase:
                 session.last_generated_batch,
             )
             if not is_completed:
-                raise CurrentBatchNotCompletedError(
-                    "Сначала закрой текущую партию карточек"
-                )
+                raise CurrentBatchNotCompletedError("Сначала закрой текущую партию карточек")
         await self._generate_cards_use_case.execute(user_id, track)
         return await self._get_track_page_use_case.execute(user_id, track)

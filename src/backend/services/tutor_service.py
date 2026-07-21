@@ -13,9 +13,7 @@ from src.backend.services.document_analysis_service import DocumentAnalysisServi
 
 @dataclass
 class TutorMessage:
-    """A message in the tutor conversation."""
-
-    role: str  # "user" or "assistant"
+    role: str
     content: str
     created_at: datetime = field(default_factory=datetime.utcnow)
     audio_url: str | None = None
@@ -23,8 +21,6 @@ class TutorMessage:
 
 @dataclass
 class TutorSession:
-    """A tutoring session with the AI tutor."""
-
     id: int
     user_id: int
     document_id: int | None = None
@@ -33,18 +29,21 @@ class TutorSession:
 
 
 class TutorService:
-    """Service that provides AI tutoring functionality.
-
-    Combines document analysis, conversation, and voice synthesis.
-    """
-
     def __init__(
         self,
         user_repository: AbstractUserRepository,
         qwen_client: QwenClient,
         tts_client: TTSClient,
         document_analysis_service: DocumentAnalysisService,
-    ):
+    ) -> None:
+        """Initialize the tutor service.
+
+        Args:
+            user_repository: Repository for user data access.
+            qwen_client: Client for the Qwen LLM.
+            tts_client: Client for text-to-speech synthesis.
+            document_analysis_service: Service for document analysis.
+        """
         self._user_repository = user_repository
         self._qwen_client = qwen_client
         self._tts_client = tts_client
@@ -56,14 +55,14 @@ class TutorService:
         user_id: int,
         document_id: int | None = None,
     ) -> TutorSession:
-        """Start a new tutoring session.
+        """Start a new tutor session for the user.
 
         Args:
-            user_id: ID of the user
-            document_id: Optional document ID to focus on
+            user_id: ID of the user.
+            document_id: Optional document ID to associate with the session.
 
         Returns:
-            New TutorSession
+            The newly created TutorSession instance.
         """
         session_id = len(self._sessions) + 1
         session = TutorSession(
@@ -82,11 +81,11 @@ class TutorService:
         """Send a message to the tutor and get a response.
 
         Args:
-            session_id: Session ID
-            message: User message
+            session_id: ID of the tutor session.
+            message: The user's message text.
 
         Returns:
-            TutorMessage with response and optional audio
+            The assistant's TutorMessage response.
         """
         session = self._sessions.get(session_id)
         if not session:
@@ -96,14 +95,11 @@ class TutorService:
         if not user:
             raise ValueError(f"User {session.user_id} not found")
 
-        # Add user message
         user_msg = TutorMessage(role="user", content=message)
         session.messages.append(user_msg)
 
-        # Generate response
         response = await self._generate_response(user, session, message)
 
-        # Add assistant message
         assistant_msg = TutorMessage(
             role="assistant",
             content=response["text"],
@@ -114,44 +110,22 @@ class TutorService:
 
     async def _generate_response(
         self,
-        user: User,
-        session: TutorSession,
+        _user: User,
+        _session: TutorSession,
         message: str,
     ) -> dict[str, Any]:
-        """Generate tutor response using Qwen."""
-        # Build context from session history
-        history = "\n".join(
-            f"{m.role}: {m.content}" for m in session.messages[-6:]
-        )
-
-        # Build prompt
-        system_prompt = (
-            "Ты - репетитор ImmersJP. Отвечай на русском языке. "
-            "Объясняй материал понятно, задавай уточняющие вопросы. "
-            "Адаптируй ответ под уровень пользователя."
-        )
-
-        user_prompt = f"""
-Пользователь спросил: {message}
-
-История диалога:
-{history}
-
-Ответь кратко и по делу. Если нужно, задай вопрос для уточнения.
-"""
-
         result = await self._qwen_client.analyze_document(message)
         return {
             "text": result.get("summary", "Я тебя понял. Чем можем помочь?"),
         }
 
     async def synthesize_speech(self, text: str) -> bytes:
-        """Synthesize text to speech.
+        """Synthesize speech audio from text.
 
         Args:
-            text: Text to synthesize
+            text: The text to synthesize.
 
         Returns:
-            MP3 audio bytes
+            The audio data as bytes.
         """
         return await self._tts_client.synthesize(text, lang="ru")

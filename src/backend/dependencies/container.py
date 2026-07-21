@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,7 +22,7 @@ class Container(RootInfrastructureProvidersMixin):
         session: AsyncSession | None = None,
         session_factory: Callable[[], AsyncSession] | None = None,
         request_state=None,
-    ) -> "RequestContainer":
+    ) -> RequestContainer:
         return RequestContainer(
             root=self,
             session=session,

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.backend.domain.common import normalize_email
 from src.backend.dto.auth_dto import AuthResultDTO, AuthTokensDTO, LoginDTO
@@ -22,11 +22,30 @@ class LoginUserUseCase:
         password_service: PasswordService,
         jwt_service: JWTService,
     ):
+        """Initialize the login user use case.
+
+        Args:
+            user_repository: Repository for user data.
+            password_service: Service for password verification.
+            jwt_service: Service for JWT token creation.
+        """
         self._user_repository = user_repository
         self._password_service = password_service
         self._jwt_service = jwt_service
 
     async def execute(self, payload: LoginDTO) -> AuthResultDTO:
+        """Authenticate a user and generate auth tokens.
+
+        Args:
+            payload: The login credentials.
+
+        Returns:
+            The authentication result with tokens.
+
+        Raises:
+            InvalidCredentialsError: If email or password is invalid.
+            EmailNotVerifiedError: If email has not been verified.
+        """
         try:
             email = normalize_email(payload.email)
         except ValueError as error:

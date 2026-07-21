@@ -186,8 +186,7 @@ class LLMPromptMixin:
             lines.append(f"  Ожидалось: {expected}")
             lines.append(f"  Ответ: {user_ans}")
         return (
-            "Проверь ответы пользователя на вопросы по японскому языку.\n"
-            + "\n".join(lines) + "\n"
+            "Проверь ответы пользователя на вопросы по японскому языку.\n" + "\n".join(lines) + "\n"
             "Верни JSON-объект с полями:\n"
             "results: массив объектов с полями question_id, is_correct (bool), feedback (короткое объяснение ошибки или подтверждение)\n"
             "score: число от 0 до 100\n"
@@ -340,9 +339,7 @@ class LLMPromptMixin:
         )
         lines = [
             f"Адаптируй сложность под уровень: {level}.",
-            HuggingFaceLLMClient._timeline_generation_instruction(
-                payload.get("study_timeline")
-            ),
+            HuggingFaceLLMClient._timeline_generation_instruction(payload.get("study_timeline")),
         ]
 
         weak_points = ", ".join(payload.get("weak_points") or [])

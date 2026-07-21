@@ -12,9 +12,22 @@ class MentorRepository(AbstractMentorRepository):
     _FOCUS_TTL_SECONDS = 14 * 24 * 60 * 60
 
     def __init__(self, store: KeyValueStore):
+        """Initialize the mentor repository.
+
+        Args:
+            store: The key-value store for mentor data.
+        """
         self._store = store
 
     async def get_messages(self, user_id: int) -> list[MentorMessage]:
+        """Get mentor messages for a user.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            A list of mentor messages.
+        """
         raw_messages = await self._store.get_json(self._messages_key(user_id)) or []
         messages: list[MentorMessage] = []
         for item in raw_messages:
@@ -38,6 +51,12 @@ class MentorRepository(AbstractMentorRepository):
         return messages
 
     async def save_messages(self, user_id: int, messages: list[MentorMessage]) -> None:
+        """Save mentor messages for a user.
+
+        Args:
+            user_id: ID of the user.
+            messages: The mentor messages to save.
+        """
         payload = [
             {
                 "role": message.role,
@@ -54,6 +73,14 @@ class MentorRepository(AbstractMentorRepository):
         )
 
     async def get_focus(self, user_id: int) -> MentorFocus | None:
+        """Get the active mentor focus for a user.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            The mentor focus, or None if not set.
+        """
         raw_focus = await self._store.get_json(self._focus_key(user_id))
         if not raw_focus:
             return None
@@ -65,6 +92,12 @@ class MentorRepository(AbstractMentorRepository):
         )
 
     async def set_focus(self, user_id: int, focus: MentorFocus | None) -> None:
+        """Set or clear the active mentor focus for a user.
+
+        Args:
+            user_id: ID of the user.
+            focus: The mentor focus to set, or None to clear.
+        """
         if focus is None:
             await self._store.delete(self._focus_key(user_id))
             return
@@ -81,8 +114,24 @@ class MentorRepository(AbstractMentorRepository):
 
     @staticmethod
     def _messages_key(user_id: int) -> str:
+        """Build the cache key for mentor messages.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            The cache key string.
+        """
         return f"mentor:messages:{user_id}"
 
     @staticmethod
     def _focus_key(user_id: int) -> str:
+        """Build the cache key for mentor focus.
+
+        Args:
+            user_id: ID of the user.
+
+        Returns:
+            The cache key string.
+        """
         return f"mentor:focus:{user_id}"

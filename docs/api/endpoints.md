@@ -1,30 +1,65 @@
 ﻿# API и маршруты
 
-Публичные страницы:
+Все маршруты — серверный рендеринг (Jinja2). JSON API нет.
 
-- `GET /` — лендинг
-- `GET /auth/register` — форма регистрации
-- `GET /auth/login` — форма входа
-- `GET /auth/verify-email` — форма подтверждения почты
+## Публичные страницы
 
-Аутентификация:
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/` | Лендинг |
+| `GET` | `/auth/register` | Форма регистрации |
+| `GET` | `/auth/login` | Форма входа |
+| `GET` | `/auth/verify-email` | Форма подтверждения почты |
 
-- `POST /auth/register` — создает пользователя и отправляет код
-- `POST /auth/login` — выдает JWT в cookie
-- `POST /auth/logout` — отзывает токены и чистит cookie
-- `POST /auth/verify-email` — подтверждает почту
+## Аутентификация
 
-Основной маршрут обучения:
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `POST` | `/auth/register` | Создаёт пользователя, отправляет код на email |
+| `POST` | `/auth/login` | Проверяет пароль, выдаёт JWT в cookie |
+| `POST` | `/auth/logout` | Отзывает refresh-токен, чистит cookie |
+| `POST` | `/auth/verify-email` | Подтверждает email по коду из письма |
 
-- `GET /onboarding`
-- `POST /onboarding`
-- `GET /dashboard`
-- `GET /learn/language`
-- `GET /learn/culture`
-- `GET /learn/history`
-- `POST /learn/complete`
-- `GET /learn/next?track=...`
-- `GET /learn/download-pdf?track=...`
-- `GET /profile`
+**Cookie:** JWT access + refresh token в HttpOnly cookie.
 
-Все защищенные страницы читают текущего пользователя из JWT cookie через middleware и `ResolveCurrentUserUseCase`.
+## Онбординг
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/onboarding` | Страница анкеты (цель, уровень, интересы) |
+| `POST` | `/onboarding` | Сохраняет анкету, запускает диагностику и генерацию первой партии |
+
+## Обучение
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/dashboard` | Дашборд с прогрессом по трекам |
+| `GET` | `/learn/language` | Трек «Язык» |
+| `GET` | `/learn/culture` | Трек «Культура» |
+| `GET` | `/learn/history` | Трек «История» |
+| `GET` | `/learn/next?track=...` | Следующая партия карточек для трека |
+| `POST` | `/learn/complete` | Отметить карточку как пройденную |
+| `GET` | `/learn/download-pdf?track=...` | Скачать PDF-выгрузку трека |
+| `GET` | `/learn/speech-practice?track=...` | Страница речевой практики |
+| `GET` | `/learn/work?track=...` | Страница заданий по треку |
+| `POST` | `/learn/work/submit` | Отправить выполненное задание |
+
+## Профиль
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/profile` | Профиль пользователя |
+| `POST` | `/profile/update-plan` | Обновить план обучения |
+| `GET` | `/profile/mentor` | Чат с ИИ-ментором |
+| `POST` | `/profile/mentor/send` | Отправить сообщение ментору |
+
+## Админ / Операции
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/health` | Healthcheck |
+| `GET` | `/metrics` | Prometheus-метрики |
+
+## Защита
+
+Все маршруты кроме публичных и `/health` читают пользователя из JWT cookie через `ResolveCurrentUserUseCase`. Если токен отсутствует или истёк — редирект на `/auth/login`.

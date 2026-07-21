@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
-import re
 
 from src.backend.domain.content import LearningCard, TrackType
 from src.backend.dto.learning_dto import (
@@ -35,6 +35,16 @@ def build_prepared_work_tasks(
     cards: list[LearningCard],
     review_cards: list[LearningCard] | None = None,
 ) -> list[PreparedWorkTask]:
+    """Build prepared work tasks for a track batch.
+
+    Args:
+        track: The learning track type.
+        cards: The current batch of learning cards.
+        review_cards: Optional cards from the previous batch for review.
+
+    Returns:
+        A list of prepared work tasks.
+    """
     if not cards:
         return []
 
@@ -75,6 +85,15 @@ def to_track_work_task_dto(
     task: PreparedWorkTask,
     submitted_answer: str | None = None,
 ) -> TrackWorkTaskDTO:
+    """Convert a PreparedWorkTask to a TrackWorkTaskDTO.
+
+    Args:
+        task: The prepared work task.
+        submitted_answer: Optional submitted answer to include.
+
+    Returns:
+        The track work task DTO.
+    """
     return TrackWorkTaskDTO(
         id=task.id,
         kind=task.kind,
@@ -93,6 +112,15 @@ def to_track_work_review_payload(
     task: PreparedWorkTask,
     submitted_answer: str | None = None,
 ) -> dict[str, object]:
+    """Convert a PreparedWorkTask to a review payload dict.
+
+    Args:
+        task: The prepared work task.
+        submitted_answer: Optional submitted answer to include.
+
+    Returns:
+        The review payload dictionary.
+    """
     return {
         "id": task.id,
         "kind": task.kind,
@@ -114,6 +142,16 @@ def evaluate_work_submission(
     *,
     track: TrackType,
 ) -> TrackWorkResultDTO:
+    """Evaluate a work submission against prepared tasks.
+
+    Args:
+        tasks: The prepared work tasks.
+        answers: Dictionary of task ID to answer text.
+        track: The learning track type.
+
+    Returns:
+        The work result DTO with scores and feedback.
+    """
     task_results: list[TrackWorkTaskResultDTO] = []
     correct = 0
 
@@ -159,6 +197,15 @@ def evaluate_work_submission(
 
 
 def _answer_matches(task: PreparedWorkTask, answer: str) -> bool:
+    """Check if an answer matches the expected criteria for a task.
+
+    Args:
+        task: The prepared work task.
+        answer: The user's answer text.
+
+    Returns:
+        True if the answer matches.
+    """
     normalized_answer = _normalize_text(answer)
     if not normalized_answer:
         return False
@@ -180,16 +227,23 @@ def _answers_are_equivalent(
     answer: str,
     expected: str,
 ) -> bool:
+    """Check if an answer is equivalent to the expected value.
+
+    Args:
+        task: The prepared work task.
+        answer: The user's answer text.
+        expected: The expected answer text.
+
+    Returns:
+        True if the answers are equivalent.
+    """
     normalized_answer = _normalize_text(answer)
     normalized_expected = _normalize_text(expected)
     if not normalized_expected:
         return False
     if normalized_answer == normalized_expected:
         return True
-    if (
-        normalized_expected in normalized_answer
-        or normalized_answer in normalized_expected
-    ):
+    if normalized_expected in normalized_answer or normalized_answer in normalized_expected:
         return True
     prompt_phrase = _extract_prompt_phrase(task.prompt)
     if (
@@ -211,13 +265,19 @@ def _answers_are_equivalent(
     ):
         return True
 
-    if _is_translation_task(task) and _is_close_russian_paraphrase(answer, expected):
-        return True
-
-    return False
+    return bool(_is_translation_task(task) and _is_close_russian_paraphrase(answer, expected))
 
 
 def _build_feedback(task: PreparedWorkTask, is_correct: bool) -> str:
+    """Build feedback text for a task result.
+
+    Args:
+        task: The prepared work task.
+        is_correct: Whether the answer was correct.
+
+    Returns:
+        The feedback text.
+    """
     if is_correct:
         if task.kind in {"production", "immersion"}:
             return "Задание закрыто: нужный материал использован в ответе."
@@ -228,6 +288,14 @@ def _build_feedback(task: PreparedWorkTask, is_correct: bool) -> str:
 
 
 def _parse_example(example: str) -> dict[str, str]:
+    """Parse an example string into its components.
+
+    Args:
+        example: The example string (format: "japanese|romaji|translation").
+
+    Returns:
+        A dict with japanese, romaji, and translation keys.
+    """
     parts = [part.strip() for part in example.split("|")]
     if len(parts) >= 3:
         japanese, romaji, translation = parts[:3]
@@ -245,6 +313,14 @@ def _parse_example(example: str) -> dict[str, str]:
 def _select_work_examples(
     cards: list[LearningCard],
 ) -> list[tuple[LearningCard, dict[str, str]]]:
+    """Select up to 3 work examples from a list of cards.
+
+    Args:
+        cards: The learning cards to select from.
+
+    Returns:
+        A list of (card, parsed_example) tuples.
+    """
     selected: list[tuple[LearningCard, dict[str, str]]] = []
 
     for card in cards:
@@ -266,8 +342,7 @@ def _select_work_examples(
             if not parsed["japanese"]:
                 continue
             if any(
-                existing_card.id == card.id
-                and existing_example["japanese"] == parsed["japanese"]
+                existing_card.id == card.id and existing_example["japanese"] == parsed["japanese"]
                 for existing_card, existing_example in selected
             ):
                 continue
@@ -285,6 +360,17 @@ def _build_language_work_tasks(
     current_terms: list[str],
     review_terms: list[str],
 ) -> list[PreparedWorkTask]:
+    """Build work tasks for the LANGUAGE track.
+
+    Args:
+        cards: The current batch of learning cards.
+        parsed_examples: Parsed examples from cards.
+        current_terms: Terms from the current batch.
+        review_terms: Terms from the previous batch for review.
+
+    Returns:
+        A list of prepared work tasks.
+    """
     first_card, first_example = parsed_examples[0]
     second_card, second_example = parsed_examples[1]
     third_card, third_example = parsed_examples[2]
@@ -322,9 +408,7 @@ def _build_language_work_tasks(
             source_topic=third_card.topic,
             placeholder="Можно в ромадзи, японская раскладка не обязательна",
             expected_answers=[
-                answer
-                for answer in (third_example["japanese"], third_example["romaji"])
-                if answer
+                answer for answer in (third_example["japanese"], third_example["romaji"]) if answer
             ],
             revealed_answer=third_example["romaji"] or third_example["japanese"],
         ),
@@ -369,6 +453,17 @@ def _build_context_work_tasks(
     current_terms: list[str],
     review_terms: list[str],
 ) -> list[PreparedWorkTask]:
+    """Build work tasks for CULTURE and HISTORY tracks.
+
+    Args:
+        track: The learning track type.
+        cards: The current batch of learning cards.
+        current_terms: Terms from the current batch.
+        review_terms: Terms from the previous batch for review.
+
+    Returns:
+        A list of prepared work tasks.
+    """
     first_card = cards[0]
     second_card = cards[1] if len(cards) > 1 else cards[0]
     third_card = cards[2] if len(cards) > 2 else cards[-1]
@@ -448,12 +543,29 @@ def _build_context_work_tasks(
 
 
 def _collect_terms_for_work(track: TrackType, cards: list[LearningCard]) -> list[str]:
+    """Collect key terms from cards for work tasks.
+
+    Args:
+        track: The learning track type.
+        cards: The learning cards to extract terms from.
+
+    Returns:
+        A list of collected term strings.
+    """
     if track == TrackType.LANGUAGE:
         return _collect_language_terms(cards)
     return _collect_context_terms(cards)
 
 
 def _collect_language_terms(cards: list[LearningCard]) -> list[str]:
+    """Collect unique terms from LANGUAGE track cards.
+
+    Args:
+        cards: The learning cards.
+
+    Returns:
+        A list of unique term strings.
+    """
     terms: list[str] = []
     seen: set[str] = set()
     for card in cards:
@@ -479,6 +591,14 @@ def _collect_language_terms(cards: list[LearningCard]) -> list[str]:
 
 
 def _collect_context_terms(cards: list[LearningCard]) -> list[str]:
+    """Collect unique terms from CULTURE/HISTORY track cards.
+
+    Args:
+        cards: The learning cards.
+
+    Returns:
+        A list of unique term strings.
+    """
     terms: list[str] = []
     seen: set[str] = set()
     for card in cards:
@@ -516,6 +636,16 @@ def _collect_context_terms(cards: list[LearningCard]) -> list[str]:
 
 
 def _scene_prompt(track: TrackType, terms: list[str], topic: str) -> str:
+    """Build a scene prompt for a work task.
+
+    Args:
+        track: The learning track type.
+        terms: The required terms to include.
+        topic: The source topic.
+
+    Returns:
+        The prompt string.
+    """
     if track == TrackType.LANGUAGE:
         return (
             f"Сцена: бытовой диалог по теме '{topic}'. Напиши 1-2 строки ответа в ромадзи или по-японски и используй "
@@ -539,6 +669,17 @@ def _confidence_prompt(
     current_terms: list[str],
     review_terms: list[str],
 ) -> str:
+    """Build a confidence check prompt for a work task.
+
+    Args:
+        track: The learning track type.
+        current_topic: The topic of the current batch.
+        current_terms: Terms from the current batch.
+        review_terms: Terms from the previous batch.
+
+    Returns:
+        The prompt string.
+    """
     if track == TrackType.LANGUAGE:
         if review_terms:
             return (
@@ -563,17 +704,42 @@ def _confidence_prompt(
 
 
 def _confidence_terms(current_terms: list[str], review_terms: list[str]) -> list[str]:
+    """Merge and deduplicate confidence check terms.
+
+    Args:
+        current_terms: Terms from the current batch.
+        review_terms: Terms from the previous batch.
+
+    Returns:
+        A list of merged terms (max 3).
+    """
     terms = [*review_terms, *current_terms]
     return [term for term in terms if term][:3]
 
 
 def _normalize_text(value: str) -> str:
+    """Normalize text by lowercasing and removing punctuation.
+
+    Args:
+        value: The text to normalize.
+
+    Returns:
+        The normalized text.
+    """
     compact = re.sub(r"\s+", " ", value.strip().casefold())
     compact = re.sub(r"[.,!?;:()\"'`。、「」・]+", "", compact)
     return compact
 
 
 def _normalize_pronunciation(value: str) -> str:
+    """Normalize Japanese pronunciation for comparison.
+
+    Args:
+        value: The text to normalize.
+
+    Returns:
+        The normalized pronunciation string.
+    """
     prepared = _kana_to_romaji(value)
     compact = re.sub(r"[^a-z0-9]", "", prepared.casefold())
     if not compact:
@@ -590,6 +756,15 @@ def _normalize_pronunciation(value: str) -> str:
 
 
 def _is_close_pronunciation(answer: str, expected: str) -> bool:
+    """Check if two pronunciations are close enough.
+
+    Args:
+        answer: The user's answer.
+        expected: The expected answer.
+
+    Returns:
+        True if pronunciations are close.
+    """
     if answer == expected:
         return True
     shorter = min(len(answer), len(expected))
@@ -599,11 +774,28 @@ def _is_close_pronunciation(answer: str, expected: str) -> bool:
 
 
 def _is_translation_task(task: PreparedWorkTask) -> bool:
+    """Check if a task is a translation task.
+
+    Args:
+        task: The prepared work task.
+
+    Returns:
+        True if the task is a translation task.
+    """
     expected_format = task.expected_format.casefold()
     return "перевод" in expected_format or task.id == "meaning"
 
 
 def _is_close_russian_paraphrase(answer: str, expected: str) -> bool:
+    """Check if a Russian answer is a close paraphrase of the expected.
+
+    Args:
+        answer: The user's answer.
+        expected: The expected answer.
+
+    Returns:
+        True if the answers are close paraphrases.
+    """
     if not _contains_cyrillic(answer) or not _contains_cyrillic(expected):
         return False
     answer_tokens = set(_meaning_tokens(answer))
@@ -622,6 +814,14 @@ def _is_close_russian_paraphrase(answer: str, expected: str) -> bool:
 
 
 def _meaning_tokens(value: str) -> list[str]:
+    """Extract meaningful tokens from a Russian text, filtering stop words.
+
+    Args:
+        value: The text to tokenize.
+
+    Returns:
+        A list of meaningful tokens.
+    """
     stop_words = {
         "а",
         "без",
@@ -686,14 +886,38 @@ def _meaning_tokens(value: str) -> list[str]:
 
 
 def _contains_cyrillic(value: str) -> bool:
+    """Check if a string contains Cyrillic characters.
+
+    Args:
+        value: The text to check.
+
+    Returns:
+        True if the text contains Cyrillic characters.
+    """
     return bool(re.search(r"[а-яё]", value.casefold()))
 
 
 def _contains_japanese_script(value: str) -> bool:
+    """Check if a string contains Japanese script characters.
+
+    Args:
+        value: The text to check.
+
+    Returns:
+        True if the text contains Japanese script.
+    """
     return bool(re.search(r"[ぁ-んァ-ヶ一-龯々ー]", value))
 
 
 def _extract_prompt_phrase(prompt: str) -> str:
+    """Extract the quoted phrase from a prompt string.
+
+    Args:
+        prompt: The prompt text.
+
+    Returns:
+        The extracted phrase, or empty string.
+    """
     match = re.search(r":\s*(.+?)\s*$", prompt)
     if not match:
         return ""
@@ -701,6 +925,14 @@ def _extract_prompt_phrase(prompt: str) -> str:
 
 
 def _kana_to_romaji(value: str) -> str:
+    """Convert kana text to romaji representation.
+
+    Args:
+        value: The kana text to convert.
+
+    Returns:
+        The romaji representation.
+    """
     digraph_map = {
         "きゃ": "kya",
         "きゅ": "kyu",
@@ -964,6 +1196,14 @@ def _kana_to_romaji(value: str) -> str:
 
 
 def _clean_work_term(value: str) -> str:
+    """Clean a work term by stripping punctuation.
+
+    Args:
+        value: The raw term string.
+
+    Returns:
+        The cleaned term string.
+    """
     prepared = key_term_prompt_value(value)
     return str(prepared).strip().strip(".,!;:()[]{}\"'`")
 
@@ -974,6 +1214,17 @@ def _slice_terms_or_topic(
     end: int,
     fallback_topic: str,
 ) -> list[str]:
+    """Slice terms list or return a cleaned topic as fallback.
+
+    Args:
+        terms: The list of terms.
+        start: Start index.
+        end: End index.
+        fallback_topic: The topic to use as fallback.
+
+    Returns:
+        A list of terms.
+    """
     chunk = [term for term in terms[start:end] if term]
     if chunk:
         return chunk

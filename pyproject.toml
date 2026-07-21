@@ -34,6 +34,7 @@ dependencies = [
 dev = [
     "aiosqlite>=0.20,<1",
     "mypy>=1.11,<2",
+    "pre-commit>=4.0,<5",
     "pytest>=8.4,<9",
     "pytest-asyncio>=1.2,<2",
     "pytest-cov>=6,<7",
@@ -76,10 +77,39 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["F", "I"]
+select = [
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "W",    # pycodestyle warnings
+    "E",    # pycodestyle errors
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "ARG",  # flake8-unused-arguments
+    "C4",   # flake8-comprehensions
+    "RUF",  # ruff-specific
+]
+ignore = [
+    "N802",  # allow lower_case function names in some contexts
+    "N803",  # allow argument name style
+    "N806",  # allow non-lowercase variable
+    "E501",  # line-length enforced by formatter
+    "RUF001",  # ambiguous character detection false-positives for Russian
+    "RUF003",  # ambiguous character detection false-positives for Russian
+    "RUF006",  # create_task reference false-positive with fire-and-forget pattern
+]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+"src/backend/delivery/api/v1/helpers.py" = ["F401"]
+"src/backend/dependencies/settings.py" = ["F401"]
+"src/backend/infrastructure/external/huggingface_llm_client.py" = ["F401"]
+"src/backend/tests/*" = ["ARG001", "ARG002", "ARG005"]
+"src/backend/infrastructure/external/llm/*.py" = ["F821", "ARG004", "ARG003"]
+"src/backend/infrastructure/external/pdf_builder.py" = ["ARG003"]
+"src/backend/infrastructure/external/qwen_client.py" = ["ARG002"]
+"src/backend/infrastructure/models/*.py" = ["F821"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -91,9 +121,11 @@ files = [
     "src/backend/delivery/api",
     "src/backend/dto",
     "src/backend/infrastructure/security",
+    "src/backend/infrastructure/web",
+    "src/backend/infrastructure/observability",
     "src/backend/repository",
     "src/backend/services",
-    "src/backend/use_case/mappers.py",
+    "src/backend/use_case",
 ]
 follow_imports = "skip"
 ignore_missing_imports = true

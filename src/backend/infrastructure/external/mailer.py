@@ -1,11 +1,14 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
+import logging
 import smtplib
 from email.message import EmailMessage
 
 import anyio
 
 from src.backend.dependencies.settings import Settings
+
+logger = logging.getLogger(__name__)
 
 
 class Mailer:
@@ -20,7 +23,7 @@ class Mailer:
 
     async def _send(self, email: str, subject: str, body: str) -> None:
         if not Settings.smtp_host:
-            print(f"[mailer] to={email} subject={subject} body={body}")
+            logger.info("Mailer skipped (no SMTP host): to=%s subject=%s", email, subject)
             return
         await anyio.to_thread.run_sync(self._send_sync, email, subject, body)
 

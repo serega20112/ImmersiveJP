@@ -31,12 +31,33 @@ class GenerateSpeechPracticeUseCase:
         llm_client: HuggingFaceLLMClient,
         rate_limiter: RateLimiter,
     ):
+        """Initialize the generate speech practice use case.
+
+        Args:
+            user_repository: Repository for user data.
+            get_speech_practice_page_use_case: Use case for getting speech practice page.
+            llm_client: Client for LLM chat completions.
+            rate_limiter: Rate limiter for LLM requests.
+        """
         self._user_repository = user_repository
         self._get_speech_practice_page_use_case = get_speech_practice_page_use_case
         self._llm_client = llm_client
         self._rate_limiter = rate_limiter
 
     async def execute(self, user_id: int, words_text: str) -> SpeechPracticePageDTO:
+        """Generate speech practice content for given words.
+
+        Args:
+            user_id: ID of the user.
+            words_text: Comma or newline separated words.
+
+        Returns:
+            The generated speech practice page data.
+
+        Raises:
+            InvalidSpeechWordsError: If words input is invalid.
+            SpeechRateLimitExceededError: If the rate limit is exceeded.
+        """
         if len(words_text.strip()) > Settings.text_input_limit:
             raise InvalidSpeechWordsError(
                 f"Поле со словами ограничено {Settings.text_input_limit} символами"
@@ -81,6 +102,14 @@ class GenerateSpeechPracticeUseCase:
 
     @staticmethod
     def _parse_words(raw_value: str) -> list[str]:
+        """Parse a raw words string into a deduplicated list.
+
+        Args:
+            raw_value: Comma or newline separated words.
+
+        Returns:
+            A list of unique word strings.
+        """
         prepared = raw_value.replace("\r", "\n").replace(";", ",")
         result: list[str] = []
         seen: set[str] = set()
