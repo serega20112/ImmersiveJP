@@ -7,17 +7,17 @@
 cp .env.example .env
 
 # 2. Установить зависимости
-pip install -r requirements.txt
+uv sync
 
 # 3. Запустить PostgreSQL и Redis (вручную или через Docker)
 #    docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=immersjp postgres:16
 #    docker run -d -p 6379:6379 redis:7
 
 # 4. Прогнать миграции
-alembic -c build/alembic/alembic.ini upgrade head
+uv run alembic -c build/alembic/alembic.ini upgrade head
 
 # 5. Запустить
-python -m src.main
+uv run python -m src.main
 ```
 
 Приложение будет на `http://localhost:8000`.
@@ -63,4 +63,4 @@ docker compose up --build
 | `HF_API_TOKEN` | — | Токен OpenRouter / HuggingFace |
 | `SMTP_*` | — | Настройки почты для отправки кодов |
 
-Полный список — в `src/backend/dependencies/settings_model.py`.
+Полный список — в `src/config/settings.py` и `.env.example`.

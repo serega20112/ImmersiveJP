@@ -111,6 +111,7 @@ ignore = [
 "src/infrastructures/external/llm/fallbacks.py" = ["ARG004"]
 "src/infrastructures/external/qwen_client.py" = ["ARG002"]
 "src/application/interfaces/**" = ["ARG002"]
+"build/alembic/env.py" = ["F401"]  # импорты моделей регистрируют их в metadata для alembic
 
 [tool.ruff.format]
 quote-style = "double"

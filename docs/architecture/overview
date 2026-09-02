@@ -1,0 +1,69 @@
+# Архитектура
+
+ImmersJP построен на принципах **Clean Architecture**: зависимости направлены
+строго внутрь, от presentation к application и domain.
+
+## Слои
+
+```
+presentation/http      →  application  →  domain
+        ↑                     ↑
+infrastructures (реализует порты application/interfaces)
+config                 (типизированные настройки, читается любым слоем)
+utils                  (нейтральные помощники: логирование)
+```
+
+### `src/domain/`
+Доменные сущности (`User`, `LearningCard`, `MentorMessage`, `UserDocument` и др.)
+и чистая логика. Не зависит ни от какого другого слоя.
+
+### `src/application/`
+- **`dto/`** — контракты данных, передаваемые между слоями (pydantic).
+- **`interfaces/`** — порты: абстрактные репозитории (`repositories/`) и
+  протоколы внешних клиентов (`clients.py`): `LLMClient`, `EmbeddingClient`,
+  `Mailer`, `JWTService`, `KeyValueStore` и др.
+- **`use_cases/`** — бизнес-сценарии (по одному модулю на сценарий).
+- **`services/`** — тонкие фасады, группирующие use cases для presentation-слоя.
+
+Слой зависит только от `domain`, `config` и собственных портов.
+Инфраструктурные импорты здесь запрещены (Dependency Rule).
+
+### `src/infrastructures/`
+Реализации портов и технические детали:
+- `database/` — engine, session factory, ORM-модели;
+- `repositories/implementations/` — SQLAlchemy-репозитории;
+- `external/` — LLM (HuggingFace router), эмбеддинги (OpenRouter), почта, PDF, TTS/STT;
+- `security/` — JWT, пароли, rate limiter, blocklist, верификация email;
+- `cache/` — key-value хранилище (Redis или in-memory fallback);
+- `observability/` — JSON-логи, метрики, Elasticsearch-хендлер;
+- `di_containers/` — DI-контейнер: root (синглтоны) и request scope (сессии БД, репозитории).
+
+### `src/presentation/http/`
+- `api/` — маршруты FastAPI (тонкие: парсинг запроса → вызов сервиса → ответ);
+- `web/` — middleware (CSRF, rate limit, метрики, логирование), шаблонизация, ошибки;
+- `app.py` — сборка приложения: middleware, роутеры, статика.
+
+### `src/config/`
+`AppSettings` на pydantic-settings: все настройки из environment/.env,
+валидация секретов и URL БД. Единая точка доступа `Settings`.
+
+## Dependency Injection
+
+`di_containers/container.py` содержит два уровня:
+- **Root container** — долгоживущие инфраструктурные объекты (LLM-клиент, Redis, security-сервисы);
+- **Request container** — создаётся на запрос: сессия БД, репозитории, use cases, сервисы.
+
+Middleware `RequestContainerMiddleware` открывает scope на запрос и закрывает сессию после ответа.
+
+## RAG
+
+Pipeline в `application/services/rag_service.py`:
+
+1. Загрузка документов пользователя (репозиторий);
+2. Chunking: перекрывающиеся фрагменты (`RAG_CHUNK_SIZE` / `RAG_CHUNK_OVERLAP`);
+3. Эмбеддинги через OpenRouter с кэшем в Redis (`RAG_EMBEDDING_CACHE_TTL_SECONDS`);
+4. Косинусная близость, top-k (`RAG_TOP_K`), порог релевантности (`RAG_MIN_SCORE`);
+5. Формирование контекста для ответа ментора (`SendMentorMessageUseCase`).
+
+При недоступности сервиса эмбеддингов или отсутствии релевантных результатов
+RAG деградирует мягко: возвращается пустой контекст, ошибка пишется в лог.

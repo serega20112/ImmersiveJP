@@ -4,18 +4,20 @@
 
 ## Быстрый старт
 
+Проект использует [uv](https://docs.astral.sh/uv/) для управления зависимостями.
+
 ```powershell
 # 1. Скопировать .env
 cp .env.example .env
 
-# 2. Установить зависимости
-pip install -r requirements.txt
+# 2. Установить зависимости (создаёт .venv и uv.lock)
+uv sync
 
 # 3. Прогнать миграции
-alembic -c build/alembic/alembic.ini upgrade head
+uv run alembic -c build/alembic/alembic.ini upgrade head
 
 # 4. Запустить
-python -m src.main
+uv run python -m src.main
 ```
 
 Открой `http://localhost:8000`.
@@ -26,19 +28,50 @@ python -m src.main
 docker compose up --build
 ```
 
+## Разработка
+
+```powershell
+uv run ruff check src        # линтер
+uv run ruff format src       # форматирование
+uv run pytest src/tests      # тесты
+```
+
 ## Структура проекта
 
+Clean Architecture (слои зависят только внутрь):
+
 ```
-src/backend/
-├── delivery/        # HTTP-слой (маршруты, шаблоны)
-├── dependencies/    # DI-контейнер и провайдеры
-├── domain/          # Доменные сущности
-├── dto/             # Контракты между слоями
-├── infrastructure/  # БД, Redis, LLM, безопасность, логи
-├── repository/      # Реализации репозиториев
-├── services/        # Делегаты между routes и use case
-├── use_case/        # Бизнес-сценарии
-└── tests/           # Тесты
+src/
+├── main.py                  # точка входа
+├── application/             # слой приложения
+│   ├── dto/                 # контракты данных между слоями
+│   ├── interfaces/          # порты: репозитории и внешние клиенты (Protocol/ABC)
+│   ├── services/            # сервисы-фасады над use cases
+│   └── use_cases/           # бизнес-сценарии
+├── config/                  # типизированная конфигурация (pydantic-settings)
+├── domain/                  # доменные сущности, чистая логика без инфраструктуры
+├── infrastructures/         # реализации портов
+│   ├── database/            # SQLAlchemy engine, ORM-модели
+│   ├── di_containers/       # DI-контейнер и провайдеры
+│   ├── external/            # LLM, эмбеддинги, почта, PDF, TTS/STT
+│   ├── observability/       # логирование, метрики, Elasticsearch
+│   ├── repositories/        # реализации репозиториев
+│   └── security/            # JWT, пароли, rate limit, blocklist
+├── presentation/            # HTTP-слой
+│   └── http/
+│       ├── api/             # маршруты FastAPI
+│       ├── web/             # middleware, CSRF, шаблонизация
+│       └── app.py           # сборка приложения
+├── frontend/                # шаблоны Jinja2 и статика
+└── tests/                   # тесты
 ```
+
+Dependency Rule: `presentation → application → domain`; инфраструктура реализует
+порты из `application/interfaces` и подключается через DI.
+
+## Конфигурация
+
+Все настройки — через environment variables (см. `.env.example`).
+Секреты (`SECRET_KEY`, `SESSION_SECRET`, API-ключи) не хранятся в коде.
 
 Подробнее — в [документации](docs/README.md).

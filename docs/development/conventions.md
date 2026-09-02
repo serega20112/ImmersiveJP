@@ -5,8 +5,8 @@
 - **Route тонкие** — получают входные данные, вызывают service, возвращают HTML/template или redirect. Никакой бизнес-логики в route.
 - **Services тонкие** — делегируют use case. Не содержат правил приложения. Могут вызывать несколько use case или внешние клиенты (LLM, TTS).
 - **Use case** — содержат бизнес-сценарии: правила, оркестрация, проверки. Единственное место, где принимаются продуктовые решения.
-- **Repository** — реализации SQLAlchemy-логики. Лежат в `src/backend/repository/`.
-- **Абстракции** — интерфейсы репозиториев в `src/backend/infrastructure/repositories/`. Репозитории от них наследуются.
+- **Repository** — реализации SQLAlchemy-логики. Лежат в `src/infrastructures/repositories/implementations/`.
+- **Абстракции** — порты репозиториев в `src/application/interfaces/repositories/`. Репозитории от них наследуются. Протоколы внешних клиентов — в `src/application/interfaces/clients.py`.
 - **Domain** — сущности и Value Object без зависимостей от инфраструктуры. Чистый Python.
 - **DTO** — явные контракты между route → service → use case. Доменные сущности наружу не торчат.
 
