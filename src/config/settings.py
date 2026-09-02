@@ -87,6 +87,14 @@ class AppSettings(BaseSettings):
     elasticsearch_url: str | None = None
     elasticsearch_log_index: str = "immersjp-logs"
 
+    openrouter_api_key: str | None = None
+    embedding_model: str = "text-embedding-ada-002"
+    rag_chunk_size: int = 1200
+    rag_chunk_overlap: int = 150
+    rag_top_k: int = 3
+    rag_min_score: float = 0.4
+    rag_embedding_cache_ttl_seconds: int = 86400
+
     hf_api_token: str | None = None
     hf_model: str = "openai/gpt-oss-120b"
     hf_provider: str | None = "fireworks-ai"

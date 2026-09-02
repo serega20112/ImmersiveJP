@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -71,4 +71,3 @@ def test_rate_limit_middleware_returns_429_and_headers():
     assert second.headers["Retry-After"] == "60"
     assert second.headers["X-RateLimit-Limit"] == "1"
     assert second.headers["X-RateLimit-Remaining"] == "0"
-

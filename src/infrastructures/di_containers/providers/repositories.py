@@ -43,4 +43,5 @@ class RepositoryProvidersMixin:
         return RAGService(
             self.user_document_repository,
             self.root.embedding_client,
+            cache=self.root.key_value_store,
         )
