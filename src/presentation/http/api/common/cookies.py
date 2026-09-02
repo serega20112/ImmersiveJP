@@ -1,0 +1,46 @@
+from __future__ import annotations
+
+from fastapi.responses import RedirectResponse
+
+from src.config.settings import Settings
+from src.presentation.http.web import (
+    ACCESS_TOKEN_COOKIE_NAME,
+    REFRESH_TOKEN_COOKIE_NAME,
+)
+
+
+def set_auth_cookies(
+    response: RedirectResponse,
+    access_token: str,
+    refresh_token: str,
+) -> None:
+    """Set auth cookies on a redirect response.
+
+    Args:
+        response: The redirect response to set cookies on.
+        access_token: The access token to set.
+        refresh_token: The refresh token to set.
+    """
+    cookie_kwargs = {
+        "httponly": True,
+        "samesite": Settings.cookie_samesite,
+        "secure": Settings.cookie_secure,
+        "path": "/",
+    }
+    response.set_cookie(ACCESS_TOKEN_COOKIE_NAME, access_token, **cookie_kwargs)
+    response.set_cookie(REFRESH_TOKEN_COOKIE_NAME, refresh_token, **cookie_kwargs)
+
+
+def clear_auth_cookies(response: RedirectResponse) -> None:
+    """Clear auth cookies from a redirect response.
+
+    Args:
+        response: The redirect response to clear cookies on.
+    """
+    cookie_kwargs = {
+        "samesite": Settings.cookie_samesite,
+        "secure": Settings.cookie_secure,
+        "path": "/",
+    }
+    response.delete_cookie(ACCESS_TOKEN_COOKIE_NAME, **cookie_kwargs)
+    response.delete_cookie(REFRESH_TOKEN_COOKIE_NAME, **cookie_kwargs)

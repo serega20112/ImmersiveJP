@@ -30,7 +30,7 @@ dependencies = [
     "uvicorn[standard]==0.35.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "aiosqlite>=0.20,<1",
     "mypy>=1.11,<2",
@@ -60,12 +60,12 @@ src = [
 addopts = "-ra"
 asyncio_mode = "auto"
 python_files = ["*_test.py", "test_*.py"]
-testpaths = ["src/backend/tests"]
+testpaths = ["src/tests"]
 
 [tool.coverage.run]
 branch = true
-source = ["src/backend"]
-omit = ["src/backend/tests/*"]
+source = ["src"]
+omit = ["src/tests/*"]
 
 [tool.coverage.report]
 show_missing = true
@@ -96,36 +96,34 @@ ignore = [
     "N806",  # allow non-lowercase variable
     "E501",  # line-length enforced by formatter
     "RUF001",  # ambiguous character detection false-positives for Russian
+    "RUF002",  # ambiguous character detection false-positives for Russian docstrings
     "RUF003",  # ambiguous character detection false-positives for Russian
     "RUF006",  # create_task reference false-positive with fire-and-forget pattern
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"src/backend/delivery/api/v1/helpers.py" = ["F401"]
-"src/backend/dependencies/settings.py" = ["F401"]
-"src/backend/infrastructure/external/huggingface_llm_client.py" = ["F401"]
-"src/backend/tests/*" = ["ARG001", "ARG002", "ARG005"]
-"src/backend/infrastructure/external/llm/*.py" = ["F821", "ARG004", "ARG003"]
-"src/backend/infrastructure/external/pdf_builder.py" = ["ARG003"]
-"src/backend/infrastructure/external/qwen_client.py" = ["ARG002"]
-"src/backend/infrastructure/models/*.py" = ["F821"]
+"src/presentation/http/api/v1/helpers.py" = ["F401"]
+"src/infrastructures/external/huggingface_llm_client.py" = ["F401"]
+"src/tests/*" = ["ARG001", "ARG002", "ARG005"]
+"src/infrastructures/external/pdf_builder.py" = ["ARG003"]
+"src/infrastructures/external/llm/fallbacks.py" = ["ARG004"]
+"src/infrastructures/external/qwen_client.py" = ["ARG002"]
+"src/application/interfaces/**" = ["ARG002"]
 
 [tool.ruff.format]
 quote-style = "double"
 
 [tool.mypy]
 python_version = "3.12"
-exclude = "(^venv/|^build/|^src/backend/tests/)"
+exclude = "(^venv/|^build/|^src/tests/)"
 files = [
-    "src/backend/delivery/api",
-    "src/backend/dto",
-    "src/backend/infrastructure/security",
-    "src/backend/infrastructure/web",
-    "src/backend/infrastructure/observability",
-    "src/backend/repository",
-    "src/backend/services",
-    "src/backend/use_case",
+    "src/presentation",
+    "src/application",
+    "src/infrastructures/security",
+    "src/infrastructures/observability",
+    "src/infrastructures/repositories",
+    "src/config",
 ]
 follow_imports = "skip"
 ignore_missing_imports = true

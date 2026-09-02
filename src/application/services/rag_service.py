@@ -1,0 +1,74 @@
+from __future__ import annotations
+
+from collections.abc import Sequence
+from math import sqrt
+
+from src.application.interfaces.clients import EmbeddingClient
+from src.application.interfaces.repositories import AbstractUserDocumentRepository
+
+
+class RAGService:
+    def __init__(
+        self,
+        doc_repo: AbstractUserDocumentRepository,
+        embed_client: EmbeddingClient,
+    ):
+        """Initialize the RAG service.
+
+        Args:
+            doc_repo: Repository for user document data.
+            embed_client: Client for generating text embeddings.
+        """
+        self._doc_repo = doc_repo
+        self._embed_client = embed_client
+
+    async def query(
+        self,
+        user_id: int,
+        query_text: str,
+        top_k: int = 3,
+    ) -> Sequence[str]:
+        """Query relevant document chunks for a user query.
+
+        Args:
+            user_id: ID of the user.
+            query_text: The search query text.
+            top_k: Maximum number of results to return.
+
+        Returns:
+            A sequence of relevant document text snippets.
+        """
+        docs = await self._doc_repo.get_by_user(user_id)
+        if not docs:
+            return []
+
+        query_emb = (await self._embed_client.embed([query_text]))[0]
+        doc_texts = [doc.content for doc in docs]
+
+        doc_embs = await self._embed_client.embed(doc_texts)
+
+        scored = [
+            (self._cosine_similarity(query_emb, doc_emb), doc_texts[i])
+            for i, doc_emb in enumerate(doc_embs)
+        ]
+        scored.sort(key=lambda pair: pair[0], reverse=True)
+        threshold = 0.4
+        return [text[:1200] for score, text in scored[:top_k] if score > threshold]
+
+    @staticmethod
+    def _cosine_similarity(a: list[float], b: list[float]) -> float:
+        """Compute the cosine similarity between two vectors.
+
+        Args:
+            a: First vector.
+            b: Second vector.
+
+        Returns:
+            The cosine similarity score between 0 and 1.
+        """
+        dot = sum(ai * bi for ai, bi in zip(a, b, strict=False))
+        norm_a = sqrt(sum(ai * ai for ai in a))
+        norm_b = sqrt(sum(bi * bi for bi in b))
+        if norm_a == 0 or norm_b == 0:
+            return 0
+        return dot / (norm_a * norm_b)

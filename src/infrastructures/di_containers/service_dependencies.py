@@ -1,0 +1,67 @@
+from __future__ import annotations
+
+from typing import Annotated
+
+from fastapi import Depends
+
+from src.application.interfaces.repositories import AbstractUserDocumentRepository
+from src.application.services import (
+    AuthServiceContract,
+    DashboardServiceContract,
+    KnowledgeServiceContract,
+    LearningServiceContract,
+    OnboardingServiceContract,
+    ProfileServiceContract,
+)
+from src.infrastructures.di_containers.request_scope import get_request_container
+from src.infrastructures.external import STTClient
+
+
+def get_auth_service() -> AuthServiceContract:
+    return get_request_container().auth_service
+
+
+def get_onboarding_service() -> OnboardingServiceContract:
+    return get_request_container().onboarding_service
+
+
+def get_dashboard_service() -> DashboardServiceContract:
+    return get_request_container().dashboard_service
+
+
+def get_learning_service() -> LearningServiceContract:
+    return get_request_container().learning_service
+
+
+def get_profile_service() -> ProfileServiceContract:
+    return get_request_container().profile_service
+
+
+AuthServiceDependency = Annotated[AuthServiceContract, Depends(get_auth_service)]
+OnboardingServiceDependency = Annotated[OnboardingServiceContract, Depends(get_onboarding_service)]
+DashboardServiceDependency = Annotated[DashboardServiceContract, Depends(get_dashboard_service)]
+LearningServiceDependency = Annotated[LearningServiceContract, Depends(get_learning_service)]
+ProfileServiceDependency = Annotated[ProfileServiceContract, Depends(get_profile_service)]
+
+
+def get_knowledge_service() -> KnowledgeServiceContract:
+    return get_request_container().knowledge_service
+
+
+KnowledgeServiceDependency = Annotated[KnowledgeServiceContract, Depends(get_knowledge_service)]
+
+
+def get_stt_client() -> STTClient:
+    return get_request_container().root.stt_client
+
+
+STTClientDependency = Annotated[STTClient, Depends(get_stt_client)]
+
+
+def get_user_document_repository() -> AbstractUserDocumentRepository:
+    return get_request_container().user_document_repository
+
+
+UserDocumentRepositoryDependency = Annotated[
+    AbstractUserDocumentRepository, Depends(get_user_document_repository)
+]

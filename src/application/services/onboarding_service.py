@@ -1,0 +1,64 @@
+from __future__ import annotations
+
+from src.application.dto.onboarding_dto import (
+    OnboardingDTO,
+    OnboardingPageDTO,
+    OnboardingResultDTO,
+)
+from src.application.interfaces.clients import KeyValueStore
+from src.application.use_cases.onboarding import (
+    CompleteOnboardingUseCase,
+    GetOnboardingPageUseCase,
+)
+from src.config.settings import Settings
+
+
+class OnboardingService:
+    def __init__(
+        self,
+        complete_onboarding_use_case: CompleteOnboardingUseCase,
+        get_onboarding_page_use_case: GetOnboardingPageUseCase,
+        cache_store: KeyValueStore,
+    ):
+        """Initialize the onboarding service.
+
+        Args:
+            complete_onboarding_use_case: Use case for completing onboarding.
+            get_onboarding_page_use_case: Use case for getting onboarding page.
+            cache_store: Key-value store for caching.
+        """
+        self._complete_onboarding_use_case = complete_onboarding_use_case
+        self._get_onboarding_page_use_case = get_onboarding_page_use_case
+        self._cache_store = cache_store
+
+    async def get_page(self) -> OnboardingPageDTO:
+        """Get the onboarding page with caching.
+
+        Returns:
+            The onboarding page data.
+        """
+        cache_ttl = Settings.onboarding_page_cache_ttl_seconds
+        cache_key = "onboarding:page"
+        cached_page = await self._cache_store.get_json(cache_key)
+        if cached_page is not None:
+            return OnboardingPageDTO.model_validate(cached_page)
+
+        page = await self._get_onboarding_page_use_case.execute()
+        await self._cache_store.set_json(
+            cache_key,
+            page.model_dump(mode="json"),
+            expire_seconds=cache_ttl,
+        )
+        return page
+
+    async def complete(self, user_id: int, payload: OnboardingDTO) -> OnboardingResultDTO:
+        """Complete the onboarding process for a user.
+
+        Args:
+            user_id: ID of the user.
+            payload: The onboarding form data.
+
+        Returns:
+            The onboarding result data.
+        """
+        return await self._complete_onboarding_use_case.execute(user_id, payload)

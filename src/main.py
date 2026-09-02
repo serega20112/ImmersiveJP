@@ -1,8 +1,8 @@
 import uvicorn
 
-from src.backend.create_app import create_app
-from src.backend.dependencies.settings import Settings
-from src.backend.infrastructure.observability import configure_logging
+from src.config.settings import Settings
+from src.infrastructures.observability import configure_logging
+from src.presentation.http.app import create_app
 
 configure_logging(Settings.log_level)
 app = create_app()

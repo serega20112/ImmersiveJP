@@ -1,0 +1,85 @@
+from __future__ import annotations
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Request
+
+from src.application.dto.auth_dto import UserViewDTO
+from src.application.dto.onboarding_dto import OnboardingDTO
+from src.application.use_cases.onboarding.complete_onboarding import (
+    InvalidOnboardingDataError,
+)
+from src.infrastructures.di_containers.auth_dependencies import require_registered_user
+from src.infrastructures.di_containers.service_dependencies import OnboardingServiceDependency
+from src.presentation.http.api.v1.helpers import redirect_to_route
+from src.presentation.http.web import flash, render_template
+
+onboarding_router = APIRouter()
+
+
+@onboarding_router.get("/onboarding", name="onboarding.page")
+async def onboarding_page(
+    request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_registered_user)],
+    onboarding_service: OnboardingServiceDependency,
+):
+    """Render the onboarding page.
+
+    Args:
+        request: The incoming request.
+        current_user: The registered user.
+        onboarding_service: The onboarding service dependency.
+
+    Returns:
+        The rendered onboarding template or a redirect.
+    """
+    if current_user.onboarding_completed:
+        return redirect_to_route(request, "dashboard.dashboard_page")
+    page = await onboarding_service.get_page()
+    return await render_template(request, "onboarding/index.html", page=page)
+
+
+@onboarding_router.post("/onboarding", name="onboarding.complete")
+async def complete_onboarding(
+    request: Request,
+    current_user: Annotated[UserViewDTO, Depends(require_registered_user)],
+    onboarding_service: OnboardingServiceDependency,
+):
+    """Handle onboarding form submission.
+
+    Args:
+        request: The incoming request.
+        current_user: The registered user.
+        onboarding_service: The onboarding service dependency.
+
+    Returns:
+        A redirect response.
+    """
+    form = await request.form()
+    diagnostic_answers = {
+        key.removeprefix("diagnostic_"): str(value)
+        for key, value in form.items()
+        if key.startswith("diagnostic_")
+    }
+    try:
+        result = await onboarding_service.complete(
+            current_user.id,
+            OnboardingDTO(
+                goal=str(form.get("goal", "")),
+                language_level=str(form.get("language_level", "")),
+                study_timeline=str(form.get("study_timeline", "")),
+                interests_text=str(form.get("interests_text", "")),
+                diagnostic_answers=diagnostic_answers,
+                diagnostic_hints_used=int(str(form.get("diagnostic_hints_used", "0")) or 0),
+            ),
+        )
+        flash(request, result.skill_assessment.summary, "success")
+        flash(
+            request,
+            "Стартовые карточки готовы. Переходим сразу к первому блоку.",
+            "success",
+        )
+        return redirect_to_route(request, "learning.language")
+    except InvalidOnboardingDataError as error:
+        flash(request, str(error), "error")
+        return redirect_to_route(request, "onboarding.page")
