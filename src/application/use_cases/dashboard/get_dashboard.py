@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from src.application.dto.profile_dto import DashboardDTO, DashboardSectionDTO
-from src.application.interfaces.repositories import AbstractUserRepository
+from src.application.dto.profile import DashboardDTO, DashboardSectionDTO
+from src.application.interfaces import UnitOfWork
 from src.application.use_cases.mappers import to_skill_assessment_dto
 from src.application.use_cases.profile.build_progress_report import (
     BuildProgressReportUseCase,
@@ -11,16 +11,16 @@ from src.application.use_cases.profile.build_progress_report import (
 class GetDashboardUseCase:
     def __init__(
         self,
-        user_repository: AbstractUserRepository,
+        uow: UnitOfWork,
         build_progress_report_use_case: BuildProgressReportUseCase,
     ):
         """Initialize the get dashboard use case.
 
         Args:
-            user_repository: Repository for user data.
+            uow: Unit of work for database transactions.
             build_progress_report_use_case: Use case for building progress reports.
         """
-        self._user_repository = user_repository
+        self._uow = uow
         self._build_progress_report_use_case = build_progress_report_use_case
 
     async def execute(self, user_id: int) -> DashboardDTO:
@@ -35,7 +35,9 @@ class GetDashboardUseCase:
         Raises:
             ValueError: If the user is not found.
         """
-        user = await self._user_repository.get_by_id(user_id)
+        async with self._uow as uow:
+            user_repository = uow.repository("user")
+            user = await user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")
         report = await self._build_progress_report_use_case.execute(user_id)
@@ -59,7 +61,7 @@ class GetDashboardUseCase:
             else "Сначала пройди онбординг. После этого сервис подготовит стартовые карточки по трем разделам."
         )
         return DashboardDTO(
-            user_display_name=user.display_name,
+            user_display_name=str(user.display_name),
             recommendation=recommendation,
             sections=sections,
             trust_score=report.trust_score,

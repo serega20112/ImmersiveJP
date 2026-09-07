@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.application.dto.onboarding_dto import OnboardingPageDTO
+from src.application.dto.onboarding import OnboardingPageDTO
 from src.application.use_cases.onboarding.diagnostic_questions import (
     build_onboarding_question_groups,
     build_study_timeline_options,

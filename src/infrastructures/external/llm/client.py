@@ -10,16 +10,16 @@ from src.application.dto.learning import (
     SpeechPracticeDTO,
     TrackWorkResultDTO,
 )
-from src.application.dto.mentor_dto import MentorReplyDTO
-from src.application.dto.profile_dto import (
+from src.application.dto.mentor import MentorReplyDTO
+from src.application.dto.profile import (
     AIAdviceDTO,
     LearningPlanPageDTO,
     ProgressReportDTO,
 )
-from src.config.settings import Settings
-from src.domain.content import TrackType
-from src.domain.mentor import MentorFocus, MentorMessage
-from src.domain.user import User
+from src.config.settings import settings
+from src.domain.aggregates.user import User
+from src.domain.entities.mentor import MentorFocus, MentorMessage
+from src.domain.value_objects.track_type import TrackType
 from src.infrastructures.cache import KeyValueStore
 from src.infrastructures.external.llm import fallbacks as fallback_module
 from src.infrastructures.external.llm import (
@@ -45,7 +45,7 @@ class HuggingFaceLLMClient(
 
     def __init__(self, store: KeyValueStore) -> None:
         self._store = store
-        self._http_client = httpx.AsyncClient(timeout=Settings.hf_timeout_seconds)
+        self._http_client = httpx.AsyncClient(timeout=settings.llm.hf_timeout_seconds)
 
     async def generate_cards(
         self,
@@ -59,7 +59,7 @@ class HuggingFaceLLMClient(
         payload = {
             "kind": "cards",
             "version": self._CARDS_CACHE_VERSION,
-            "user_id": user.id,
+            "user_id": int(user.id) if user.id is not None else None,
             "track": track.value,
             "batch_number": batch_number,
             "batch_size": batch_size,
@@ -101,7 +101,7 @@ class HuggingFaceLLMClient(
         payload = {
             "kind": "advice",
             "version": self._ADVICE_CACHE_VERSION,
-            "user_id": user.id,
+            "user_id": int(user.id) if user.id is not None else None,
             "goal": user.learning_goal.value if user.learning_goal else None,
             "language_level": (user.language_level.value if user.language_level else None),
             "study_timeline": (user.study_timeline.value if user.study_timeline else None),
@@ -139,7 +139,7 @@ class HuggingFaceLLMClient(
         payload = {
             "kind": "speech",
             "version": self._SPEECH_CACHE_VERSION,
-            "user_id": user.id,
+            "user_id": int(user.id) if user.id is not None else None,
             "goal": user.learning_goal.value if user.learning_goal else None,
             "language_level": (user.language_level.value if user.language_level else None),
             "study_timeline": (user.study_timeline.value if user.study_timeline else None),
@@ -182,9 +182,9 @@ class HuggingFaceLLMClient(
     ) -> MentorReplyDTO:
         payload = {
             "kind": "mentor",
-            "user_id": user.id,
+            "user_id": int(user.id) if user.id is not None else None,
         }
-        if not Settings.hf_api_token:
+        if not settings.llm.hf_api_token:
             self._log_fallback(payload, reason="missing_token")
             return self._fallback_mentor_reply(report, plan, message, active_focus)
         try:
@@ -243,7 +243,7 @@ class HuggingFaceLLMClient(
     ) -> list[dict]:
         payload = {
             "kind": "knowledge_check",
-            "user_id": user.id,
+            "user_id": int(user.id) if user.id is not None else None,
             "goal": user.learning_goal.value if user.learning_goal else None,
             "language_level": (user.language_level.value if user.language_level else None),
             "study_timeline": (user.study_timeline.value if user.study_timeline else None),
@@ -252,7 +252,7 @@ class HuggingFaceLLMClient(
             "recent_topics": recent_topics or [],
             "focus_area": focus_area or "общая проверка",
         }
-        if not Settings.hf_api_token:
+        if not settings.llm.hf_api_token:
             self._log_fallback(payload, reason="missing_token")
             return self._fallback_knowledge_check(payload)
         try:
@@ -294,7 +294,7 @@ class HuggingFaceLLMClient(
             "questions": questions,
             "answers": answers,
         }
-        if not Settings.hf_api_token:
+        if not settings.llm.hf_api_token:
             self._log_fallback(payload, reason="missing_token")
             return self._fallback_knowledge_eval(questions, answers)
         try:
@@ -331,7 +331,7 @@ class HuggingFaceLLMClient(
     ) -> TrackWorkResultDTO:
         payload = {
             "kind": "work_review",
-            "user_id": user.id,
+            "user_id": int(user.id) if user.id is not None else None,
             "track": track.value,
             "batch_number": batch_number,
             "goal": user.learning_goal.value if user.learning_goal else None,

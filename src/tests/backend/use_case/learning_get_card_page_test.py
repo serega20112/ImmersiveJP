@@ -1,19 +1,20 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from types import SimpleNamespace
 
 import pytest
 
-from src.application.use_cases.learning.get_card_page import GetCardPageUseCase
-from src.domain.content import LearningCard, TrackType
-from src.domain.progress import CARD_BATCH_SIZE
+from src.application.use_cases.learning.cards.get_card_page import GetCardPageUseCase
+from src.domain.entities.progress import CARD_BATCH_SIZE
+from src.domain.value_objects.track_type import TrackType
+from src.tests.support import FakeUnitOfWork, build_test_card
 
 
 class _CardPageContentRepository:
     def __init__(self):
         self.cards = [
-            LearningCard(
-                id=index,
+            build_test_card(
+                card_id=index,
                 user_id=42,
                 track=TrackType.CULTURE,
                 topic=f"Тема {index}",
@@ -74,9 +75,13 @@ class _CardPageSessionRepository:
 @pytest.mark.asyncio
 async def test_card_page_unlocks_work_after_completed_five_card_batch():
     use_case = GetCardPageUseCase(
-        _CardPageContentRepository(),
-        _CardPageProgressRepository(),
-        _CardPageSessionRepository(),
+        FakeUnitOfWork(
+            {
+                "content": _CardPageContentRepository(),
+                "progress": _CardPageProgressRepository(),
+                "session": _CardPageSessionRepository(),
+            }
+        ),
     )
 
     page = await use_case.execute(

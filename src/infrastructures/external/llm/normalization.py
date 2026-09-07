@@ -18,14 +18,14 @@ from src.application.dto.learning import (
     TrackWorkResultDTO,
     TrackWorkTaskResultDTO,
 )
-from src.application.dto.mentor_dto import MentorReplyDTO
-from src.application.dto.profile_dto import (
+from src.application.dto.mentor import MentorReplyDTO
+from src.application.dto.profile import (
     AIAdviceDTO,
     LearningPlanPageDTO,
     ProgressReportDTO,
 )
-from src.domain.mentor import MentorFocus
-from src.domain.user import User
+from src.domain.aggregates.user import User
+from src.domain.entities.mentor import MentorFocus
 from src.utils.logging import get_logger, log_event
 
 logger = get_logger(__name__)

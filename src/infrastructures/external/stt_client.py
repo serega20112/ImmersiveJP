@@ -4,7 +4,7 @@ import logging
 
 import httpx
 
-from src.config.settings import Settings
+from src.config.settings import settings
 from src.utils.logging import get_logger, log_event
 
 logger = get_logger(__name__)
@@ -17,7 +17,7 @@ class STTClient:
         self._http_client = httpx.AsyncClient(timeout=30)
 
     async def transcribe(self, audio_data: bytes) -> str:
-        if not Settings.hf_api_token:
+        if not settings.llm.hf_api_token:
             log_event(logger, logging.WARNING, "stt.missing_token", "HF API token not configured")
             return ""
         try:
@@ -25,7 +25,7 @@ class STTClient:
                 self._WHISPER_URL,
                 content=audio_data,
                 headers={
-                    "Authorization": f"Bearer {Settings.hf_api_token}",
+                    "Authorization": f"Bearer {settings.llm.hf_api_token}",
                     "Content-Type": "audio/webm",
                 },
             )

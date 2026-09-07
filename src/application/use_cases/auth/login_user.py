@@ -1,35 +1,29 @@
 from __future__ import annotations
 
-from src.application.dto.auth_dto import AuthResultDTO, AuthTokensDTO, LoginDTO
+from src.application.dto.auth import AuthResultDTO, AuthTokensDTO, LoginDTO
+from src.application.exceptions import EmailNotVerifiedError, InvalidCredentialsError
+from src.application.interfaces import UnitOfWork
 from src.application.interfaces.clients import JWTService, PasswordService
-from src.application.interfaces.repositories import AbstractUserRepository
 from src.application.use_cases.mappers import to_user_view_dto
-from src.domain.common import normalize_email
-
-
-class InvalidCredentialsError(Exception):
-    pass
-
-
-class EmailNotVerifiedError(Exception):
-    pass
+from src.domain.exceptions import InvalidEmailError
+from src.domain.value_objects import Email
 
 
 class LoginUserUseCase:
     def __init__(
         self,
-        user_repository: AbstractUserRepository,
+        uow: UnitOfWork,
         password_service: PasswordService,
         jwt_service: JWTService,
     ):
         """Initialize the login user use case.
 
         Args:
-            user_repository: Repository for user data.
+            uow: Unit of work for database transactions.
             password_service: Service for password verification.
             jwt_service: Service for JWT token creation.
         """
-        self._user_repository = user_repository
+        self._uow = uow
         self._password_service = password_service
         self._jwt_service = jwt_service
 
@@ -47,13 +41,15 @@ class LoginUserUseCase:
             EmailNotVerifiedError: If email has not been verified.
         """
         try:
-            email = normalize_email(payload.email)
-        except ValueError as error:
+            email = Email(payload.email)
+        except InvalidEmailError as error:
             raise InvalidCredentialsError(str(error)) from error
-        user = await self._user_repository.get_by_email(email)
-        if user is None or not self._password_service.verify_password(
+        async with self._uow as uow:
+            user_repository = uow.repository("user")
+            user = await user_repository.get_by_email(email.value)
+        if user is None or user.id is None or not await self._password_service.verify_password(
             payload.password,
-            user.password_hash,
+            user.password_hash.value,
         ):
             raise InvalidCredentialsError("Неверный email или пароль")
         if not user.is_email_verified:
@@ -61,7 +57,7 @@ class LoginUserUseCase:
         return AuthResultDTO(
             user=to_user_view_dto(user),
             tokens=AuthTokensDTO(
-                access_token=self._jwt_service.create_access_token(int(user.id)),
-                refresh_token=self._jwt_service.create_refresh_token(int(user.id)),
+                access_token=await self._jwt_service.create_access_token(int(user.id)),
+                refresh_token=await self._jwt_service.create_refresh_token(int(user.id)),
             ),
         )

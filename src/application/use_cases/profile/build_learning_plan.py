@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.application.dto.profile_dto import (
+from src.application.dto.profile import (
     LearningPlanPageDTO,
     PlanContentModeDTO,
     PlanDictionaryLinkDTO,
@@ -9,11 +9,11 @@ from src.application.dto.profile_dto import (
     PlanStageDTO,
     ProgressReportDTO,
 )
-from src.application.interfaces.repositories import AbstractUserRepository
+from src.application.interfaces import UnitOfWork
 from src.application.use_cases.profile.build_progress_report import (
     BuildProgressReportUseCase,
 )
-from src.domain.user import StudyTimeline
+from src.domain.value_objects.user import StudyTimeline
 
 _ROADMAP = (
     {
@@ -322,16 +322,16 @@ _DICTIONARY_LINKS = (
 class BuildLearningPlanUseCase:
     def __init__(
         self,
-        user_repository: AbstractUserRepository,
+        uow: UnitOfWork,
         build_progress_report_use_case: BuildProgressReportUseCase,
     ):
         """Initialize the build learning plan use case.
 
         Args:
-            user_repository: Repository for user data.
+            uow: Unit of work for database transactions.
             build_progress_report_use_case: Use case for building progress reports.
         """
-        self._user_repository = user_repository
+        self._uow = uow
         self._build_progress_report_use_case = build_progress_report_use_case
 
     async def execute(self, user_id: int) -> LearningPlanPageDTO:
@@ -346,7 +346,9 @@ class BuildLearningPlanUseCase:
         Raises:
             ValueError: If the user is not found.
         """
-        user = await self._user_repository.get_by_id(user_id)
+        async with self._uow as uow:
+            user_repository = uow.repository("user")
+            user = await user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")
 

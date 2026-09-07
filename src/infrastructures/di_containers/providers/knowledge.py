@@ -13,7 +13,7 @@ class KnowledgeProvidersMixin:
     @cached_property
     def generate_knowledge_check_use_case(self) -> GenerateKnowledgeCheckUseCase:
         return GenerateKnowledgeCheckUseCase(
-            self.user_repository,
+            self.uow,
             self.build_progress_report_use_case,
             self.root.llm_client,
         )

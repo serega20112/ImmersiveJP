@@ -1,32 +1,24 @@
 """Сервис RAG: поиск релевантных фрагментов в документах пользователя.
 
-Pipeline: chunking документов -> эмбеддинги (с кэшем в Redis) ->
-косинусная близость -> отсечение по порогу релевантности.
+Pipeline: загрузка документов (UoW) -> chunking (домен) -> эмбеддинги
+(инфраструктура, с кэшем) -> ранжирование по косинусной близости (домен).
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from collections.abc import Callable
 from hashlib import sha256
-from math import sqrt
 
-from src.application.interfaces.clients import EmbeddingClient, KeyValueStore
-from src.application.interfaces.repositories import AbstractUserDocumentRepository
-from src.config.settings import Settings
+from src.application.interfaces import UnitOfWork
+from src.application.interfaces.clients import EmbeddingClient
+from src.config.settings import settings
+from src.domain.services import chunk_documents, cosine_similarity
 from src.utils.logging import log_event
 
 logger = logging.getLogger(__name__)
 
 _EMBEDDING_CACHE_PREFIX = "rag:emb:v1"
-
-
-@dataclass(slots=True)
-class DocumentChunk:
-    """Фрагмент документа, подготовленный к векторному поиску."""
-
-    document_id: int | None
-    text: str
 
 
 class RAGService:
@@ -39,20 +31,17 @@ class RAGService:
 
     def __init__(
         self,
-        doc_repo: AbstractUserDocumentRepository,
+        uow_factory: Callable[[], UnitOfWork],
         embed_client: EmbeddingClient,
-        cache: KeyValueStore | None = None,
     ):
         """Инициализировать RAG-сервис.
 
         Args:
-            doc_repo: Репозиторий пользовательских документов.
-            embed_client: Клиент текстовых эмбеддингов.
-            cache: Опциональное key-value хранилище для кэша эмбеддингов.
+            uow_factory: Фабрика Unit of Work для получения документов.
+            embed_client: Клиент эмбеддингов с кэшированием.
         """
-        self._doc_repo = doc_repo
+        self._uow_factory = uow_factory
         self._embed_client = embed_client
-        self._cache = cache
 
     async def query(
         self,
@@ -76,7 +65,7 @@ class RAGService:
             return []
 
         try:
-            docs = await self._doc_repo.get_by_user(user_id)
+            documents = await self._load_documents(user_id)
         except Exception:
             log_event(
                 logger,
@@ -86,10 +75,14 @@ class RAGService:
                 user_id=user_id,
             )
             return []
-        if not docs:
+        if not documents:
             return []
 
-        chunks = self._build_chunks(docs)
+        chunks = chunk_documents(
+            documents,
+            chunk_size=settings.rag.rag_chunk_size,
+            chunk_overlap=settings.rag.rag_chunk_overlap,
+        )
         if not chunks:
             return []
 
@@ -107,16 +100,20 @@ class RAGService:
             )
             return []
 
-        limit = top_k or Settings.rag_top_k
+        limit = top_k or settings.rag.rag_top_k
         scored = sorted(
             (
-                (self._cosine_similarity(query_embedding, chunk_embedding), chunk)
+                (cosine_similarity(query_embedding, chunk_embedding), chunk)
                 for chunk, chunk_embedding in zip(chunks, chunk_embeddings, strict=True)
             ),
             key=lambda pair: pair[0],
             reverse=True,
         )
-        results = [chunk.text for score, chunk in scored[:limit] if score >= Settings.rag_min_score]
+        results = [
+            chunk.text
+            for score, chunk in scored[:limit]
+            if score >= settings.rag.rag_min_score
+        ]
         log_event(
             logger,
             logging.DEBUG,
@@ -128,53 +125,39 @@ class RAGService:
         )
         return results
 
-    def _build_chunks(self, docs) -> list[DocumentChunk]:
-        """Разбить документы на перекрывающиеся фрагменты заданного размера."""
-        size = Settings.rag_chunk_size
-        overlap = max(min(Settings.rag_chunk_overlap, size - 1), 0)
-        step = size - overlap
-        chunks: list[DocumentChunk] = []
-        for doc in docs:
-            text = " ".join(str(doc.content or "").split())
-            for start in range(0, len(text), step):
-                chunk = text[start : start + size]
-                if len(chunk) < overlap + 1 and chunks and chunks[-1].document_id == doc.id:
-                    continue
-                chunks.append(DocumentChunk(document_id=doc.id, text=chunk))
-        return chunks
+    async def _load_documents(self, user_id: int) -> list:
+        """Загрузить документы пользователя через Unit of Work.
+
+        Args:
+            user_id: Идентификатор пользователя.
+
+        Returns:
+            Список документов пользователя.
+        """
+        async with self._uow_factory() as uow:
+            doc_repository = uow.repository("user_document")
+            return await doc_repository.get_by_user(user_id)
 
     async def _embeddings(self, texts: list[str]) -> list[list[float]]:
-        """Получить эмбеддинги с учётом кэша key-value хранилища."""
-        if self._cache is None:
-            return await self._embed_client.embed(texts)
+        """Получить эмбеддинги через клиент с кэшированием.
 
-        keys = [f"{_EMBEDDING_CACHE_PREFIX}:{self._text_hash(text)}" for text in texts]
-        cached = [await self._cache.get_json(key) for key in keys]
-        missing = [index for index, value in enumerate(cached) if not isinstance(value, list)]
-        if missing:
-            fresh = await self._embed_client.embed([texts[index] for index in missing])
-            for index, vector in zip(missing, fresh, strict=True):
-                cached[index] = vector
-                await self._cache.set_json(
-                    keys[index],
-                    vector,
-                    expire_seconds=Settings.rag_embedding_cache_ttl_seconds,
-                )
-        return [list(value) for value in cached]  # type: ignore[arg-type]
+        Args:
+            texts: Тексты для векторизации.
+
+        Returns:
+            Список векторов эмбеддингов.
+        """
+        return await self._embed_client.embed(texts)
 
     @staticmethod
-    def _text_hash(text: str) -> str:
-        model = Settings.embedding_model
-        return sha256(f"{model}:{text}".encode()).hexdigest()
+    def embedding_cache_key(text: str) -> str:
+        """Построить ключ кэша эмбеддинга для текста.
 
-    @staticmethod
-    def _cosine_similarity(a: list[float], b: list[float]) -> float:
-        """Вычислить косинусную близость двух векторов."""
-        if len(a) != len(b) or not a:
-            return 0.0
-        dot = sum(ai * bi for ai, bi in zip(a, b, strict=True))
-        norm_a = sqrt(sum(ai * ai for ai in a))
-        norm_b = sqrt(sum(bi * bi for bi in b))
-        if norm_a == 0 or norm_b == 0:
-            return 0.0
-        return dot / (norm_a * norm_b)
+        Args:
+            text: Исходный текст.
+
+        Returns:
+            Ключ кэша с учётом модели эмбеддингов.
+        """
+        model = settings.llm.embedding_model
+        return f"{_EMBEDDING_CACHE_PREFIX}:{sha256(f'{model}:{text}'.encode()).hexdigest()}"

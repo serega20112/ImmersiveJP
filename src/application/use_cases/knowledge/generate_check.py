@@ -1,26 +1,26 @@
 from __future__ import annotations
 
-from src.application.dto.knowledge_dto import KnowledgeCheckPageDTO, KnowledgeQuestionDTO
+from src.application.dto.knowledge import KnowledgeCheckPageDTO, KnowledgeQuestionDTO
+from src.application.interfaces import UnitOfWork
 from src.application.interfaces.clients import LLMClient
-from src.application.interfaces.repositories import AbstractUserRepository
 from src.application.use_cases.profile import BuildProgressReportUseCase
 
 
 class GenerateKnowledgeCheckUseCase:
     def __init__(
         self,
-        user_repository: AbstractUserRepository,
+        uow: UnitOfWork,
         build_progress_report_use_case: BuildProgressReportUseCase,
         llm_client: LLMClient,
     ):
         """Initialize the generate knowledge check use case.
 
         Args:
-            user_repository: Repository for user data.
+            uow: Unit of work for database transactions.
             build_progress_report_use_case: Use case for building progress reports.
             llm_client: Client for LLM chat completions.
         """
-        self._user_repository = user_repository
+        self._uow = uow
         self._build_progress_report_use_case = build_progress_report_use_case
         self._llm_client = llm_client
 
@@ -41,7 +41,9 @@ class GenerateKnowledgeCheckUseCase:
         Raises:
             ValueError: If the user is not found.
         """
-        user = await self._user_repository.get_by_id(user_id)
+        async with self._uow as uow:
+            user_repository = uow.repository("user")
+            user = await user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")
 

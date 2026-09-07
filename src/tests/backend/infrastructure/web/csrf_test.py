@@ -3,15 +3,14 @@ from __future__ import annotations
 import pytest
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import PlainTextResponse
-from starlette.middleware.sessions import SessionMiddleware
-from starlette.testclient import TestClient
-
 from src.presentation.http.web.constants import (
     CSRF_FIELD_NAME,
     CSRF_HEADER_NAME,
 )
 from src.presentation.http.web.csrf import ensure_csrf_token, validate_csrf
 from src.presentation.http.web.errors import SecurityViolationError
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.testclient import TestClient
 
 
 def _build_request(method: str, *, content_type: str = "", headers=None) -> Request:

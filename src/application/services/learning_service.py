@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.application.dto.learning_dto import (
+from src.application.dto.learning import (
     CardCompletionResultDTO,
     PdfDocumentDTO,
     SpeechPracticePageDTO,
@@ -20,7 +20,7 @@ from src.application.use_cases.learning import (
     RepairCurrentBatchUseCase,
     SubmitTrackWorkUseCase,
 )
-from src.domain.content import TrackType
+from src.domain.value_objects.track_type import TrackType
 
 
 class LearningService:

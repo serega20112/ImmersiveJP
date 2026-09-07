@@ -1,12 +1,13 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from types import SimpleNamespace
 
 import pytest
 
-from src.application.use_cases.learning.get_track_page import GetTrackPageUseCase
-from src.domain.content import LearningCard, TrackType
-from src.domain.progress import CARD_BATCH_SIZE
+from src.application.use_cases.learning.cards.get_track_page import GetTrackPageUseCase
+from src.domain.entities.progress import CARD_BATCH_SIZE
+from src.domain.value_objects.track_type import TrackType
+from src.tests.support import FakeUnitOfWork, build_test_card
 
 
 class _EmptyContentRepository:
@@ -41,9 +42,13 @@ class _EmptySessionRepository:
 @pytest.mark.asyncio
 async def test_empty_track_page_can_generate_first_batch():
     use_case = GetTrackPageUseCase(
-        _EmptyContentRepository(),
-        _EmptyProgressRepository(),
-        _EmptySessionRepository(),
+        FakeUnitOfWork(
+            {
+                "content": _EmptyContentRepository(),
+                "progress": _EmptyProgressRepository(),
+                "session": _EmptySessionRepository(),
+            }
+        ),
     )
 
     page = await use_case.execute(user_id=42, track=TrackType.CULTURE)
@@ -58,8 +63,8 @@ async def test_empty_track_page_can_generate_first_batch():
 class _CompletedBatchContentRepository:
     def __init__(self):
         self.cards = [
-            LearningCard(
-                id=index,
+            build_test_card(
+                card_id=index,
                 user_id=42,
                 track=TrackType.CULTURE,
                 topic=f"Тема {index}",
@@ -114,9 +119,13 @@ class _ExistingSessionRepository:
 @pytest.mark.asyncio
 async def test_track_page_unlocks_work_after_completed_five_card_batch():
     use_case = GetTrackPageUseCase(
-        _CompletedBatchContentRepository(),
-        _CompletedBatchProgressRepository(),
-        _ExistingSessionRepository(),
+        FakeUnitOfWork(
+            {
+                "content": _CompletedBatchContentRepository(),
+                "progress": _CompletedBatchProgressRepository(),
+                "session": _ExistingSessionRepository(),
+            }
+        ),
     )
 
     page = await use_case.execute(user_id=42, track=TrackType.CULTURE)

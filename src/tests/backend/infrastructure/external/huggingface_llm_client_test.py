@@ -10,9 +10,10 @@ from src.application.dto.learning import (
     TrackWorkResultDTO,
     TrackWorkTaskResultDTO,
 )
-from src.domain.content import TrackType
-from src.domain.user import LanguageLevel, LearningGoal, StudyTimeline, User
+from src.domain.aggregates.user import User
+from src.domain.value_objects.track_type import TrackType
 from src.infrastructures.external import HuggingFaceLLMClient
+from src.tests.support import build_test_user
 
 
 @dataclass
@@ -33,18 +34,7 @@ class DummyStore:
 
 
 def _build_user() -> User:
-    return User(
-        id=1,
-        email="user@example.com",
-        password_hash="hashed",
-        display_name="Immers User",
-        is_email_verified=True,
-        learning_goal=LearningGoal.TOURISM,
-        language_level=LanguageLevel.BASIC,
-        study_timeline=StudyTimeline.SIX_MONTHS,
-        interests=["еда", "поездки"],
-        onboarding_completed=True,
-    )
+    return build_test_user()
 
 
 @pytest.mark.asyncio
@@ -127,13 +117,13 @@ def test_split_llm_modules_keep_cross_module_static_calls_working():
 
 
 def test_cards_runtime_uses_dedicated_settings(monkeypatch: pytest.MonkeyPatch):
-    from src.config.settings import Settings
+    from src.config.settings import settings
 
-    monkeypatch.setattr(Settings, "hf_cards_model", "openai/gpt-oss-20b")
-    monkeypatch.setattr(Settings, "hf_cards_timeout_seconds", 10.0)
-    monkeypatch.setattr(Settings, "hf_cards_retry_attempts", 1)
-    monkeypatch.setattr(Settings, "hf_cards_max_tokens", 1400)
-    monkeypatch.setattr(Settings, "hf_provider", "fireworks-ai")
+    monkeypatch.setattr(settings.llm, "hf_cards_model", "openai/gpt-oss-20b")
+    monkeypatch.setattr(settings.llm, "hf_cards_timeout_seconds", 10.0)
+    monkeypatch.setattr(settings.llm, "hf_cards_retry_attempts", 1)
+    monkeypatch.setattr(settings.llm, "hf_cards_max_tokens", 1400)
+    monkeypatch.setattr(settings.llm, "hf_provider", "fireworks-ai")
 
     model, timeout_seconds, retry_attempts, max_tokens = HuggingFaceLLMClient._request_runtime(
         {"kind": "cards"}
@@ -149,15 +139,15 @@ def test_cards_runtime_uses_dedicated_settings(monkeypatch: pytest.MonkeyPatch):
 async def test_cards_circuit_breaker_skips_remote_request_after_timeout(
     monkeypatch: pytest.MonkeyPatch,
 ):
-    from src.config.settings import Settings
+    from src.config.settings import settings
 
     store = DummyStore()
     client = HuggingFaceLLMClient(store)
     user = _build_user()
     request_calls = 0
 
-    monkeypatch.setattr(Settings, "hf_api_token", "test-token")
-    monkeypatch.setattr(Settings, "hf_cards_circuit_open_seconds", 900)
+    monkeypatch.setattr(settings.llm, "hf_api_token", "test-token")
+    monkeypatch.setattr(settings.llm, "hf_cards_circuit_open_seconds", 900)
 
     async def failing_request(*, payload, temperature, system_content, user_content):
         nonlocal request_calls
@@ -195,15 +185,15 @@ async def test_cards_circuit_breaker_skips_remote_request_after_timeout(
 async def test_timeout_circuit_allows_retry_for_smaller_batch_size(
     monkeypatch: pytest.MonkeyPatch,
 ):
-    from src.config.settings import Settings
+    from src.config.settings import settings
 
     store = DummyStore()
     client = HuggingFaceLLMClient(store)
     user = _build_user()
     request_calls = 0
 
-    monkeypatch.setattr(Settings, "hf_api_token", "test-token")
-    monkeypatch.setattr(Settings, "hf_cards_circuit_open_seconds", 900)
+    monkeypatch.setattr(settings.llm, "hf_api_token", "test-token")
+    monkeypatch.setattr(settings.llm, "hf_cards_circuit_open_seconds", 900)
 
     async def first_timeout_then_success(
         *,
@@ -293,13 +283,13 @@ def test_normalize_cards_replaces_history_offtopic_with_history_fallback():
 async def test_review_track_work_uses_llm_result_with_fallback_shape(
     monkeypatch: pytest.MonkeyPatch,
 ):
-    from src.config.settings import Settings
+    from src.config.settings import settings
 
     store = DummyStore()
     client = HuggingFaceLLMClient(store)
     user = _build_user()
 
-    monkeypatch.setattr(Settings, "hf_api_token", "test-token")
+    monkeypatch.setattr(settings.llm, "hf_api_token", "test-token")
 
     async def fake_request(*, payload, temperature, system_content, user_content):
         return {

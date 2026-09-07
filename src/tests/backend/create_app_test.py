@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from starlette.middleware.sessions import SessionMiddleware
-
-from src.presentation.http.app import create_app
 from src.presentation.http.web.middleware import (
     CsrfMiddleware,
     RateLimitMiddleware,
@@ -11,6 +8,9 @@ from src.presentation.http.web.middleware import (
     RequestMetricsMiddleware,
     RequestStateMiddleware,
 )
+from starlette.middleware.sessions import SessionMiddleware
+
+from src.presentation.http.app import create_app
 
 
 def test_middleware_order_matches_request_lifecycle():

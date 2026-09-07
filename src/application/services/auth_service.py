@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.application.dto.auth_dto import (
+from src.application.dto.auth import (
     AuthResultDTO,
     LoginDTO,
     RegistrationDTO,

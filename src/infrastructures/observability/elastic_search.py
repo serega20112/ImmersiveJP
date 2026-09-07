@@ -7,19 +7,19 @@ from typing import Any
 
 from elasticsearch import AsyncElasticsearch
 
-from src.config.settings import Settings
+from src.config.settings import settings
 
 
 class ElasticsearchLogHandler(logging.Handler):
     def __init__(self) -> None:
         super().__init__()
         self._client: AsyncElasticsearch | None = None
-        self._index = Settings.elasticsearch_log_index
+        self._index = settings.elasticsearch.elasticsearch_log_index
 
     async def _ensure_client(self) -> AsyncElasticsearch | None:
         if self._client is not None:
             return self._client
-        url = Settings.elasticsearch_url
+        url = settings.elasticsearch.elasticsearch_url
         if not url:
             return None
         self._client = AsyncElasticsearch(hosts=[url])

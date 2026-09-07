@@ -1,5 +1,3 @@
-"""Общие утилиты, не зависящие от слоёв приложения."""
+from .identifiers import to_optional, value_or_none
 
-from .logging import get_logger, log_event
-
-__all__ = ["get_logger", "log_event"]
+__all__ = ["to_optional", "value_or_none"]

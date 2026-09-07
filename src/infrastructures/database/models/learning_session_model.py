@@ -9,6 +9,16 @@ from src.infrastructures.database.database import Base
 
 
 class LearningSessionModel(Base):
+    """Учебная сессия пользователя по треку.
+
+    Поля:
+        id: Первичный ключ.
+        user_id: Владелец сессии (users.id, каскадное удаление).
+        track: Ключ трека обучения (language, culture, history).
+        last_generated_batch: Номер последнего сгенерированного батча.
+        updated_at: Момент последнего обновления записи (UTC).
+    """
+
     __tablename__ = "learning_sessions"
     __table_args__ = (UniqueConstraint("user_id", "track", name="uq_learning_session_user_track"),)
 

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from src.application.dto.profile_dto import TrustComponentDTO, TrustScoreDTO
-from src.domain.progress import TrackProgressSnapshot
-from src.domain.user import SkillAssessment
+from src.application.dto.profile import TrustComponentDTO, TrustScoreDTO
+from src.domain.entities.progress import TrackProgressSnapshot
+from src.domain.value_objects.skill_assessment import SkillAssessment
 
 
 def build_trust_score(
@@ -29,10 +29,10 @@ def build_trust_score(
     completed_batches = sum(item.completed_batches for item in snapshots)
     stability_points = min(15, completed_batches * 5)
 
-    active_tracks = [item for item in snapshots if item.generated_cards > 0]
+    active_tracks = [item for item in snapshots if item.generated_cards.value > 0]
     if len(active_tracks) >= 2:
-        spread = max(item.completion_rate for item in active_tracks) - min(
-            item.completion_rate for item in active_tracks
+        spread = max(item.completion_rate.percentage for item in active_tracks) - min(
+            item.completion_rate.percentage for item in active_tracks
         )
         balance_points = max(0, 10 - round(spread / 12))
     elif active_tracks:
@@ -41,7 +41,9 @@ def build_trust_score(
         balance_points = 0
 
     unfinished_tracks = sum(
-        1 for item in active_tracks if item.completed_cards < item.generated_cards
+        1
+        for item in active_tracks
+        if item.completed_cards.value < item.generated_cards.value
     )
     debt_penalty = min(20, unfinished_tracks * 4)
 

@@ -23,8 +23,8 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from src.application.dto.learning_dto import CardExampleDTO, KeyTermDTO, TrackCardDTO
-from src.domain.content import TrackType
+from src.application.dto.learning import CardExampleDTO, KeyTermDTO, TrackCardDTO
+from src.domain.value_objects.track_type import TrackType
 
 
 class PdfBuilder:

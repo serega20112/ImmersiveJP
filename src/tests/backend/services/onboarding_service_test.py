@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.application.dto.onboarding_dto import (
+from src.application.dto.onboarding import (
     OnboardingPageDTO,
     StudyTimelineOptionDTO,
 )

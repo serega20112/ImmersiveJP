@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import re
 
-from src.application.dto.auth_dto import UserViewDTO
-from src.application.dto.learning_dto import CardExampleDTO, TrackCardDTO
-from src.application.dto.profile_dto import TrackProgressDTO
-from src.application.dto.skill_dto import SkillAssessmentDTO
+from src.application.dto.auth import UserViewDTO
+from src.application.dto.learning import CardExampleDTO, TrackCardDTO
+from src.application.dto.profile import TrackProgressDTO
+from src.application.dto.skill import SkillAssessmentDTO
 from src.application.use_cases.key_terms import build_key_term_dtos
-from src.domain.content import LearningCard
-from src.domain.progress import TrackProgressSnapshot
-from src.domain.user import SkillAssessment, User
+from src.domain.aggregates.user import User
+from src.domain.entities.content import LearningCard
+from src.domain.entities.progress import TrackProgressSnapshot
+from src.domain.value_objects.skill_assessment import SkillAssessment
 
 _LEVEL_TITLES = {
     "zero": "Стартовый",
@@ -28,9 +29,9 @@ def to_user_view_dto(user: User) -> UserViewDTO:
         The user view DTO.
     """
     return UserViewDTO(
-        id=int(user.id or 0),
-        email=user.email,
-        display_name=user.display_name,
+        id=int(user.id) if user.id is not None else 0,
+        email=str(user.email),
+        display_name=str(user.display_name),
         is_email_verified=user.is_email_verified,
         onboarding_completed=user.onboarding_completed,
         learning_goal=user.learning_goal.value if user.learning_goal else None,
@@ -51,8 +52,9 @@ def to_track_card_dto(card: LearningCard, completed_ids: set[int]) -> TrackCardD
         The track card DTO.
     """
     cleaned_explanation = _sanitize_generated_note(card.explanation)
+    card_id = int(card.id) if card.id is not None else 0
     return TrackCardDTO(
-        id=int(card.id or 0),
+        id=card_id,
         track=card.track.value,
         topic=card.topic,
         preview=_build_preview(cleaned_explanation),
@@ -60,9 +62,9 @@ def to_track_card_dto(card: LearningCard, completed_ids: set[int]) -> TrackCardD
         examples=[_to_card_example_dto(example) for example in card.examples],
         key_terms=list(card.key_terms),
         key_term_items=build_key_term_dtos(card.key_terms),
-        batch_number=card.batch_number,
-        position=card.position,
-        is_completed=int(card.id or 0) in completed_ids,
+        batch_number=int(card.batch_number),
+        position=int(card.position),
+        is_completed=card_id in completed_ids,
     )
 
 
@@ -78,10 +80,10 @@ def to_track_progress_dto(snapshot: TrackProgressSnapshot) -> TrackProgressDTO:
     return TrackProgressDTO(
         track=snapshot.track.value,
         title=snapshot.track.title,
-        completed_cards=snapshot.completed_cards,
-        generated_cards=snapshot.generated_cards,
+        completed_cards=int(snapshot.completed_cards.value),
+        generated_cards=int(snapshot.generated_cards.value),
         current_batch=snapshot.current_batch,
-        completion_rate=snapshot.completion_rate,
+        completion_rate=float(snapshot.completion_rate.percentage),
         completed_batches=snapshot.completed_batches,
         work_ready_batch=snapshot.work_ready_batch,
     )

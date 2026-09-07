@@ -7,6 +7,13 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 
 class TimestampMixin:
+    """Примесь временных меток создания и обновления записи.
+
+    Поля:
+        created_at: Момент создания записи (UTC, серверное значение).
+        updated_at: Момент последнего обновления записи (UTC).
+    """
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

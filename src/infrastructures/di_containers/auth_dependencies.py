@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from fastapi import Request
 
-from src.application.dto.auth_dto import UserViewDTO
+from src.application.dto.auth import UserViewDTO
 from src.infrastructures.di_containers.current_user import get_current_user, resolve_current_user
-from src.presentation.http.web import RouteRedirectError
+from src.presentation.http import RouteRedirectError
 
 
 def _redirect(request: Request, route_name: str) -> RouteRedirectError:

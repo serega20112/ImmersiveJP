@@ -3,32 +3,27 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from src.application.exceptions import InvalidMentorMessageError
+from src.application.interfaces import UnitOfWork
 from src.application.interfaces.clients import LLMClient
-from src.application.interfaces.repositories import (
-    AbstractMentorRepository,
-    AbstractUserRepository,
-)
+from src.application.interfaces.database import MentorRepositoryPort
 from src.application.use_cases.profile.build_learning_plan import BuildLearningPlanUseCase
 from src.application.use_cases.profile.build_progress_report import (
     BuildProgressReportUseCase,
 )
 from src.application.use_cases.profile.get_mentor_page import GetMentorPageUseCase
-from src.config.settings import Settings
-from src.domain.mentor import MentorFocus, MentorMessage
+from src.config.settings import settings
+from src.domain.entities.mentor import MentorFocus, MentorMessage
 
 if TYPE_CHECKING:
     from src.application.services.rag_service import RAGService
 
 
-class InvalidMentorMessageError(Exception):
-    pass
-
-
 class SendMentorMessageUseCase:
     def __init__(
         self,
-        user_repository: AbstractUserRepository,
-        mentor_repository: AbstractMentorRepository,
+        uow: UnitOfWork,
+        mentor_repository: MentorRepositoryPort,
         build_progress_report_use_case: BuildProgressReportUseCase,
         build_learning_plan_use_case: BuildLearningPlanUseCase,
         get_mentor_page_use_case: GetMentorPageUseCase,
@@ -38,7 +33,7 @@ class SendMentorMessageUseCase:
         """Initialize the send mentor message use case.
 
         Args:
-            user_repository: Repository for user data.
+            uow: Unit of work for database transactions.
             mentor_repository: Repository for mentor data.
             build_progress_report_use_case: Use case for building progress reports.
             build_learning_plan_use_case: Use case for building learning plans.
@@ -46,7 +41,7 @@ class SendMentorMessageUseCase:
             llm_client: Client for LLM chat completions.
             rag_service: Optional RAG service for document context.
         """
-        self._user_repository = user_repository
+        self._uow = uow
         self._mentor_repository = mentor_repository
         self._build_progress_report_use_case = build_progress_report_use_case
         self._build_learning_plan_use_case = build_learning_plan_use_case
@@ -70,12 +65,14 @@ class SendMentorMessageUseCase:
         message = str(message_text or "").strip()
         if not message:
             raise InvalidMentorMessageError("Сообщение пустое. Сформулируй, что именно не идет.")
-        if len(message) > Settings.text_input_limit:
+        if len(message) > settings.app.text_input_limit:
             raise InvalidMentorMessageError(
-                f"Сообщение ограничено {Settings.text_input_limit} символами"
+                f"Сообщение ограничено {settings.app.text_input_limit} символами"
             )
 
-        user = await self._user_repository.get_by_id(user_id)
+        async with self._uow as uow:
+            user_repository = uow.repository("user")
+            user = await user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")
 

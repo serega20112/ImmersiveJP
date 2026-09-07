@@ -16,17 +16,12 @@ from src.application.use_cases.profile import (
 class ProfileProvidersMixin:
     @cached_property
     def build_progress_report_use_case(self) -> BuildProgressReportUseCase:
-        return BuildProgressReportUseCase(
-            self.content_repository,
-            self.progress_repository,
-            self.session_repository,
-            self.user_repository,
-        )
+        return BuildProgressReportUseCase(self.uow)
 
     @cached_property
     def build_learning_plan_use_case(self) -> BuildLearningPlanUseCase:
         return BuildLearningPlanUseCase(
-            self.user_repository,
+            self.uow,
             self.build_progress_report_use_case,
         )
 
@@ -41,7 +36,7 @@ class ProfileProvidersMixin:
     @cached_property
     def send_mentor_message_use_case(self) -> SendMentorMessageUseCase:
         return SendMentorMessageUseCase(
-            self.user_repository,
+            self.uow,
             self.mentor_repository,
             self.build_progress_report_use_case,
             self.build_learning_plan_use_case,
@@ -52,12 +47,12 @@ class ProfileProvidersMixin:
 
     @cached_property
     def generate_ai_advice_use_case(self) -> GenerateAIAdviceUseCase:
-        return GenerateAIAdviceUseCase(self.user_repository, self.root.llm_client)
+        return GenerateAIAdviceUseCase(self.uow, self.root.llm_client)
 
     @cached_property
     def get_dashboard_use_case(self) -> GetDashboardUseCase:
         return GetDashboardUseCase(
-            self.user_repository,
+            self.uow,
             self.build_progress_report_use_case,
         )
 

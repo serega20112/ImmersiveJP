@@ -4,13 +4,6 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.sessions import SessionMiddleware
-from starlette.testclient import TestClient
-
-from src.infrastructures.cache import KeyValueStore
-from src.infrastructures.observability import HttpMetricsCollector, get_logger
-from src.infrastructures.security import RateLimiter
-from src.presentation.http.app import create_app
 from src.presentation.http.web import register_exception_handlers
 from src.presentation.http.web.middleware import (
     RateLimitMiddleware,
@@ -18,6 +11,13 @@ from src.presentation.http.web.middleware import (
     RequestMetricsMiddleware,
     RequestStateMiddleware,
 )
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.testclient import TestClient
+
+from src.infrastructures.cache import KeyValueStore
+from src.infrastructures.observability import HttpMetricsCollector, get_logger
+from src.infrastructures.security import RateLimiter
+from src.presentation.http.app import create_app
 
 PROJECT_ROOT = Path(__file__).resolve().parents[5]
 

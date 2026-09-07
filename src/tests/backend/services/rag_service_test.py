@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import pytest
 
 from src.application.services.rag_service import RAGService
+from src.tests.support import FakeUnitOfWork
 
 
 @dataclass(slots=True)
@@ -36,6 +37,13 @@ class FailingEmbedClient:
         raise RuntimeError("unavailable")
 
 
+def _rag_service(docs: list[FakeDoc], embed_client) -> RAGService:
+    return RAGService(
+        lambda: FakeUnitOfWork({"user_document": FakeDocRepo(docs)}),
+        embed_client,
+    )
+
+
 @pytest.mark.asyncio
 async def test_query_returns_relevant_chunk():
     target = "Токио столица Японии и крупнейший город страны"
@@ -45,8 +53,8 @@ async def test_query_returns_relevant_chunk():
         target: [0.9, 0.1, 0.0],
         other: [0.0, 0.0, 1.0],
     }
-    service = RAGService(
-        FakeDocRepo([FakeDoc(id=1, content=other), FakeDoc(id=2, content=target)]),
+    service = _rag_service(
+        [FakeDoc(id=1, content=other), FakeDoc(id=2, content=target)],
         FakeEmbedClient(vectors),
     )
     results = await service.query(1, "токио", top_k=2)
@@ -55,20 +63,20 @@ async def test_query_returns_relevant_chunk():
 
 @pytest.mark.asyncio
 async def test_query_empty_query_returns_empty():
-    service = RAGService(FakeDocRepo([]), FakeEmbedClient({}))
+    service = _rag_service([], FakeEmbedClient({}))
     assert await service.query(1, "   ") == []
 
 
 @pytest.mark.asyncio
 async def test_query_no_documents_returns_empty():
-    service = RAGService(FakeDocRepo([]), FakeEmbedClient({}))
+    service = _rag_service([], FakeEmbedClient({}))
     assert await service.query(1, "любой запрос") == []
 
 
 @pytest.mark.asyncio
 async def test_query_embedding_failure_degrades_gracefully():
-    service = RAGService(
-        FakeDocRepo([FakeDoc(id=1, content="какой-то текст")]),
+    service = _rag_service(
+        [FakeDoc(id=1, content="какой-то текст")],
         FailingEmbedClient(),
     )
     assert await service.query(1, "запрос") == []
@@ -76,8 +84,8 @@ async def test_query_embedding_failure_degrades_gracefully():
 
 @pytest.mark.asyncio
 async def test_query_filters_by_min_score():
-    service = RAGService(
-        FakeDocRepo([FakeDoc(id=1, content="нерелевантный фрагмент про кандзи")]),
+    service = _rag_service(
+        [FakeDoc(id=1, content="нерелевантный фрагмент про кандзи")],
         FakeEmbedClient(
             {
                 "запрос": [1.0, 0.0],

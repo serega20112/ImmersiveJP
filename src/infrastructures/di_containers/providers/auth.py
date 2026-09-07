@@ -16,7 +16,7 @@ class AuthProvidersMixin:
     @cached_property
     def register_user_use_case(self) -> RegisterUserUseCase:
         return RegisterUserUseCase(
-            self.user_repository,
+            self.uow,
             self.root.password_service,
             self.root.email_verification_store,
             self.root.mailer,
@@ -25,14 +25,14 @@ class AuthProvidersMixin:
     @cached_property
     def verify_email_use_case(self) -> VerifyEmailUseCase:
         return VerifyEmailUseCase(
-            self.user_repository,
+            self.uow,
             self.root.email_verification_store,
         )
 
     @cached_property
     def login_user_use_case(self) -> LoginUserUseCase:
         return LoginUserUseCase(
-            self.user_repository,
+            self.uow,
             self.root.password_service,
             self.root.jwt_service,
         )
@@ -44,7 +44,7 @@ class AuthProvidersMixin:
     @cached_property
     def resolve_current_user_use_case(self) -> ResolveCurrentUserUseCase:
         return ResolveCurrentUserUseCase(
-            self.user_repository,
+            self.uow,
             self.root.jwt_service,
             self.root.token_blocklist,
         )

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from src.application.dto.mentor_dto import MentorPageDTO
-from src.application.dto.profile_dto import (
+from src.application.dto.mentor import MentorPageDTO
+from src.application.dto.profile import (
     AIAdviceDTO,
     LearningPlanPageDTO,
     ProgressReportDTO,

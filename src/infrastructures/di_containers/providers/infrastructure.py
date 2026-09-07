@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import cached_property
 
-from src.config.settings import Settings
+from src.config.settings import settings
 from src.infrastructures.cache import KeyValueStore
 from src.infrastructures.external import (
     EmbeddingClient,
@@ -24,9 +24,9 @@ class RootInfrastructureProvidersMixin:
     @cached_property
     def key_value_store(self) -> KeyValueStore:
         return KeyValueStore(
-            redis_url=Settings.redis_url if Settings.redis_enabled else None,
+            redis_url=settings.redis.redis_url if settings.redis.redis_enabled else None,
             namespace="immersjp",
-            required=Settings.redis_required,
+            required=settings.redis.redis_required,
         )
 
     @cached_property
@@ -49,7 +49,7 @@ class RootInfrastructureProvidersMixin:
     def email_verification_store(self) -> EmailVerificationStore:
         return EmailVerificationStore(
             self.key_value_store,
-            ttl_seconds=Settings.email_verification_expire_minutes * 60,
+            ttl_seconds=settings.security.email_verification_expire_minutes * 60,
         )
 
     @cached_property

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.application.dto.onboarding_dto import (
+from src.application.dto.onboarding import (
     OnboardingDTO,
     OnboardingPageDTO,
     OnboardingResultDTO,
@@ -10,7 +10,7 @@ from src.application.use_cases.onboarding import (
     CompleteOnboardingUseCase,
     GetOnboardingPageUseCase,
 )
-from src.config.settings import Settings
+from src.config.settings import settings
 
 
 class OnboardingService:
@@ -37,7 +37,7 @@ class OnboardingService:
         Returns:
             The onboarding page data.
         """
-        cache_ttl = Settings.onboarding_page_cache_ttl_seconds
+        cache_ttl = settings.app.onboarding_page_cache_ttl_seconds
         cache_key = "onboarding:page"
         cached_page = await self._cache_store.get_json(cache_key)
         if cached_page is not None:

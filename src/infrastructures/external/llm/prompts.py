@@ -8,9 +8,9 @@ if TYPE_CHECKING:
 import json
 
 from src.application.dto.learning import TrackWorkResultDTO
-from src.application.dto.profile_dto import LearningPlanPageDTO, ProgressReportDTO
-from src.domain.mentor import MentorMessage
-from src.domain.user import User
+from src.application.dto.profile import LearningPlanPageDTO, ProgressReportDTO
+from src.domain.aggregates.user import User
+from src.domain.entities.mentor import MentorMessage
 
 
 class LLMPromptMixin:

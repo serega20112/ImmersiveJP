@@ -5,7 +5,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from src.config.settings import Settings
+from src.config.settings import settings
 from src.infrastructures.database.database import Base
 from src.infrastructures.database.models import (
     CardCompletionModel,
@@ -16,7 +16,7 @@ from src.infrastructures.database.models import (
 )
 
 config = context.config
-config.set_main_option("sqlalchemy.url", Settings.database_sync_url)
+config.set_main_option("sqlalchemy.url", settings.db.database_sync_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

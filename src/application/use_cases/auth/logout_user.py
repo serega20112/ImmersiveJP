@@ -28,5 +28,5 @@ class LogoutUserUseCase:
         for token in (access_token, refresh_token):
             if not token:
                 continue
-            ttl_seconds = self._jwt_service.get_token_ttl_seconds(token)
+            ttl_seconds = await self._jwt_service.get_token_ttl_seconds(token)
             await self._token_blocklist.revoke(token, ttl_seconds)

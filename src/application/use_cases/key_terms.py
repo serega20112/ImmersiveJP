@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from src.application.dto.learning_dto import KeyTermDTO
+from src.application.dto.learning import KeyTermDTO
 
 _TERM_TRANSLATIONS = {
     "挨拶": "приветствие",

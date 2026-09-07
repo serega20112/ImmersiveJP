@@ -1,23 +1,23 @@
 from __future__ import annotations
 
-from src.application.dto.profile_dto import AIAdviceDTO, ProgressReportDTO
+from src.application.dto.profile import AIAdviceDTO, ProgressReportDTO
+from src.application.interfaces import UnitOfWork
 from src.application.interfaces.clients import LLMClient
-from src.application.interfaces.repositories import AbstractUserRepository
 
 
 class GenerateAIAdviceUseCase:
     def __init__(
         self,
-        user_repository: AbstractUserRepository,
+        uow: UnitOfWork,
         llm_client: LLMClient,
     ):
         """Initialize the generate AI advice use case.
 
         Args:
-            user_repository: Repository for user data.
+            uow: Unit of work for database transactions.
             llm_client: Client for LLM chat completions.
         """
-        self._user_repository = user_repository
+        self._uow = uow
         self._llm_client = llm_client
 
     async def execute(self, user_id: int, report: ProgressReportDTO) -> AIAdviceDTO:
@@ -33,7 +33,9 @@ class GenerateAIAdviceUseCase:
         Raises:
             ValueError: If the user is not found.
         """
-        user = await self._user_repository.get_by_id(user_id)
+        async with self._uow as uow:
+            user_repository = uow.repository("user")
+            user = await user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")
         return await self._llm_client.generate_advice(user, report)

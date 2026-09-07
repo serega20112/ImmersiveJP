@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.application.dto.knowledge_dto import KnowledgeCheckPageDTO, KnowledgeQuestionDTO
+from src.application.dto.knowledge import KnowledgeCheckPageDTO, KnowledgeQuestionDTO
 from src.application.use_cases.knowledge import (
     GenerateKnowledgeCheckUseCase,
     SubmitKnowledgeCheckUseCase,

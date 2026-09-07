@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from src.application.dto.onboarding_dto import (
+from src.application.dto.onboarding import (
     DiagnosticOptionDTO,
     DiagnosticQuestionDTO,
     DiagnosticQuestionGroupDTO,
     StudyTimelineOptionDTO,
 )
-from src.domain.user import LanguageLevel, SkillAssessment, StudyTimeline
+from src.domain.value_objects.skill_assessment import SkillAssessment
+from src.domain.value_objects.user import LanguageLevel, StudyTimeline
 
 _DIAGNOSTIC_BANKS = {
     LanguageLevel.ZERO: {

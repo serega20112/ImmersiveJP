@@ -4,13 +4,13 @@ from types import SimpleNamespace
 
 import pytest
 from fastapi import FastAPI, Request
+from src.presentation.http.web import RouteRedirectError
 
 from src.infrastructures.di_containers.auth_dependencies import (
     require_authenticated_user,
     require_onboarded_user,
     require_registered_user,
 )
-from src.presentation.http.web import RouteRedirectError
 
 
 def _build_request(current_user=None) -> Request:

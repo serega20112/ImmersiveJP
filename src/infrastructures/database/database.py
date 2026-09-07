@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 
-from src.config.settings import Settings
+from src.config.settings import settings
 
 
 class Base(DeclarativeBase):
@@ -40,7 +40,7 @@ def create_session_factory(
 def get_engine() -> AsyncEngine:
     global _engine
     if _engine is None:
-        _engine = create_db_engine(Settings.database_url)
+        _engine = create_db_engine(settings.db.database_url)
     return _engine
 
 

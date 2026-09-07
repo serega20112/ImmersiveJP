@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from src.domain.content import TrackType
+from src.domain.value_objects.track_type import TrackType
 from src.infrastructures.observability import get_logger
 
 logger = get_logger(__name__)

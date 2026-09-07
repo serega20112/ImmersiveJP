@@ -1,11 +1,11 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from src.application.interfaces.repositories import AbstractProgressRepository
-from src.domain.content import TrackType
+from src.application.interfaces.database import ProgressRepositoryPort
+from src.domain.value_objects.track_type import TrackType
 
 
 async def summarize_completed_batches(
-    progress_repository: AbstractProgressRepository,
+    progress_repository: ProgressRepositoryPort,
     *,
     user_id: int,
     track: TrackType,
@@ -37,3 +37,4 @@ async def summarize_completed_batches(
         completed_batches += 1
         work_ready_batch = batch_number
     return completed_batches, work_ready_batch
+

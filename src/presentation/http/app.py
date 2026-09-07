@@ -1,3 +1,5 @@
+"""Сборка FastAPI-приложения: middleware, шаблонизатор, роуты."""
+
 from __future__ import annotations
 
 import time
@@ -6,18 +8,16 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from src.config.settings import Settings
+from src.config.settings import settings
 from src.infrastructures.database import get_session_factory
 from src.infrastructures.di_containers.container import container
 from src.infrastructures.observability import HttpMetricsCollector, get_logger
-from src.presentation.http.api.router import api_router
-from src.presentation.http.web import (
-    SESSION_COOKIE_NAME,
-    register_exception_handlers,
-)
-from src.presentation.http.web.middleware import (
+from src.presentation.http import register_exception_handlers
+from src.presentation.http.api import api_router
+from src.presentation.http.middleware import (
     CsrfMiddleware,
     RateLimitMiddleware,
     RequestContainerMiddleware,
@@ -40,11 +40,18 @@ async def _lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    """Собрать и настроить FastAPI-приложение.
+
+    Returns:
+        Полностью сконфигурированное приложение.
+    """
     app = FastAPI(
-        title=Settings.app_name,
-        debug=Settings.app_debug,
+        title=settings.app.app_name,
+        debug=settings.app.app_debug,
         lifespan=_lifespan,
     )
+    templates = Jinja2Templates(directory=str(FRONTEND_ROOT / "templates"))
+    app.state.templates = templates
     app.state.root_container = container
     app.state.asset_version = str(int(time.time()))
     app.state.metrics_collector = HttpMetricsCollector()
@@ -55,12 +62,12 @@ def create_app() -> FastAPI:
         session_factory=get_session_factory(),
     )
     app.add_middleware(CsrfMiddleware)
-    if Settings.api_rate_limit_enabled:
+    if settings.app.api_rate_limit_enabled:
         app.add_middleware(
             RateLimitMiddleware,
             rate_limiter=container.rate_limiter,
-            limit=Settings.api_rate_limit_requests,
-            window_seconds=Settings.api_rate_limit_window_seconds,
+            limit=settings.app.api_rate_limit_requests,
+            window_seconds=settings.app.api_rate_limit_window_seconds,
         )
     app.add_middleware(
         RequestMetricsMiddleware,
@@ -70,10 +77,10 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestStateMiddleware)
     app.add_middleware(
         SessionMiddleware,
-        secret_key=Settings.session_secret,
-        same_site=Settings.cookie_samesite,
-        https_only=Settings.cookie_secure,
-        session_cookie=SESSION_COOKIE_NAME,
+        secret_key=settings.security.session_secret,
+        same_site=settings.security.cookie_samesite,
+        https_only=settings.security.cookie_secure,
+        session_cookie=settings.security.session_cookie_name,
     )
     app.include_router(api_router)
     register_exception_handlers(app)

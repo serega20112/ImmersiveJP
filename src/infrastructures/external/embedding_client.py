@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import httpx
 
-from src.config.settings import Settings
+from src.config.settings import settings
 
 
 class EmbeddingClient:
     """Клиент векторных представлений текста через OpenRouter embeddings API."""
 
     def __init__(self) -> None:
-        self._api_key = Settings.openrouter_api_key
+        self._api_key = settings.llm.openrouter_api_key
         self._base_url = "https://openrouter.ai/api/v1/embeddings"
-        self._model = Settings.embedding_model
+        self._model = settings.llm.embedding_model
         self._timeout = httpx.Timeout(15.0)
 
     @property

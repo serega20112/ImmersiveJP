@@ -1,9 +1,21 @@
-from .auth_dto import (
+"""Публичные DTO-модели прикладного слоя.
+
+Пакет является единственной точкой импорта DTO: потребители всегда пишут
+``from src.application.dto import ...`` вместо длинных путей вглубь пакета.
+"""
+
+from .auth import (
     AuthResultDTO,
+    AuthTokensDTO,
     LoginDTO,
     RegistrationDTO,
     UserViewDTO,
     VerificationDTO,
+)
+from .knowledge import (
+    KnowledgeAnswerResultDTO,
+    KnowledgeCheckPageDTO,
+    KnowledgeQuestionDTO,
 )
 from .learning import (
     CardCompletionResultDTO,
@@ -25,8 +37,8 @@ from .learning import (
     TrackWorkTaskResultDTO,
     WorkHintDTO,
 )
-from .mentor_dto import MentorFocusDTO, MentorMessageDTO, MentorPageDTO, MentorReplyDTO
-from .onboarding_dto import (
+from .mentor import MentorFocusDTO, MentorMessageDTO, MentorPageDTO, MentorReplyDTO
+from .onboarding import (
     DiagnosticOptionDTO,
     DiagnosticQuestionDTO,
     DiagnosticQuestionGroupDTO,
@@ -35,11 +47,74 @@ from .onboarding_dto import (
     OnboardingResultDTO,
     StudyTimelineOptionDTO,
 )
-from .profile_dto import (
+from .profile import (
     AIAdviceDTO,
     DashboardDTO,
+    DashboardSectionDTO,
+    LearningPlanPageDTO,
+    PlanContentModeDTO,
+    PlanDictionaryLinkDTO,
+    PlanModuleDTO,
+    PlanPaceDTO,
+    PlanStageDTO,
     ProgressReportDTO,
+    TrackProgressDTO,
     TrustComponentDTO,
     TrustScoreDTO,
 )
-from .skill_dto import SkillAssessmentDTO
+from .skill import SkillAssessmentDTO
+
+__all__ = [
+    "AIAdviceDTO",
+    "AuthResultDTO",
+    "AuthTokensDTO",
+    "CardCompletionResultDTO",
+    "CardExampleDTO",
+    "DashboardDTO",
+    "DashboardSectionDTO",
+    "DiagnosticOptionDTO",
+    "DiagnosticQuestionDTO",
+    "DiagnosticQuestionGroupDTO",
+    "GeneratedCardDraftDTO",
+    "KeyTermDTO",
+    "KnowledgeAnswerResultDTO",
+    "KnowledgeCheckPageDTO",
+    "KnowledgeQuestionDTO",
+    "LearningPlanPageDTO",
+    "LoginDTO",
+    "MentorFocusDTO",
+    "MentorMessageDTO",
+    "MentorPageDTO",
+    "MentorReplyDTO",
+    "OnboardingDTO",
+    "OnboardingPageDTO",
+    "OnboardingResultDTO",
+    "PdfDocumentDTO",
+    "PlanContentModeDTO",
+    "PlanDictionaryLinkDTO",
+    "PlanModuleDTO",
+    "PlanPaceDTO",
+    "PlanStageDTO",
+    "ProgressReportDTO",
+    "RegistrationDTO",
+    "SkillAssessmentDTO",
+    "SpeechDialogueDTO",
+    "SpeechDialogueTurnDTO",
+    "SpeechLineDTO",
+    "SpeechPracticeDTO",
+    "SpeechPracticePageDTO",
+    "StudyTimelineOptionDTO",
+    "TrackCardDTO",
+    "TrackCardPageDTO",
+    "TrackPageDTO",
+    "TrackProgressDTO",
+    "TrackWorkPageDTO",
+    "TrackWorkResultDTO",
+    "TrackWorkTaskDTO",
+    "TrackWorkTaskResultDTO",
+    "TrustComponentDTO",
+    "TrustScoreDTO",
+    "UserViewDTO",
+    "VerificationDTO",
+    "WorkHintDTO",
+]

@@ -1,9 +1,20 @@
+"""DTO учебных карточек: примеры, термины, страницы треков."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class CardExampleDTO(BaseModel):
+    """Один пример употребления в учебной карточке.
+
+    Атрибуты:
+        raw_text: Исходный текст примера.
+        japanese: Пример на японском.
+        romaji: Транслитерация (ромадзи).
+        translation: Перевод примера.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     raw_text: str
@@ -13,6 +24,14 @@ class CardExampleDTO(BaseModel):
 
 
 class KeyTermDTO(BaseModel):
+    """Ключевой термин учебной карточки.
+
+    Атрибуты:
+        raw_text: Исходное написание термина.
+        label: Основное значение.
+        translation: Перевод термина.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     raw_text: str
@@ -21,6 +40,22 @@ class KeyTermDTO(BaseModel):
 
 
 class TrackCardDTO(BaseModel):
+    """Учебная карточка в составе партии.
+
+    Атрибуты:
+        id: Идентификатор карточки.
+        track: Ключ трека.
+        topic: Тема карточки.
+        preview: Краткое превью объяснения.
+        explanation: Развёрнутое объяснение.
+        examples: Примеры употребления.
+        key_terms: Список ключевых терминов.
+        key_term_items: Структурированные ключевые термины.
+        batch_number: Номер партии.
+        position: Позиция в партии.
+        is_completed: Флаг завершения карточки.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     id: int
@@ -37,6 +72,24 @@ class TrackCardDTO(BaseModel):
 
 
 class TrackPageDTO(BaseModel):
+    """Страница трека со списком карточек текущей партии.
+
+    Атрибуты:
+        track: Ключ трека.
+        title: Название трека.
+        subtitle: Подзаголовок трека.
+        cards: Карточки текущей партии.
+        current_batch: Текущая партия.
+        completed_total: Завершённые карточки.
+        generated_total: Созданные карточки.
+        all_current_batch_completed: Флаг завершения текущей партии.
+        can_generate_next: Флаг доступности генерации следующей партии.
+        generate_action_label: Текст кнопки генерации.
+        completed_batches: Завершённые партии.
+        work_ready_batch: Партия для работы.
+        work_href: Ссылка на работу.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     track: str
@@ -55,6 +108,24 @@ class TrackPageDTO(BaseModel):
 
 
 class TrackCardPageDTO(BaseModel):
+    """Страница отдельной карточки внутри партии.
+
+    Атрибуты:
+        track: Ключ трека.
+        title: Название трека.
+        subtitle: Подзаголовок трека.
+        card: Текущая карточка.
+        batch_cards: Все карточки партии.
+        current_batch: Текущая партия.
+        completed_total: Завершённые карточки.
+        generated_total: Созданные карточки.
+        all_current_batch_completed: Флаг завершения текущей партии.
+        can_generate_next: Флаг доступности генерации следующей партии.
+        completed_batches: Завершённые партии.
+        work_ready_batch: Партия для работы.
+        work_href: Ссылка на работу.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     track: str
@@ -73,6 +144,14 @@ class TrackCardPageDTO(BaseModel):
 
 
 class CardCompletionResultDTO(BaseModel):
+    """Результат завершения карточки.
+
+    Атрибуты:
+        card_id: Идентификатор карточки.
+        track: Ключ трека.
+        batch_completed: Флаг завершения всей партии.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     card_id: int
@@ -81,6 +160,15 @@ class CardCompletionResultDTO(BaseModel):
 
 
 class GeneratedCardDraftDTO(BaseModel):
+    """Черновик карточки, сгенерированный нейросетью.
+
+    Атрибуты:
+        topic: Тема карточки.
+        explanation: Объяснение темы.
+        examples: Примеры употребления.
+        key_terms: Ключевые термины.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     topic: str

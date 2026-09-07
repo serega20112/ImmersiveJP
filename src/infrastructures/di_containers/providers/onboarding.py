@@ -17,7 +17,7 @@ class OnboardingProvidersMixin:
     @cached_property
     def complete_onboarding_use_case(self) -> CompleteOnboardingUseCase:
         return CompleteOnboardingUseCase(
-            self.user_repository,
+            self.uow,
             self.generate_cards_use_case,
         )
 

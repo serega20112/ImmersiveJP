@@ -18,6 +18,21 @@ from src.infrastructures.database.database import Base
 
 
 class LearningCardModel(Base):
+    """Учебная карточка пользователя.
+
+    Поля:
+        id: Первичный ключ.
+        user_id: Владелец карточки (users.id, каскадное удаление).
+        track: Ключ трека обучения (language, culture, history).
+        topic: Тема карточки.
+        explanation: Основное объяснение темы.
+        examples_json: Список примеров употребления.
+        key_terms_json: Список ключевых терминов.
+        batch_number: Номер батча, к которому относится карточка.
+        position: Позиция карточки внутри батча.
+        created_at: Момент создания записи (UTC).
+    """
+
     __tablename__ = "learning_cards"
     __table_args__ = (
         UniqueConstraint(

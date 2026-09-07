@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from src.application.dto.mentor_dto import MentorFocusDTO, MentorMessageDTO, MentorPageDTO
-from src.application.interfaces.repositories import AbstractMentorRepository
+from src.application.dto.mentor import MentorFocusDTO, MentorMessageDTO, MentorPageDTO
+from src.application.interfaces.database import MentorRepositoryPort
 from src.application.use_cases.profile.build_learning_plan import BuildLearningPlanUseCase
 from src.application.use_cases.profile.build_progress_report import (
     BuildProgressReportUseCase,
 )
-from src.domain.mentor import MentorFocus, MentorMessage
+from src.domain.entities.mentor import MentorFocus, MentorMessage
 
 
 class GetMentorPageUseCase:
     def __init__(
         self,
-        mentor_repository: AbstractMentorRepository,
+        mentor_repository: MentorRepositoryPort,
         build_progress_report_use_case: BuildProgressReportUseCase,
         build_learning_plan_use_case: BuildLearningPlanUseCase,
     ):

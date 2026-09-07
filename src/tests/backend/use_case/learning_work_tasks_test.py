@@ -1,6 +1,6 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from src.application.use_cases.learning.work_tasks import PreparedWorkTask, _answer_matches
+from src.application.use_cases.learning.work.work_tasks import PreparedWorkTask, _answer_matches
 
 
 def test_answer_matches_accepts_minor_romaji_variation():

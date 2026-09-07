@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.application.dto.profile_dto import DashboardDTO
+from src.application.dto.profile import DashboardDTO
 from src.application.use_cases.dashboard import GetDashboardUseCase
 
 

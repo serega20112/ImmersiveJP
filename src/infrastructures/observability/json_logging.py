@@ -6,7 +6,7 @@ import sys
 from datetime import UTC, datetime
 from typing import Any
 
-from src.config.settings import Settings
+from src.config.settings import settings
 
 _DEFAULT_RECORD_FIELDS = {
     "args",
@@ -97,7 +97,7 @@ def configure_logging(level_name: str = "INFO") -> None:
     root_logger.setLevel(level)
     root_logger.addHandler(handler)
 
-    if Settings.elasticsearch_enabled:
+    if settings.elasticsearch.elasticsearch_enabled:
         from src.infrastructures.observability.elastic_search import (
             ElasticsearchLogHandler,
         )

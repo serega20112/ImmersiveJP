@@ -1,39 +1,37 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import logging
 
-from src.application.dto.onboarding_dto import OnboardingDTO, OnboardingResultDTO
-from src.application.interfaces.repositories import AbstractUserRepository
-from src.application.use_cases.learning.generate_cards import GenerateCardsUseCase
+from src.application.dto.onboarding import OnboardingDTO, OnboardingResultDTO
+from src.application.exceptions import InvalidOnboardingDataError
+from src.application.interfaces import UnitOfWork
+from src.application.use_cases.learning.cards.generate_cards import GenerateCardsUseCase
 from src.application.use_cases.mappers import to_skill_assessment_dto
 from src.application.use_cases.onboarding.diagnostic_questions import (
     evaluate_diagnostic_answers,
 )
-from src.config.settings import Settings
-from src.domain.content import TrackType
-from src.domain.user import LanguageLevel, LearningGoal, StudyTimeline
+from src.config.settings import settings
+from src.domain.exceptions import UserNotOnboardedError
+from src.domain.value_objects.track_type import TrackType
+from src.domain.value_objects.user import LanguageLevel, LearningGoal, StudyTimeline
 from src.utils.logging import get_logger, log_event
 
 logger = get_logger(__name__)
 
 
-class InvalidOnboardingDataError(Exception):
-    pass
-
-
 class CompleteOnboardingUseCase:
     def __init__(
         self,
-        user_repository: AbstractUserRepository,
+        uow: UnitOfWork,
         generate_cards_use_case: GenerateCardsUseCase,
     ):
         """Initialize the complete onboarding use case.
 
         Args:
-            user_repository: Repository for user data.
+            uow: Unit of work for database transactions.
             generate_cards_use_case: Use case for generating learning cards.
         """
-        self._user_repository = user_repository
+        self._uow = uow
         self._generate_cards_use_case = generate_cards_use_case
 
     async def execute(self, user_id: int, payload: OnboardingDTO) -> OnboardingResultDTO:
@@ -57,9 +55,9 @@ class CompleteOnboardingUseCase:
             raise InvalidOnboardingDataError(
                 "Некорректная цель, уровень или срок обучения"
             ) from error
-        if len(payload.interests_text.strip()) > Settings.text_input_limit:
+        if len(payload.interests_text.strip()) > settings.app.text_input_limit:
             raise InvalidOnboardingDataError(
-                f"Поле интересов ограничено {Settings.text_input_limit} символами"
+                f"Поле интересов ограничено {settings.app.text_input_limit} символами"
             )
         interests = self._parse_interests(payload.interests_text)
         if not interests:
@@ -73,14 +71,22 @@ class CompleteOnboardingUseCase:
         except ValueError as error:
             raise InvalidOnboardingDataError(str(error)) from error
 
-        await self._user_repository.update_learning_profile(
-            user_id=user_id,
-            goal=goal,
-            language_level=language_level,
-            study_timeline=study_timeline,
-            interests=interests,
-            skill_assessment=skill_assessment,
-        )
+        async with self._uow as uow:
+            user_repository = uow.repository("user")
+            user = await user_repository.get_by_id(user_id)
+            if user is None:
+                raise InvalidOnboardingDataError("Пользователь не найден")
+            try:
+                user.complete_onboarding(
+                    goal=goal,
+                    level=language_level,
+                    timeline=study_timeline,
+                    interests=interests,
+                    assessment=skill_assessment,
+                )
+            except UserNotOnboardedError as error:
+                raise InvalidOnboardingDataError(str(error)) from error
+            await user_repository.save(user)
         generated_batches: dict[str, int] = {}
         await self._generate_cards_use_case.execute(user_id, TrackType.LANGUAGE)
         generated_batches[TrackType.LANGUAGE.value] = 1

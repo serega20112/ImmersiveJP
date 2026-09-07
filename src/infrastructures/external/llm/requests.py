@@ -20,9 +20,9 @@ from src.application.dto.learning import (
     SpeechPracticeDTO,
     TrackWorkResultDTO,
 )
-from src.application.dto.profile_dto import AIAdviceDTO, ProgressReportDTO
-from src.config.settings import Settings
-from src.domain.user import User
+from src.application.dto.profile import AIAdviceDTO, ProgressReportDTO
+from src.config.settings import settings
+from src.domain.aggregates.user import User
 from src.utils.logging import get_logger, log_event
 
 logger = get_logger(__name__)
@@ -30,7 +30,7 @@ logger = get_logger(__name__)
 
 class LLMRequestMixin:
     async def _request_cards(self, payload: dict) -> list[GeneratedCardDraftDTO]:
-        if not Settings.hf_api_token:
+        if not settings.llm.hf_api_token:
             self._log_fallback(payload, reason="missing_token")
             return self._fallback_cards(payload)
         circuit_reason = await self._get_open_circuit_reason(payload)
@@ -65,12 +65,12 @@ class LLMRequestMixin:
             return self._fallback_cards(payload)
 
     async def _request_advice(self, user: User, report: ProgressReportDTO) -> AIAdviceDTO:
-        if not Settings.hf_api_token:
-            self._log_fallback({"kind": "advice", "user_id": user.id}, reason="missing_token")
+        if not settings.llm.hf_api_token:
+            self._log_fallback({"kind": "advice", "user_id": int(user.id) if user.id is not None else None}, reason="missing_token")
             return self._fallback_advice(user, report)
         try:
             parsed = await self._request_llm_json(
-                payload={"kind": "advice", "user_id": user.id},
+                payload={"kind": "advice", "user_id": int(user.id) if user.id is not None else None},
                 temperature=0.6,
                 system_content=(
                     "Ты редактор учебных рекомендаций ImmersJP. "
@@ -82,13 +82,13 @@ class LLMRequestMixin:
             return self._normalize_advice_payload(parsed, user, report)
         except Exception as error:
             self._log_fallback(
-                {"kind": "advice", "user_id": user.id},
+                {"kind": "advice", "user_id": int(user.id) if user.id is not None else None},
                 reason=self._fallback_reason_from_error(error),
             )
             return self._fallback_advice(user, report)
 
     async def _request_speech_practice(self, payload: dict) -> SpeechPracticeDTO:
-        if not Settings.hf_api_token:
+        if not settings.llm.hf_api_token:
             self._log_fallback(payload, reason="missing_token")
             return self._fallback_speech_practice(payload)
         try:
@@ -116,7 +116,7 @@ class LLMRequestMixin:
         payload: dict,
         fallback_result: TrackWorkResultDTO,
     ) -> TrackWorkResultDTO:
-        if not Settings.hf_api_token:
+        if not settings.llm.hf_api_token:
             self._log_fallback(payload, reason="missing_token")
             return fallback_result
         try:
@@ -170,9 +170,9 @@ class LLMRequestMixin:
             started_at = time.perf_counter()
             try:
                 response = await self._http_client.post(
-                    Settings.hf_api_url,
+                    settings.llm.hf_api_url,
                     headers={
-                        "Authorization": f"Bearer {Settings.hf_api_token}",
+                        "Authorization": f"Bearer {settings.llm.hf_api_token}",
                         "Content-Type": "application/json",
                     },
                     json=request_body,
@@ -192,7 +192,7 @@ class LLMRequestMixin:
                     duration_ms=round((time.perf_counter() - started_at) * 1000, 2),
                     status_code=response.status_code,
                     model=request_model,
-                    provider=Settings.hf_provider,
+                    provider=settings.llm.hf_provider,
                     finish_reason=(
                         str(choice.get("finish_reason") or "")
                         if isinstance(choice, Mapping)
@@ -216,13 +216,13 @@ class LLMRequestMixin:
                     error_type=type(error).__name__,
                     error_message=str(error),
                     model=request_model,
-                    provider=Settings.hf_provider,
+                    provider=settings.llm.hf_provider,
                     fallback_reason=self._fallback_reason_from_error(error),
                     **self._response_error_log_fields(error),
                     **self._payload_log_fields(payload),
                 )
                 if attempt < retry_attempts and self._should_retry_request(error):
-                    await asyncio.sleep(Settings.hf_retry_backoff_seconds * attempt)
+                    await asyncio.sleep(settings.llm.hf_retry_backoff_seconds * attempt)
                 else:
                     break
 
@@ -292,7 +292,7 @@ class LLMRequestMixin:
                 "track": payload.get("track"),
                 "batch_size": payload.get("batch_size"),
             },
-            expire_seconds=Settings.hf_cards_circuit_open_seconds,
+            expire_seconds=settings.llm.hf_cards_circuit_open_seconds,
         )
         log_event(
             logger,
@@ -300,9 +300,9 @@ class LLMRequestMixin:
             "llm.circuit_opened",
             "Opened LLM circuit for cards",
             reason=reason,
-            cooldown_seconds=Settings.hf_cards_circuit_open_seconds,
+            cooldown_seconds=settings.llm.hf_cards_circuit_open_seconds,
             model=self._request_runtime(payload)[0],
-            provider=Settings.hf_provider,
+            provider=settings.llm.hf_provider,
             **self._payload_log_fields(payload),
         )
 
@@ -318,9 +318,9 @@ class LLMRequestMixin:
             "llm.circuit_open",
             "LLM circuit already open for cards",
             reason=circuit_reason,
-            cooldown_seconds=Settings.hf_cards_circuit_open_seconds,
+            cooldown_seconds=settings.llm.hf_cards_circuit_open_seconds,
             model=self._request_runtime(payload)[0],
-            provider=Settings.hf_provider,
+            provider=settings.llm.hf_provider,
             **self._payload_log_fields(payload),
         )
 
@@ -366,7 +366,7 @@ class LLMRequestMixin:
     @staticmethod
     def _circuit_key(payload: dict) -> str:
         request_model = LLMRequestMixin._request_runtime(payload)[0]
-        provider = (Settings.hf_provider or "").strip() or "default"
+        provider = (settings.llm.hf_provider or "").strip() or "default"
         kind = str(payload.get("kind") or "unknown")
         return f"llm:circuit:{kind}:{provider}:{request_model}"
 
@@ -374,33 +374,33 @@ class LLMRequestMixin:
     def _request_runtime(payload: dict) -> tuple[str, float, int, int | None]:
         kind = str(payload.get("kind") or "")
         if kind == "cards":
-            model = Settings.hf_cards_model.strip() or Settings.hf_model.strip()
-            timeout_seconds = Settings.hf_cards_timeout_seconds
-            retry_attempts = Settings.hf_cards_retry_attempts
-            max_tokens = Settings.hf_cards_max_tokens
+            model = settings.llm.hf_cards_model.strip() or settings.llm.hf_model.strip()
+            timeout_seconds = settings.llm.hf_cards_timeout_seconds
+            retry_attempts = settings.llm.hf_cards_retry_attempts
+            max_tokens = settings.llm.hf_cards_max_tokens
         elif kind == "mentor":
-            model = Settings.hf_mentor_model.strip() or Settings.hf_model.strip()
-            timeout_seconds = Settings.hf_mentor_timeout_seconds
-            retry_attempts = Settings.hf_mentor_retry_attempts
-            max_tokens = Settings.hf_mentor_max_tokens
+            model = settings.llm.hf_mentor_model.strip() or settings.llm.hf_model.strip()
+            timeout_seconds = settings.llm.hf_mentor_timeout_seconds
+            retry_attempts = settings.llm.hf_mentor_retry_attempts
+            max_tokens = settings.llm.hf_mentor_max_tokens
         elif kind == "speech":
-            model = Settings.hf_speech_model.strip() or Settings.hf_model.strip()
-            timeout_seconds = Settings.hf_speech_timeout_seconds
-            retry_attempts = Settings.hf_speech_retry_attempts
-            max_tokens = Settings.hf_speech_max_tokens
+            model = settings.llm.hf_speech_model.strip() or settings.llm.hf_model.strip()
+            timeout_seconds = settings.llm.hf_speech_timeout_seconds
+            retry_attempts = settings.llm.hf_speech_retry_attempts
+            max_tokens = settings.llm.hf_speech_max_tokens
         elif kind == "work_review":
             model = (
-                Settings.hf_work_review_model.strip()
-                or Settings.hf_mentor_model.strip()
-                or Settings.hf_model.strip()
+                settings.llm.hf_work_review_model.strip()
+                or settings.llm.hf_mentor_model.strip()
+                or settings.llm.hf_model.strip()
             )
-            timeout_seconds = Settings.hf_work_review_timeout_seconds
-            retry_attempts = Settings.hf_work_review_retry_attempts
-            max_tokens = Settings.hf_work_review_max_tokens
+            timeout_seconds = settings.llm.hf_work_review_timeout_seconds
+            retry_attempts = settings.llm.hf_work_review_retry_attempts
+            max_tokens = settings.llm.hf_work_review_max_tokens
         else:
-            model = Settings.hf_model.strip()
-            timeout_seconds = Settings.hf_timeout_seconds
-            retry_attempts = Settings.hf_retry_attempts
+            model = settings.llm.hf_model.strip()
+            timeout_seconds = settings.llm.hf_timeout_seconds
+            retry_attempts = settings.llm.hf_retry_attempts
             max_tokens = None
         return (
             HuggingFaceLLMClient._resolve_request_model(model),
@@ -418,7 +418,7 @@ class LLMRequestMixin:
 
     @staticmethod
     def _resolve_request_model(model: str) -> str:
-        provider = (Settings.hf_provider or "").strip()
+        provider = (settings.llm.hf_provider or "").strip()
         if not model:
             return model
         if ":" in model or not provider:
@@ -429,7 +429,7 @@ class LLMRequestMixin:
 
     @staticmethod
     def _uses_openai_compatible_endpoint() -> bool:
-        return Settings.hf_api_url.rstrip("/").endswith("/v1/chat/completions")
+        return settings.llm.hf_api_url.rstrip("/").endswith("/v1/chat/completions")
 
     @staticmethod
     def _should_retry_request(error: Exception) -> bool:

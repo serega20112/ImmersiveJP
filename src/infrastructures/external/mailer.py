@@ -6,7 +6,7 @@ from email.message import EmailMessage
 
 import anyio
 
-from src.config.settings import Settings
+from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class Mailer:
         await self._send(email, subject, body)
 
     async def _send(self, email: str, subject: str, body: str) -> None:
-        if not Settings.smtp_host:
+        if not settings.smtp.smtp_host:
             logger.info("Mailer skipped (no SMTP host): to=%s subject=%s", email, subject)
             return
         await anyio.to_thread.run_sync(self._send_sync, email, subject, body)
@@ -30,14 +30,14 @@ class Mailer:
     @staticmethod
     def _send_sync(email: str, subject: str, body: str) -> None:
         message = EmailMessage()
-        message["From"] = Settings.smtp_from
+        message["From"] = settings.smtp.smtp_from
         message["To"] = email
         message["Subject"] = subject
         message.set_content(body)
 
-        with smtplib.SMTP(Settings.smtp_host, Settings.smtp_port, timeout=10) as smtp:
-            if Settings.smtp_use_tls:
+        with smtplib.SMTP(settings.smtp.smtp_host, settings.smtp.smtp_port, timeout=10) as smtp:
+            if settings.smtp.smtp_use_tls:
                 smtp.starttls()
-            if Settings.smtp_username and Settings.smtp_password:
-                smtp.login(Settings.smtp_username, Settings.smtp_password)
+            if settings.smtp.smtp_username and settings.smtp.smtp_password:
+                smtp.login(settings.smtp.smtp_username, settings.smtp.smtp_password)
             smtp.send_message(message)

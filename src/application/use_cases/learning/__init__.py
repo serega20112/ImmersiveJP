@@ -1,11 +1,32 @@
-from .complete_card import CompleteCardUseCase
-from .export_cards_to_pdf import ExportCardsToPDFUseCase
-from .generate_cards import GenerateCardsUseCase
-from .generate_speech_practice import GenerateSpeechPracticeUseCase
-from .get_card_page import GetCardPageUseCase
-from .get_next_cards import GetNextCardsUseCase
-from .get_speech_practice_page import GetSpeechPracticePageUseCase
-from .get_track_page import GetTrackPageUseCase
-from .get_track_work_page import GetTrackWorkPageUseCase
-from .repair_current_batch import RepairCurrentBatchUseCase
-from .submit_track_work import SubmitTrackWorkUseCase
+"""Use cases модуля обучения.
+
+Use cases сгруппированы по логическим направлениям:
+``cards`` — учебные карточки, ``speech`` — речевая практика,
+``work`` — работа по партии, ``export`` — экспорт материалов.
+"""
+
+from .cards import (
+    CompleteCardUseCase,
+    GenerateCardsUseCase,
+    GetCardPageUseCase,
+    GetNextCardsUseCase,
+    GetTrackPageUseCase,
+    RepairCurrentBatchUseCase,
+)
+from .export import ExportCardsToPDFUseCase
+from .speech import GenerateSpeechPracticeUseCase, GetSpeechPracticePageUseCase
+from .work import GetTrackWorkPageUseCase, SubmitTrackWorkUseCase
+
+__all__ = [
+    "CompleteCardUseCase",
+    "ExportCardsToPDFUseCase",
+    "GenerateCardsUseCase",
+    "GenerateSpeechPracticeUseCase",
+    "GetCardPageUseCase",
+    "GetNextCardsUseCase",
+    "GetSpeechPracticePageUseCase",
+    "GetTrackPageUseCase",
+    "GetTrackWorkPageUseCase",
+    "RepairCurrentBatchUseCase",
+    "SubmitTrackWorkUseCase",
+]

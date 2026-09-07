@@ -1,25 +1,20 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from src.application.dto.learning import TrackWorkResultDTO, TrackWorkTaskResultDTO
-from src.application.use_cases.learning.submit_track_work import SubmitTrackWorkUseCase
-from src.domain.content import LearningCard, TrackType
-from src.domain.user import LanguageLevel, LearningGoal, StudyTimeline, User
+from src.application.use_cases.learning.work.submit_track_work import SubmitTrackWorkUseCase
+from src.domain.aggregates.user import User
+from src.domain.value_objects.track_type import TrackType
+from src.tests.support import FakeUnitOfWork, build_test_card, build_test_user
 
 
 class _UserRepository:
+    def __init__(self, user: User):
+        self._user = user
+
     async def get_by_id(self, user_id: int) -> User | None:
-        return User(
-            id=user_id,
-            email="user@example.com",
-            password_hash="hashed",
-            display_name="Immers User",
-            is_email_verified=True,
-            learning_goal=LearningGoal.TOURISM,
-            language_level=LanguageLevel.BASIC,
-            study_timeline=StudyTimeline.SIX_MONTHS,
-            interests=["история"],
-            onboarding_completed=True,
-        )
+        if int(self._user.id) != user_id:
+            return None
+        return self._user
 
 
 class _ContentRepository:
@@ -90,8 +85,8 @@ class _LLMClient:
 
 def test_submit_track_work_uses_llm_review_for_final_result():
     cards = [
-        LearningCard(
-            id=1,
+        build_test_card(
+            card_id=1,
             user_id=42,
             track=TrackType.HISTORY,
             topic="Реставрация Мэйдзи",
@@ -101,8 +96,8 @@ def test_submit_track_work_uses_llm_review_for_final_result():
             batch_number=1,
             position=1,
         ),
-        LearningCard(
-            id=2,
+        build_test_card(
+            card_id=2,
             user_id=42,
             track=TrackType.HISTORY,
             topic="Эдо как городской порядок",
@@ -112,8 +107,8 @@ def test_submit_track_work_uses_llm_review_for_final_result():
             batch_number=1,
             position=2,
         ),
-        LearningCard(
-            id=3,
+        build_test_card(
+            card_id=3,
             user_id=42,
             track=TrackType.HISTORY,
             topic="Память о войне",
@@ -126,9 +121,13 @@ def test_submit_track_work_uses_llm_review_for_final_result():
     ]
     llm_client = _LLMClient()
     use_case = SubmitTrackWorkUseCase(
-        _UserRepository(),
-        _ContentRepository(cards),
-        _ProgressRepository(),
+        FakeUnitOfWork(
+            {
+                "user": _UserRepository(build_test_user(user_id=42, interests=["история"])),
+                "content": _ContentRepository(cards),
+                "progress": _ProgressRepository(),
+            }
+        ),
         llm_client,
     )
 
