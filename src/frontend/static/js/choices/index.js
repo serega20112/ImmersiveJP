@@ -1,3 +1,9 @@
+/**
+ * Группы кнопок-выборов: клик по кнопке пишет значение в скрытый input группы
+ * и переключает активное состояние. Группа уровня управляет видимостью
+ * диагностических панелей.
+ */
+
 const setDiagnosticLevel = (level) => {
   const diagnosticPanels = document.querySelectorAll("[data-diagnostic-panel]");
 

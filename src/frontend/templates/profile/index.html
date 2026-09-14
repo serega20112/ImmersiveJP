@@ -1,9 +1,9 @@
-{% extends "base.html" %} {% block title %}Профиль - ImmersJP{% endblock %} {%
-block body_class %}page--profile{% endblock %} {% block content %}
+{% extends "base.html" %} {% block title %}Профиль — ImmersJP{% endblock %} {% block
+body_class %}page--profile{% endblock %} {% block content %}
 <section class="profile-hero reveal">
   <div class="panel panel--hero profile-hero__main">
     <p class="section-kicker">Профиль</p>
-    <h1>Здесь видно, насколько система доверяет твоему текущему ритму.</h1>
+    <h1>Здесь видно, насколько система доверяет вашему текущему ритму.</h1>
     <p class="page-lead">{{ report.next_step }}</p>
     <div class="hero-facts">
       <span class="hero-fact"
@@ -19,7 +19,7 @@ block body_class %}page--profile{% endblock %} {% block content %}
   </div>
 
   <aside class="panel panel--signal trust-card">
-    <p class="section-kicker">Trust Score</p>
+    <p class="section-kicker">Trust score</p>
     <div
       class="trust-score__ring trust-score__ring--{{ report.trust_score.band_key }}"
       style="--trust-progress: {{ report.trust_score.score }}%;"
@@ -86,8 +86,8 @@ block body_class %}page--profile{% endblock %} {% block content %}
     <p class="section-kicker">Диагностика</p>
     <h2>Стартовый срез пока не собран.</h2>
     <p>
-      Пройди онбординг заново, если нужно обновить стартовые настройки и уровень
-      вопросов.
+      Пройдите онбординг заново, если нужно обновить стартовые настройки и
+      уровень вопросов.
     </p>
   </article>
   {% endif %}

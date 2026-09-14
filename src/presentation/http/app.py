@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import dataclasses
+import datetime
+import json
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.config.settings import settings
@@ -31,6 +36,31 @@ FRONTEND_ROOT = PROJECT_ROOT / "src" / "frontend"
 logger = get_logger(__name__)
 
 
+def _island_json(value: Any) -> str:
+    """Сериализовать контекст острова в JSON для ``<script type="application/json">``.
+
+    Фронтенд (React-острова) получает данные страницы этим фильтром:
+    Pydantic-модели и доменные dataclass-сущности конвертируются рекурсивно.
+    """
+
+    def convert(item: Any) -> Any:
+        if isinstance(item, BaseModel):
+            return item.model_dump(mode="json")
+        if dataclasses.is_dataclass(item) and not isinstance(item, type):
+            return {key: convert(sub) for key, sub in dataclasses.asdict(item).items()}
+        if isinstance(item, dict):
+            return {str(key): convert(sub) for key, sub in item.items()}
+        if isinstance(item, (list, tuple, set)):
+            return [convert(sub) for sub in item]
+        if isinstance(item, (str, int, float, bool)) or item is None:
+            return item
+        if isinstance(item, (datetime.datetime, datetime.date, datetime.time)):
+            return item.isoformat()
+        return str(item)
+
+    return json.dumps(convert(value), ensure_ascii=False)
+
+
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     yield
@@ -51,6 +81,7 @@ def create_app() -> FastAPI:
         lifespan=_lifespan,
     )
     templates = Jinja2Templates(directory=str(FRONTEND_ROOT / "templates"))
+    templates.env.filters["island_json"] = _island_json
     app.state.templates = templates
     app.state.root_container = container
     app.state.asset_version = str(int(time.time()))

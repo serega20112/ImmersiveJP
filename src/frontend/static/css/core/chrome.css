@@ -1,3 +1,10 @@
+/* =============================================================================
+   Chrome: каркас страницы, шапка, бренд, навигация, инструменты, флеш-сообщения.
+
+   Характер: тонкая линия вместо стекла, плоская поверхность вместо «блюра»,
+   шапка как деревянная балка энгавы — ровная, с одним швом снизу.
+   ============================================================================= */
+
 .site-frame,
 .site-header,
 .site-main {
@@ -9,7 +16,8 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  padding: 16px 20px 0;
+  padding: var(--space-3) var(--space-5) 0;
+  background: linear-gradient(to bottom, var(--bg-canvas) 62%, transparent);
 }
 
 .site-header__inner,
@@ -22,217 +30,172 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 16px 18px;
+  gap: var(--space-5);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line);
-  border-radius: 28px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
-    var(--surface);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(26px) saturate(160%);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--shadow-header);
 }
+
+/* --- Бренд: печать-ханко 浸 + название ---------------------------------- */
 
 .brand-mark {
   display: inline-flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-3);
   min-width: 0;
 }
 
 .brand-mark__seal {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 20px;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), transparent),
-    linear-gradient(135deg, var(--accent-secondary), var(--accent));
-  color: #04131d;
-  font-size: 1.34rem;
-  font-weight: 800;
-  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.24);
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-xs);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-family: "Noto Serif JP", var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1;
 }
 
 .brand-mark__copy {
   display: grid;
-  gap: 4px;
+  gap: 2px;
+  min-width: 0;
 }
 
 .brand-mark__copy strong {
-  font-size: 1.55rem;
-  line-height: 0.98;
-  letter-spacing: -0.05em;
+  font-family: var(--font-display);
+  font-size: 1.24rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
 .brand-mark__copy small {
-  color: var(--accent-secondary);
+  color: var(--ink-muted);
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
 }
+
+/* --- Кластер справа: навигация + инструменты ---------------------------- */
 
 .site-header__cluster {
   display: flex;
   flex: 1;
-  justify-content: flex-end;
   align-items: center;
-  gap: 12px;
+  justify-content: flex-end;
+  gap: var(--space-3);
   min-width: 0;
 }
 
 .site-nav {
   display: flex;
   align-items: stretch;
-  gap: 8px;
+  gap: var(--space-1);
   flex-wrap: wrap;
-  padding: 8px;
+  padding: var(--space-1);
   border: 1px solid var(--line);
-  border-radius: 22px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    rgba(255, 255, 255, 0.025);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
 }
 
 .nav-link {
+  position: relative;
   display: grid;
-  gap: 3px;
-  min-width: 108px;
-  padding: 12px 16px;
+  gap: 1px;
+  min-width: 96px;
+  padding: var(--space-2) var(--space-3) var(--space-2) calc(var(--space-3) + 6px);
   border: 1px solid transparent;
-  border-radius: 16px;
+  border-radius: var(--radius-sm);
   color: var(--ink-soft);
 }
 
-.nav-link span {
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1.12;
+.nav-link::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: var(--space-2);
+  width: 2px;
+  background: transparent;
 }
 
-.nav-link small {
+.nav-link__label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.nav-link__meta {
   color: var(--ink-muted);
   font-family: var(--font-mono);
-  font-size: 0.64rem;
-  letter-spacing: 0.14em;
+  font-size: var(--fs-micro);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.nav-link:hover,
+.nav-link:hover {
+  color: var(--ink);
+  background: var(--surface-muted);
+}
+
 .nav-link.is-active {
-  color: var(--ink);
-  border-color: var(--line);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.nav-link:hover small,
-.nav-link.is-active small {
-  color: var(--accent-secondary);
-}
-
-.nav-link--accent {
-  background: linear-gradient(
-    135deg,
-    var(--accent-soft),
-    rgba(100, 230, 255, 0.1)
-  );
-  border-color: rgba(255, 107, 74, 0.16);
-}
-
-.nav-link--accent span {
+  border-color: var(--line-strong);
+  background: var(--surface-muted);
   color: var(--ink);
 }
 
-.nav-link--accent small {
+.nav-link.is-active::before {
+  background: var(--accent);
+}
+
+.nav-link.is-active .nav-link__meta {
   color: var(--accent-strong);
 }
+
+.nav-link--accent::before {
+  background: var(--accent-secondary);
+}
+
+.nav-link--accent .nav-link__meta {
+  color: var(--accent-secondary-strong);
+}
+
+/* --- Инструменты -------------------------------------------------------- */
 
 .site-tools {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
 .viewer-badge {
   display: grid;
-  gap: 4px;
-  min-width: 170px;
-  padding: 10px 14px;
+  gap: 1px;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
 }
 
-.viewer-badge span {
-  font-size: 0.92rem;
-  font-weight: 700;
+.viewer-badge__name {
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
-.viewer-badge small {
+.viewer-badge__state {
   color: var(--ink-muted);
   font-family: var(--font-mono);
-  font-size: 0.64rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.theme-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 54px;
-  padding: 8px 16px 8px 8px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-}
-
-.theme-switch__halo {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), transparent),
-    linear-gradient(135deg, var(--accent-secondary), var(--accent));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    0 10px 20px rgba(0, 0, 0, 0.24);
-}
-
-.theme-switch[data-theme="paper"] .theme-switch__halo {
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.24), transparent),
-    linear-gradient(135deg, var(--gold), var(--accent));
-}
-
-.theme-switch__copy {
-  display: grid;
-  gap: 2px;
-  text-align: left;
-}
-
-.theme-switch__copy strong {
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.theme-switch__copy small {
-  color: var(--ink-muted);
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -241,45 +204,141 @@
   display: flex;
 }
 
+/* --- Переключатель трёх тем --------------------------------------------- */
+
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  color: var(--ink);
+  text-align: left;
+}
+
+.theme-switch:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-muted);
+}
+
+.theme-switch:focus-visible {
+  outline: none;
+  border-color: var(--accent-secondary-strong);
+  box-shadow: var(--glow-secondary);
+}
+
+.theme-switch__mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--accent-strong);
+}
+
+.theme-switch__icon {
+  display: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* Показываем ровно ту пиктограмму, чья тема активна */
+.theme-switch[data-theme="edo"] .theme-switch__icon--edo,
+.theme-switch[data-theme="sakura"] .theme-switch__icon--sakura,
+.theme-switch[data-theme="neon"] .theme-switch__icon--neon {
+  display: block;
+}
+
+.theme-switch[data-theme="sakura"] .theme-switch__mark {
+  color: var(--accent-secondary-strong);
+}
+
+.theme-switch__copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.theme-switch__name {
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.theme-switch__hint {
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Три точки: где мы в цикле тем. Стилизуются по data-theme, без JS */
+.theme-switch__dots {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.theme-switch__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--line-strong);
+}
+
+.theme-switch[data-theme="edo"] .theme-switch__dot:nth-child(1),
+.theme-switch[data-theme="sakura"] .theme-switch__dot:nth-child(2),
+.theme-switch[data-theme="neon"] .theme-switch__dot:nth-child(3) {
+  background: var(--accent-strong);
+}
+
+/* --- Основная область --------------------------------------------------- */
+
 .site-main {
-  padding: 32px 20px 96px;
+  padding: var(--space-6) var(--space-5) var(--space-8);
 }
 
 .site-main__inner {
   display: grid;
-  gap: 28px;
+  gap: var(--space-6);
 }
+
+/* --- Флеш-сообщения ----------------------------------------------------- */
 
 .flash-stack {
   display: grid;
-  gap: 12px;
+  gap: var(--space-2);
 }
 
 .flash {
-  display: grid;
-  gap: 6px;
-  padding: 16px 18px;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line-strong);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
-  box-shadow: var(--shadow-sm);
+  border-left: 2px solid var(--ink-muted);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
 }
 
 .flash__label {
-  color: var(--accent-secondary);
+  flex: none;
+  color: var(--ink-muted);
   font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.16em;
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
 }
 
 .flash--success {
-  border-color: rgba(121, 223, 172, 0.24);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    rgba(121, 223, 172, 0.08);
+  border-left-color: var(--success);
 }
 
 .flash--success .flash__label {
@@ -287,10 +346,7 @@
 }
 
 .flash--error {
-  border-color: rgba(255, 142, 132, 0.24);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    rgba(255, 142, 132, 0.08);
+  border-left-color: var(--danger);
 }
 
 .flash--error .flash__label {

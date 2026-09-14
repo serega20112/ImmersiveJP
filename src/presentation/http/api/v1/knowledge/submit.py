@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 
 from src.application.dto.auth import UserViewDTO
@@ -23,7 +23,7 @@ async def knowledge_submit(
     request: Request,
     _current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
     knowledge_service: KnowledgeServiceDependency,
-    form: Annotated[KnowledgeSubmitForm, Depends()],
+    form: Annotated[KnowledgeSubmitForm, Form()],
 ) -> HTMLResponse:
     """Обработать отправку ответов на проверку знаний.
 

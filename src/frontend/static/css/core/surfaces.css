@@ -1,3 +1,10 @@
+/* =============================================================================
+   Компоновка страниц: общие каркасы «основное + боковая колонка», сетки карточек,
+   лендинг, сезонная деталь и страница ошибки.
+   ============================================================================= */
+
+/* --- Общие каркасы страниц ---------------------------------------------- */
+
 .landing-hero,
 .track-hero,
 .page-hero,
@@ -11,22 +18,9 @@
 .profile-hero,
 .manifesto-band {
   display: grid;
-  gap: 24px;
+  gap: var(--space-5);
   align-items: start;
-}
-
-.landing-hero,
-.track-hero,
-.page-hero,
-.speech-workbench,
-.card-layout,
-.practice-overview,
-.auth-stage,
-.onboarding-hero,
-.plan-hero,
-.dashboard-hero,
-.profile-hero {
-  grid-template-columns: minmax(0, 1.1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) 320px;
 }
 
 .landing-hero__main,
@@ -44,7 +38,28 @@
 .error-card,
 .hero-stack {
   display: grid;
-  gap: 18px;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.hero__actions,
+.panel-actions {
+  margin-top: var(--space-1);
+}
+
+/* --- Лендинг ------------------------------------------------------------ */
+
+.kanji-column {
+  display: grid;
+  gap: var(--space-2);
+  padding-right: var(--space-4);
+  border-right: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-family: "Noto Serif JP", var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
 }
 
 .landing-kanji-card {
@@ -52,100 +67,94 @@
   align-items: center;
 }
 
-.kanji-column {
+.landing-kanji-card__copy {
   display: grid;
-  gap: 6px;
-  font-family: var(--font-display);
-  font-size: clamp(3.4rem, 7vw, 5.5rem);
-  font-weight: 700;
-  line-height: 0.82;
-  color: var(--accent-secondary);
-  opacity: 0.5;
+  gap: var(--space-2);
 }
 
 .feature-marquee,
 .story-grid {
   display: grid;
-  gap: 24px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.feature-card {
+  border-left: 2px solid var(--line-strong);
 }
 
 .feature-card--language {
-  border-color: rgba(255, 107, 74, 0.24);
+  border-left-color: var(--accent);
 }
 
 .feature-card--culture {
-  border-color: rgba(100, 230, 255, 0.24);
+  border-left-color: var(--accent-secondary);
 }
 
 .feature-card--history {
-  border-color: rgba(240, 201, 104, 0.24);
+  border-left-color: var(--gold);
+}
+
+.story-card .section-kicker {
+  color: var(--ink-muted);
 }
 
 .manifesto-band {
-  grid-template-columns: minmax(0, 1.18fr) 360px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
 }
 
-.auth-story,
-.auth-card,
-.onboarding-step,
-.error-shell,
-.empty-state {
+/* Сезонная деталь (сакура/момидзи) — одна тонкая линия, не декор на весь экран */
+.season-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+}
+
+.season-line svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--accent);
+}
+
+.season-line::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* --- Сетки карточек ----------------------------------------------------- */
+
+.preview-grid {
   display: grid;
-  gap: 18px;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-.empty-state {
-  justify-items: start;
+.track-gallery {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
+
+/* --- Страница ошибки ---------------------------------------------------- */
 
 .error-shell {
+  display: grid;
   justify-items: center;
-  padding-top: 24px;
+  padding-top: var(--space-5);
 }
 
 .error-card {
-  width: min(760px, 100%);
+  width: min(680px, 100%);
 }
 
-.landing-hero__main,
-.dashboard-hero__main,
-.profile-hero__main,
-.plan-hero__main,
-.onboarding-hero__main,
-.auth-story {
-  min-height: 100%;
-  align-content: start;
-}
-
-.page-hero__copy h1,
-.track-hero__main h1,
-.landing-hero__main h1,
-.dashboard-hero__main h1,
-.profile-hero__main h1,
-.onboarding-hero__main h1,
-.plan-hero__main h1,
-.auth-story h1,
 .error-card h1 {
-  font-size: clamp(2.7rem, 5vw, 5.2rem);
-}
-
-.feature-card h2,
-.story-card h2,
-.manifesto-band h2,
-.page-hero__side h2,
-.section-head h2,
-.auth-card__head h2,
-.plan-focus-card h2,
-.plan-mode-card h2,
-.signal-card h2,
-.track-card h2,
-.advice-card h2,
-.skill-summary-card h2,
-.trust-score__copy h2,
-.mentor-empty h2,
-.work-result h2,
-.work-task h2 {
-  font-size: clamp(1.4rem, 2.2vw, 2.15rem);
-  line-height: 1.04;
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
 }

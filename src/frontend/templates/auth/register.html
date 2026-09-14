@@ -1,9 +1,9 @@
-{% extends "base.html" %} {% block title %}Регистрация - ImmersJP{% endblock %}
-{% block body_class %}page--auth{% endblock %} {% block content %}
+{% extends "base.html" %} {% block title %}Регистрация — ImmersJP{% endblock %} {%
+block body_class %}page--auth{% endblock %} {% block content %}
 <section class="auth-stage reveal">
   <aside class="panel panel--hero auth-story">
     <p class="section-kicker">Регистрация</p>
-    <h1>Создай профиль и собери первый маршрут.</h1>
+    <h1>Создайте профиль и соберите первый маршрут.</h1>
     <p class="page-lead">
       После регистрации на почту придет код подтверждения. Дальше откроется вход
       и онбординг, где сервис настроит стартовую точку и темп обучения.
@@ -25,7 +25,7 @@
     <div class="auth-card__head">
       <p class="section-kicker">Новый аккаунт</p>
       <h2>Старт за пару минут</h2>
-      <p>Создай профиль, подтверди почту и переходи к онбордингу.</p>
+      <p>Создайте профиль, подтвердите почту и переходите к онбордингу.</p>
     </div>
 
     <label class="field-stack">
@@ -35,18 +35,26 @@
         name="display_name"
         minlength="2"
         maxlength="40"
+        autocomplete="nickname"
         required
       />
     </label>
 
     <label class="field-stack">
       <span>Email</span>
-      <input type="email" name="email" required />
+      <input type="email" name="email" autocomplete="email" required />
     </label>
 
     <label class="field-stack">
       <span>Пароль</span>
-      <input type="password" name="password" minlength="8" required />
+      <input
+        type="password"
+        name="password"
+        minlength="8"
+        autocomplete="new-password"
+        required
+      />
+      <small class="field-note">Минимум 8 символов.</small>
     </label>
 
     <button type="submit" class="primary-button">Создать аккаунт</button>

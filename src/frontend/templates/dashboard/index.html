@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% block title %}Dashboard - ImmersJP{% endblock %} {%
-block body_class %}page--dashboard{% endblock %} {% block content %}
+{% extends "base.html" %} {% block title %}Обзор — ImmersJP{% endblock %} {% block
+body_class %}page--dashboard{% endblock %} {% block content %}
 <section class="dashboard-hero reveal">
   <div class="panel panel--hero dashboard-hero__main">
     <p class="section-kicker">Оперативная сводка</p>
@@ -24,7 +24,7 @@ block body_class %}page--dashboard{% endblock %} {% block content %}
   </div>
 
   <aside class="panel panel--signal dashboard-hero__trust">
-    <p class="section-kicker">Trust Score</p>
+    <p class="section-kicker">Trust score</p>
     <div class="trust-score__hero">
       <div
         class="trust-score__ring trust-score__ring--{{ dashboard.trust_score.band_key }}"
@@ -55,11 +55,11 @@ block body_class %}page--dashboard{% endblock %} {% block content %}
 <section class="dashboard-signal-grid reveal">
   <article class="panel signal-card">
     <p class="section-kicker">Как идет система</p>
-    <h2>Партия -> работа -> следующая партия.</h2>
+    <h2>Партия → работа → следующая партия.</h2>
     <ul class="plain-list">
-      <li>сначала закрывай текущий батч полностью</li>
-      <li>после завершения переходи к работе по партии</li>
-      <li>если trust score падает, не форсируй новую генерацию</li>
+      <li>сначала закрывайте текущий батч полностью</li>
+      <li>после завершения переходите к работе по партии</li>
+      <li>если trust score падает, не форсируйте новую генерацию</li>
     </ul>
   </article>
 

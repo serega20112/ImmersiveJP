@@ -1,168 +1,215 @@
-.auth-card__head,
-.section-head,
-.diagnostic-block__head,
-.diagnostic-group__head {
+/* =============================================================================
+   Формы и выборы: страницы входа/регистрации/подтверждения, онбординг,
+   группы кнопок-выборов и адаптивная диагностика.
+   ============================================================================= */
+
+/* --- Авторизация -------------------------------------------------------- */
+
+.auth-stage {
+  align-items: stretch;
+}
+
+.auth-story,
+.auth-card {
   display: grid;
-  gap: 8px;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.auth-card {
+  border-color: var(--line-strong);
+  background: var(--surface-strong);
+}
+
+.auth-card__head {
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.auth-card__head h2 {
+  font-size: var(--fs-title);
+}
+
+.auth-card__head p {
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
+}
+
+.auth-card .primary-button {
+  margin-top: var(--space-1);
+}
+
+/* --- Онбординг ---------------------------------------------------------- */
+
+.onboarding-hero__main,
+.onboarding-hero__aside {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
 }
 
 .onboarding-flow {
   display: grid;
-  gap: 24px;
+  gap: var(--space-4);
 }
 
 .onboarding-step {
-  display: grid;
-  gap: 22px;
+  gap: var(--space-5);
 }
 
 .onboarding-step__head {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 18px;
   align-items: start;
+  gap: var(--space-4);
 }
 
 .step-badge {
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 22px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0)),
-    linear-gradient(135deg, var(--accent-secondary), var(--accent));
-  color: #04131d;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xs);
+  background: var(--surface-inset);
+  color: var(--accent-strong);
   font-family: var(--font-mono);
-  font-size: 0.9rem;
-  font-weight: 700;
-  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.22);
+  font-size: var(--fs-small);
 }
 
-.choice-grid,
-.diagnostic-groups,
-.diagnostic-grid {
-  display: grid;
-  gap: 14px;
-}
+/* --- Группы выборов ----------------------------------------------------- */
 
 .choice-grid {
+  display: grid;
+  gap: var(--space-2);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.choice-grid--compact,
-.choice-grid--triple {
+.choice-grid--compact {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .choice-grid--timeline {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.choice-grid--triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .choice-button {
   position: relative;
-  width: 100%;
-  min-height: 132px;
-  padding: 0;
+  display: block;
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line);
-  border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
-  cursor: pointer;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-
-.choice-button::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background: transparent;
-}
-
-.choice-button::after {
-  content: "";
-  position: absolute;
-  inset: auto -40px -40px auto;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(100, 230, 255, 0.14),
-    transparent 72%
-  );
-  pointer-events: none;
+  border-left: 2px solid var(--line-strong);
+  border-radius: var(--radius-xs);
+  background: var(--surface-inset);
+  text-align: left;
 }
 
 .choice-button__body {
   display: grid;
-  gap: 10px;
-  height: 100%;
-  padding: 18px 20px;
-  text-align: left;
+  gap: var(--space-1);
 }
 
 .choice-button__body strong {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--fs-small);
+  font-weight: 500;
 }
 
 .choice-button__body small {
-  color: var(--ink-soft);
-  line-height: 1.64;
+  color: var(--ink-muted);
+  font-size: var(--fs-micro);
+  line-height: 1.5;
 }
 
 .choice-button:hover {
-  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  background: var(--surface-muted);
 }
 
-.choice-button.is-pressed,
-.choice-button[aria-pressed="true"] {
-  border-color: rgba(100, 230, 255, 0.28);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
-    rgba(100, 230, 255, 0.08);
+.choice-button.is-pressed {
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: var(--glow-accent);
 }
 
-.choice-button.is-pressed::before,
-.choice-button[aria-pressed="true"]::before {
-  background: linear-gradient(180deg, var(--accent-secondary), var(--accent));
-}
-
-.choice-button.is-pressed strong,
-.choice-button[aria-pressed="true"] strong {
+.choice-button.is-pressed .choice-button__body strong {
   color: var(--ink);
 }
 
 .choice-button--dense {
-  min-height: 158px;
+  padding: var(--space-2) var(--space-3);
+  text-align: center;
+}
+
+/* --- Диагностика -------------------------------------------------------- */
+
+.diagnostic-groups {
+  display: grid;
+  gap: var(--space-4);
 }
 
 .diagnostic-group {
   display: grid;
-  gap: 18px;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
 }
 
 .diagnostic-group[hidden] {
-  display: none !important;
+  display: none;
+}
+
+.diagnostic-group__head {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.diagnostic-group__head h3 {
+  font-family: var(--font-ui);
+  font-size: var(--fs-subheading);
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.diagnostic-grid {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .diagnostic-block {
   display: grid;
-  gap: 16px;
-  padding: 22px;
+  gap: var(--space-3);
+  padding: var(--space-4);
   border: 1px solid var(--line);
-  border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
 }
 
-.form-note a {
-  color: var(--accent-secondary);
-  font-weight: 700;
+.diagnostic-block__head {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.diagnostic-block__head h3 {
+  font-family: var(--font-ui);
+  font-size: var(--fs-subheading);
+  font-weight: 500;
+}
+
+.diagnostic-block__head p {
+  color: var(--ink-muted);
+  font-size: var(--fs-micro);
+}
+
+.onboarding-flow .form-actions {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line);
 }

@@ -1,69 +1,221 @@
+/* =============================================================================
+   ImmersJP — дизайн-токены и три темы оформления.
+
+   Темы:
+     * "edo"    — по умолчанию (тёмная): тушь-суми, индиго 藍, бумага, редкий 朱;
+     * "sakura" — светлая: кремовая бумага, приглушённая сакура, мох, тушь;
+     * "neon"   — тёмная альтернативная: та же суми-база, точечный приглушённый
+                  неон только на активных состояниях (без заливки и bloom).
+
+   Файл задаёт только переменные и базовые правила. Компоненты живут в
+   chrome.css / components.css / surfaces.css / dashboard.css.
+   ============================================================================= */
+
 :root {
+  /* --- Тема по умолчанию: «Эдо» ------------------------------------------- */
   color-scheme: dark;
-  --font-ui: "Noto Sans JP", "Sora", sans-serif;
-  --font-display: "Sora", "Noto Sans JP", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
-  --bg-canvas: #050816;
-  --bg-primary: #0b1325;
-  --bg-secondary: #121d37;
-  --surface: rgba(10, 15, 28, 0.74);
-  --surface-strong: rgba(15, 22, 40, 0.9);
-  --surface-muted: rgba(24, 35, 62, 0.88);
-  --surface-elevated: rgba(32, 45, 78, 0.96);
-  --surface-alt: rgba(255, 255, 255, 0.05);
-  --ink: #f4f7ff;
-  --ink-soft: #c5cde0;
-  --ink-muted: #7d89a6;
-  --line: rgba(145, 174, 239, 0.14);
-  --line-strong: rgba(168, 198, 255, 0.28);
-  --accent: #ff6b4a;
-  --accent-strong: #ff9d66;
-  --accent-soft: rgba(255, 107, 74, 0.18);
-  --accent-secondary: #64e6ff;
-  --accent-secondary-strong: #adf5ff;
-  --accent-secondary-soft: rgba(100, 230, 255, 0.16);
-  --gold: #f0c968;
-  --success: #79dfac;
-  --danger: #ff8e84;
-  --shadow-lg: 0 40px 120px rgba(2, 6, 18, 0.58);
-  --shadow-md: 0 26px 68px rgba(2, 6, 18, 0.42);
-  --shadow-sm: 0 12px 28px rgba(2, 6, 18, 0.28);
-  --radius-2xl: 32px;
-  --radius-xl: 26px;
-  --radius-lg: 20px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
-  --container: min(1420px, calc(100vw - 40px));
+
+  /* Поверхности: тушь-суми (墨) с тёплым подтоном, без градиентов и стекла */
+  --bg-canvas: #0f0d0c;
+  --bg-raised: #15120f;
+  --bg-sunken: #0a0908;
+  --surface: #191512;
+  --surface-strong: #1d1814;
+  --surface-muted: #221c17;
+  --surface-elevated: #26201a;
+  --surface-inset: #120f0d;
+
+  /* Неотбеленная бумага (生成り) как основной текст */
+  --ink: #e8e0d1;
+  --ink-soft: #bfb5a4;
+  --ink-muted: #8b8173;
+  --ink-inverse: #14110f;
+
+  /* Линии-границы вместо теней: тонкие, тёплые */
+  --line: rgba(232, 224, 209, 0.14);
+  --line-strong: rgba(232, 224, 209, 0.26);
+  --line-soft: rgba(232, 224, 209, 0.08);
+  --grid-line: rgba(232, 224, 209, 0.05);
+
+  /* Приглушённый красный тории (朱) — редкий акцент */
+  --accent: #a8483c;
+  --accent-strong: #c25a4b;
+  --accent-soft: rgba(168, 72, 60, 0.16);
+  --accent-ink: #f3e3dc;
+
+  /* Индиго (藍, aizome) — второй акцент (трек «Культура») */
+  --accent-secondary: #6c81a8;
+  --accent-secondary-strong: #8b9dc0;
+  --accent-secondary-soft: rgba(108, 129, 168, 0.16);
+
+  /* Дерево кияки — третий акцент (трек «История») */
+  --gold: #c2a06a;
+  --gold-soft: rgba(194, 160, 106, 0.16);
+
+  --success: #6e9a78;
+  --success-soft: rgba(110, 154, 120, 0.14);
+  --danger: #b3544c;
+  --danger-soft: rgba(179, 84, 76, 0.14);
+
+  /* Тени почти отсутствуют: глубина строится линиями */
+  --shadow-header: 0 1px 0 var(--line), 0 18px 40px rgba(0, 0, 0, 0.34);
+  --shadow-none: 0 0 0 rgba(0, 0, 0, 0);
+
+  /* Неоновая подсветка: в «Эдо» выключена, включается только в «Неоне» */
+  --glow-accent: none;
+  --glow-secondary: none;
+
+  /* Бумажная текстура и сетка сёдзи */
+  --grain-opacity: 0.05;
+  --grain-blend: overlay;
+  --grid-opacity: 0.55;
+  --grid-size: 104px;
+
+  /* Типографика: кегли подобраны сдержанно, без «манифестов» */
+  --font-display: "Cormorant Garamond", "Noto Serif JP", "Times New Roman", serif;
+  --font-ui: "Noto Sans JP", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", "Consolas", monospace;
+
+  --fs-display: clamp(1.85rem, 3.1vw, 2.85rem);
+  --fs-title: clamp(1.35rem, 2vw, 1.85rem);
+  --fs-heading: clamp(1.08rem, 1.35vw, 1.3rem);
+  --fs-subheading: 1rem;
+  --fs-body: 0.94rem;
+  --fs-small: 0.82rem;
+  --fs-micro: 0.68rem;
+
+  --lh-display: 1.14;
+  --lh-body: 1.72;
+  --tracking-display: -0.01em;
+  --tracking-mono: 0.18em;
+
+  /* Ритм отступов */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 22px;
+  --space-6: 30px;
+  --space-7: 42px;
+  --space-8: 60px;
+
+  /* Радиусы: почти прямые углы, лёгкое скругление как у деревянных панелей */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-pill: 999px;
+
+  --container: min(1240px, calc(100vw - 40px));
+  --duration: 160ms;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* --- Тема «Сакура» (светлая) --------------------------------------------- */
+/* Не инверсия «Эдо»: другой акцентный набор (сакура + мох), тот же характер. */
+html[data-theme="sakura"] {
+  color-scheme: light;
+
+  --bg-canvas: #f7f2e8;
+  --bg-raised: #fbf7ee;
+  --bg-sunken: #efe7d8;
+  --surface: #fdfaf3;
+  --surface-strong: #fffdf8;
+  --surface-muted: #f2ebdd;
+  --surface-elevated: #ebe2d2;
+  --surface-inset: #f5efe3;
+
+  --ink: #2b2723;
+  --ink-soft: #514a40;
+  --ink-muted: #8b8172;
+  --ink-inverse: #fdfaf3;
+
+  --line: rgba(43, 39, 35, 0.14);
+  --line-strong: rgba(43, 39, 35, 0.28);
+  --line-soft: rgba(43, 39, 35, 0.07);
+  --grid-line: rgba(43, 39, 35, 0.045);
+
+  --accent: #a85a62;
+  --accent-strong: #bd6c74;
+  --accent-soft: rgba(168, 90, 98, 0.12);
+  --accent-ink: #fdf6f4;
+
+  --accent-secondary: #5c7a5f;
+  --accent-secondary-strong: #6f8f72;
+  --accent-secondary-soft: rgba(92, 122, 95, 0.12);
+
+  --gold: #a5822f;
+  --gold-soft: rgba(165, 130, 47, 0.14);
+
+  --success: #4f7d5a;
+  --success-soft: rgba(79, 125, 90, 0.12);
+  --danger: #a5453e;
+  --danger-soft: rgba(165, 69, 62, 0.1);
+
+  --shadow-header: 0 1px 0 var(--line), 0 14px 30px rgba(72, 58, 40, 0.08);
+  --glow-accent: none;
+  --glow-secondary: none;
+
+  --grain-opacity: 0.07;
+  --grain-blend: multiply;
+  --grid-opacity: 0.5;
 }
 
-html[data-theme="paper"] {
-  color-scheme: light;
-  --bg-canvas: #f3f6fb;
-  --bg-primary: #eef3fb;
-  --bg-secondary: #dde7f6;
-  --surface: rgba(255, 255, 255, 0.72);
-  --surface-strong: rgba(255, 255, 255, 0.92);
-  --surface-muted: rgba(233, 240, 251, 0.92);
-  --surface-elevated: rgba(224, 233, 248, 0.98);
-  --surface-alt: rgba(18, 31, 60, 0.05);
-  --ink: #101828;
-  --ink-soft: #334155;
-  --ink-muted: #66758e;
-  --line: rgba(58, 82, 128, 0.12);
-  --line-strong: rgba(58, 82, 128, 0.2);
-  --accent: #d94d2e;
-  --accent-strong: #f27548;
-  --accent-soft: rgba(217, 77, 46, 0.14);
-  --accent-secondary: #0ea5c6;
-  --accent-secondary-strong: #0f7e9a;
-  --accent-secondary-soft: rgba(14, 165, 198, 0.12);
-  --gold: #c79325;
-  --success: #0f9966;
-  --danger: #c84b43;
-  --shadow-lg: 0 32px 80px rgba(56, 77, 120, 0.14);
-  --shadow-md: 0 18px 42px rgba(56, 77, 120, 0.1);
-  --shadow-sm: 0 8px 24px rgba(56, 77, 120, 0.08);
+/* --- Тема «Неон Эдо» (тёмная альтернативная) ----------------------------- */
+/* Приглушённый киберпанк: неон низкой насыщенности как подсветка состояний. */
+html[data-theme="neon"] {
+  color-scheme: dark;
+
+  --bg-canvas: #0d0e14;
+  --bg-raised: #12131c;
+  --bg-sunken: #0a0b10;
+  --surface: #151724;
+  --surface-strong: #191b2a;
+  --surface-muted: #1d2032;
+  --surface-elevated: #22263a;
+  --surface-inset: #101120;
+
+  --ink: #e6e5f0;
+  --ink-soft: #bcbbc9;
+  --ink-muted: #83839a;
+  --ink-inverse: #0d0e14;
+
+  --line: rgba(214, 214, 236, 0.13);
+  --line-strong: rgba(214, 214, 236, 0.24);
+  --line-soft: rgba(214, 214, 236, 0.07);
+  --grid-line: rgba(214, 214, 236, 0.05);
+
+  --accent: #b1477e;
+  --accent-strong: #c75f93;
+  --accent-soft: rgba(177, 71, 126, 0.18);
+  --accent-ink: #f6e6ef;
+
+  --accent-secondary: #4f9aa3;
+  --accent-secondary-strong: #6fb9c1;
+  --accent-secondary-soft: rgba(79, 154, 163, 0.16);
+
+  --gold: #c2a06a;
+  --gold-soft: rgba(194, 160, 106, 0.14);
+
+  --success: #5f9b86;
+  --success-soft: rgba(95, 155, 134, 0.14);
+  --danger: #bd5a5a;
+  --danger-soft: rgba(189, 90, 90, 0.14);
+
+  --shadow-header: 0 1px 0 var(--line), 0 18px 40px rgba(0, 0, 0, 0.42);
+
+  /* Единственное место, где тема позволяет себе «свет»: активные состояния */
+  --glow-accent: 0 0 0 1px rgba(177, 71, 126, 0.34), 0 6px 20px rgba(177, 71, 126, 0.16);
+  --glow-secondary: 0 0 0 1px rgba(79, 154, 163, 0.32), 0 6px 20px rgba(79, 154, 163, 0.14);
+
+  --grain-opacity: 0.04;
+  --grain-blend: overlay;
+  --grid-opacity: 0.75;
 }
+
+/* =============================================================================
+   База: сброс, типографика, фоновая среда
+   ============================================================================= */
 
 *,
 *::before,
@@ -72,8 +224,9 @@ html[data-theme="paper"] {
 }
 
 html {
-  scroll-behavior: smooth;
   background: var(--bg-canvas);
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -82,73 +235,52 @@ body {
   overflow-x: clip;
   color: var(--ink);
   font-family: var(--font-ui);
-  background:
-    radial-gradient(
-      circle at 12% 10%,
-      rgba(255, 107, 74, 0.2),
-      transparent 28%
-    ),
-    radial-gradient(
-      circle at 88% 12%,
-      rgba(100, 230, 255, 0.16),
-      transparent 26%
-    ),
-    radial-gradient(
-      circle at 50% 100%,
-      rgba(240, 201, 104, 0.09),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      var(--bg-canvas),
-      var(--bg-primary) 42%,
-      var(--bg-secondary)
-    );
-  background-attachment: fixed;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  background: var(--bg-canvas);
+  transition: background-color var(--duration) var(--ease), color var(--duration) var(--ease);
 }
 
+/* Бумажная текстура (лёгкий шум) — вместо градиентов и «орбов» */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
+  z-index: 0;
   pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 22%),
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-blend);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* Сетка сёдзи: редкая решётка тонкими линиями */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--grid-opacity);
+  background-image:
     repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.028) 0,
-      rgba(255, 255, 255, 0.028) 1px,
-      transparent 1px,
-      transparent 120px
+      to right,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-size)
     ),
     repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.024) 0,
-      rgba(255, 255, 255, 0.024) 1px,
-      transparent 1px,
-      transparent 96px
+      to bottom,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-size)
     );
-  opacity: 0.42;
 }
 
 ::selection {
-  color: #03111b;
-  background: var(--accent-secondary);
+  color: var(--ink-inverse);
+  background: var(--accent);
 }
 
-button,
-input,
-textarea,
-a {
-  font: inherit;
-}
-
-button {
-  border: 0;
-  background: transparent;
-}
-
-img {
+img,
+svg {
   display: block;
   max-width: 100%;
 }
@@ -158,6 +290,20 @@ a {
   text-decoration: none;
 }
 
+button {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
 textarea {
   resize: vertical;
 }
@@ -165,134 +311,75 @@ textarea {
 button,
 input,
 textarea,
-a {
+a,
+select {
   transition:
-    transform 180ms ease,
-    background-color 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease,
-    box-shadow 180ms ease,
-    opacity 180ms ease;
+    background-color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease),
+    color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease),
+    opacity var(--duration) var(--ease);
 }
 
 h1,
 h2,
-h3 {
+h3,
+h4 {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.06em;
-  line-height: 0.96;
+  font-weight: 600;
+  letter-spacing: var(--tracking-display);
+  line-height: var(--lh-display);
   text-wrap: balance;
 }
 
-p,
-li,
-span,
-small,
-label,
-input,
-textarea,
-button,
-a,
-strong {
-  font-family: var(--font-ui);
+h1 {
+  font-size: var(--fs-display);
+}
+
+h2 {
+  font-size: var(--fs-title);
+}
+
+h3 {
+  font-size: var(--fs-heading);
+}
+
+h4 {
+  font-size: var(--fs-subheading);
 }
 
 p,
 li {
-  line-height: 1.72;
+  margin: 0;
+  line-height: var(--lh-body);
   text-wrap: pretty;
 }
 
-.site-backdrop {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  overflow: clip;
+ul,
+ol {
+  margin: 0;
 }
 
-.site-backdrop__orb,
-.site-backdrop__grid {
-  position: absolute;
+/* Японские декоративные глифы (кандзи) — только как деталь */
+.glyph {
+  font-family: "Noto Serif JP", var(--font-display);
+  font-weight: 500;
+  line-height: 1;
 }
 
-.site-backdrop__orb {
-  border-radius: 50%;
-  filter: blur(40px);
-  opacity: 0.84;
-  animation: drift 22s ease-in-out infinite alternate;
-}
-
-.site-backdrop__orb--alpha {
-  top: -160px;
-  right: -120px;
-  width: 420px;
-  height: 420px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 107, 74, 0.28),
-    transparent 68%
-  );
-}
-
-.site-backdrop__orb--beta {
-  left: -160px;
-  top: 18%;
-  width: 340px;
-  height: 340px;
-  background: radial-gradient(
-    circle,
-    rgba(100, 230, 255, 0.24),
-    transparent 68%
-  );
-  animation-duration: 28s;
-}
-
-.site-backdrop__orb--gamma {
-  right: 18%;
-  bottom: -220px;
-  width: 460px;
-  height: 460px;
-  background: radial-gradient(
-    circle,
-    rgba(240, 201, 104, 0.18),
-    transparent 72%
-  );
-  animation-duration: 32s;
-}
-
-.site-backdrop__grid {
-  inset: 0;
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 22%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 28%);
-  mix-blend-mode: screen;
-}
-
-.section-stack {
-  display: grid;
-  gap: 20px;
-}
-
+/* Появление блоков — сдержанное, без «выездов» целыми секциями */
 .reveal {
-  opacity: 0;
-  transform: translateY(18px);
-  animation: reveal 520ms cubic-bezier(0.2, 0.72, 0.12, 1) forwards;
+  animation: rise 260ms var(--ease) both;
 }
 
-@keyframes reveal {
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
   to {
     opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes drift {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(-2%, 2%, 0) scale(1.08);
+    transform: none;
   }
 }

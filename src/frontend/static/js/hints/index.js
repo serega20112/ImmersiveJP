@@ -1,3 +1,8 @@
+/**
+ * Подсказки к заданиям: кнопка раскрывает свой блок подсказки и один раз
+ * увеличивает счётчик использованных подсказок.
+ */
+
 export const initHintToggles = () => {
   const hintButtons = document.querySelectorAll("[data-hint-toggle]");
 

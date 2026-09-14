@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 
 from src.application.dto.auth import UserViewDTO
@@ -22,7 +22,7 @@ async def knowledge_generate(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
     knowledge_service: KnowledgeServiceDependency,
-    form: Annotated[KnowledgeGenerateForm, Depends()],
+    form: Annotated[KnowledgeGenerateForm, Form()],
 ) -> HTMLResponse:
     """Обработать генерацию вопросов для проверки знаний.
 

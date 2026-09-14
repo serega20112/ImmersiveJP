@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Онбординг - ImmersJP{% endblock %} {%
+{% extends "base.html" %} {% block title %}Онбординг — ImmersJP{% endblock %} {%
 block body_class %}page--onboarding{% endblock %} {% block content %}
 <section class="onboarding-hero reveal">
   <div class="panel panel--hero onboarding-hero__main">
@@ -20,7 +20,7 @@ block body_class %}page--onboarding{% endblock %} {% block content %}
   <aside class="panel panel--signal onboarding-hero__aside">
     <p class="section-kicker">Что учитывает система</p>
     <ul class="plain-list">
-      <li>уровень вопросов зависит от твоей самооценки</li>
+      <li>уровень вопросов зависит от вашей самооценки</li>
       <li>срок обучения влияет на темп и глубину объяснений</li>
       <li>интересы определяют контекст первых партий</li>
       <li>результат уходит в trust score и влияет на следующие циклы</li>
@@ -41,7 +41,7 @@ block body_class %}page--onboarding{% endblock %} {% block content %}
       <span class="step-badge">01</span>
       <div class="section-head">
         <p class="section-kicker">Цель</p>
-        <h2>Зачем тебе японский</h2>
+        <h2>Зачем вам японский</h2>
         <p>От этого зависят сцены, словарь и контекст первых батчей.</p>
       </div>
     </div>
@@ -159,7 +159,7 @@ block body_class %}page--onboarding{% endblock %} {% block content %}
       <span class="step-badge">03</span>
       <div class="section-head">
         <p class="section-kicker">Срок</p>
-        <h2>Какой у тебя горизонт по времени</h2>
+        <h2>Какой у вас горизонт по времени</h2>
         <p>
           Это влияет на темп: сколько теории давать за раз, как быстро убирать
           опоры и насколько агрессивно двигать дальше.
@@ -194,7 +194,7 @@ block body_class %}page--onboarding{% endblock %} {% block content %}
       <span class="step-badge">04</span>
       <div class="section-head">
         <p class="section-kicker">Интересы</p>
-        <h2>Что тебе действительно интересно</h2>
+        <h2>Что вам действительно интересно</h2>
         <p>
           Можно писать свободно: темы, медиа, профессии, хобби, исторические
           периоды.
@@ -206,7 +206,7 @@ block body_class %}page--onboarding{% endblock %} {% block content %}
       <textarea
         name="interests_text"
         rows="5"
-        placeholder="anime, архитектура, программирование, история, бизнес, литература"
+        placeholder="архитектура, программирование, история, бизнес, литература"
         maxlength="{{ text_input_limit }}"
         required
       ></textarea>
@@ -232,13 +232,7 @@ block body_class %}page--onboarding{% endblock %} {% block content %}
       <article
         class="diagnostic-group {% if group.level == 'zero' %}is-active{% endif %}"
         data-diagnostic-panel="{{ group.level }}"
-        {%
-        if
-        group.level
-        !="zero"
-        %}hidden{%
-        endif
-        %}
+        {% if group.level != "zero" %}hidden{% endif %}
       >
         <div class="diagnostic-group__head">
           <p class="section-kicker">{{ group.title }}</p>

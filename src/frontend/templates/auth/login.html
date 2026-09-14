@@ -1,9 +1,9 @@
-{% extends "base.html" %} {% block title %}Вход - ImmersJP{% endblock %} {%
-block body_class %}page--auth{% endblock %} {% block content %}
+{% extends "base.html" %} {% block title %}Вход — ImmersJP{% endblock %} {% block
+body_class %}page--auth{% endblock %} {% block content %}
 <section class="auth-stage reveal">
   <aside class="panel panel--hero auth-story">
     <p class="section-kicker">Вход</p>
-    <h1>Вернись в свой учебный контур.</h1>
+    <h1>Вернитесь в свой учебный контур.</h1>
     <p class="page-lead">
       После входа откроются текущие батчи, профиль с trust score, план по сроку
       и уже собранные материалы.
@@ -15,7 +15,7 @@ block body_class %}page--auth{% endblock %} {% block content %}
     </div>
     <ul class="plain-list">
       <li>текущие партии восстанавливаются без ручного поиска</li>
-      <li>профиль сразу показывает, насколько система тебе доверяет</li>
+      <li>профиль сразу показывает, насколько система вам доверяет</li>
       <li>наставник видит контекст уже пройденных батчей</li>
     </ul>
   </aside>
@@ -25,17 +25,22 @@ block body_class %}page--auth{% endblock %} {% block content %}
     <div class="auth-card__head">
       <p class="section-kicker">Аккаунт</p>
       <h2>Вход по email</h2>
-      <p>Открой текущий маршрут и продолжи с того места, где остановился.</p>
+      <p>Откройте текущий маршрут и продолжите с того места, где остановились.</p>
     </div>
 
     <label class="field-stack">
       <span>Email</span>
-      <input type="email" name="email" required />
+      <input type="email" name="email" autocomplete="email" required />
     </label>
 
     <label class="field-stack">
       <span>Пароль</span>
-      <input type="password" name="password" required />
+      <input
+        type="password"
+        name="password"
+        autocomplete="current-password"
+        required
+      />
     </label>
 
     <button type="submit" class="primary-button">Войти в систему</button>

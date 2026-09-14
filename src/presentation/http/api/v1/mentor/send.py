@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 
 from src.application.dto.auth import UserViewDTO
@@ -21,7 +21,7 @@ async def tutor_send(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
     profile_service: ProfileServiceDependency,
-    form: Annotated[MentorMessageForm, Depends()],
+    form: Annotated[MentorMessageForm, Form()],
 ) -> HTMLResponse:
     """Обработать отправку сообщения ментору.
 

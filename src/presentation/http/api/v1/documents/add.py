@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 
 from src.application.dto.auth import UserViewDTO
@@ -21,7 +21,7 @@ async def document_add(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_onboarded_user)],
     document_service: DocumentServiceDependency,
-    form: Annotated[DocumentAddForm, Depends()],
+    form: Annotated[DocumentAddForm, Form()],
 ) -> RedirectResponse:
     """Обработать добавление нового документа.
 

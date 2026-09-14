@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from src.application.dto.auth import UserViewDTO
@@ -55,7 +55,7 @@ async def complete_card(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_authenticated_user)],
     learning_service: LearningServiceDependency,
-    form: Annotated[CompleteCardForm, Depends()],
+    form: Annotated[CompleteCardForm, Form()],
 ) -> RedirectResponse:
     """Обработать отметку карточки как пройденной.
 

@@ -1,3 +1,8 @@
+/**
+ * Долгие формы: при отправке блокирует кнопку, подменяет её текст и
+ * показывает пояснение, что идёт обработка.
+ */
+
 export const initPendingForms = () => {
   const pendingForms = document.querySelectorAll("[data-pending-form]");
 

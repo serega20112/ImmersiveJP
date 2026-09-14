@@ -1,3 +1,8 @@
+/**
+ * Чипы слов для речевой практики: добавляют слово в поле со списком,
+ * не допуская дублей.
+ */
+
 export const initWordChips = () => {
   const wordChips = document.querySelectorAll("[data-word-chip]");
 

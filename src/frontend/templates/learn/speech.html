@@ -1,6 +1,5 @@
-﻿{% extends "base.html" %} {% block title %}Речевая практика - ImmersJP{%
-endblock %} {% block body_class %}page--learn page--speech{% endblock %} {%
-block content %}
+{% extends "base.html" %} {% block title %}Речевая практика — ImmersJP{% endblock
+%} {% block body_class %}page--learn page--speech{% endblock %} {% block content %}
 <section class="page-hero reveal">
   <div class="page-hero__copy panel panel--hero">
     <p class="section-kicker">{{ page.title }}</p>
@@ -35,7 +34,7 @@ block content %}
 </section>
 
 <section class="speech-workbench reveal">
-  <article class="panel speech-form-card panel--hero">
+  <article class="panel panel--hero speech-form-card">
     <div class="section-head">
       <p class="section-kicker">Список слов</p>
       <h2>Можно вставить свои слова или взять их из последней партии.</h2>
@@ -108,10 +107,10 @@ block content %}
     <section class="panel panel--tone">
       <p class="section-kicker">Как использовать</p>
       <ul class="plain-list">
-        <li>сначала прочитай все предложения в спокойном темпе</li>
-        <li>потом проговори диалоги двумя ролями</li>
+        <li>сначала прочитайте все предложения в спокойном темпе</li>
+        <li>потом проговорите диалоги двумя ролями</li>
         <li>
-          после этого вернись в карточки и проверь, насколько материал стал
+          после этого вернитесь в карточки и проверьте, насколько материал стал
           понятнее на слух
         </li>
       </ul>
@@ -148,7 +147,7 @@ block content %}
 <section class="speech-section reveal">
   <div class="section-head">
     <p class="section-kicker">10 предложений</p>
-    <h2>Прочитай их и проговори несколько раз.</h2>
+    <h2>Прочитайте их и проговорите несколько раз.</h2>
   </div>
   <div class="speech-line-grid">
     {% for sentence in page.practice.sentences %}
@@ -167,7 +166,7 @@ block content %}
 <section class="speech-section reveal">
   <div class="section-head">
     <p class="section-kicker">5 диалогов</p>
-    <h2>Пройди их по ролям, чтобы закрепить фразы в связке.</h2>
+    <h2>Пройдите их по ролям, чтобы закрепить фразы в связке.</h2>
   </div>
   <div class="dialogue-grid">
     {% for dialogue in page.practice.dialogues %}

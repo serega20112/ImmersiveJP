@@ -1,3 +1,4 @@
+/* Ядро: токены тем → каркас → компоненты → компоновка → дашборд. */
 @import url("./theme.css");
 @import url("./chrome.css");
 @import url("./components.css");

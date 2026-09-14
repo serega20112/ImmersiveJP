@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 
 from src.application.dto.auth import UserViewDTO
@@ -22,7 +22,7 @@ async def complete_onboarding(
     request: Request,
     current_user: Annotated[UserViewDTO, Depends(require_registered_user)],
     onboarding_service: OnboardingServiceDependency,
-    form: Annotated[OnboardingForm, Depends()],
+    form: Annotated[OnboardingForm, Form()],
 ) -> RedirectResponse:
     """Обработать отправку формы онбординга.
 

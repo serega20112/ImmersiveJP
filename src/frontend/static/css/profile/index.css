@@ -1,162 +1,175 @@
-body.page--mentor {
-  background:
-    radial-gradient(
-      circle at 12% 10%,
-      rgba(255, 107, 74, 0.18),
-      transparent 24%
-    ),
-    radial-gradient(
-      circle at 88% 12%,
-      rgba(100, 230, 255, 0.16),
-      transparent 24%
-    ),
-    linear-gradient(180deg, #040611, #080d1b 40%, #0c1325);
+/* =============================================================================
+   Профиль и наставник: сводка доверия, рекомендации, диагностический срез,
+   чат с наставником. Чат — читаемый: узкие меры строки, тонкие линейки слева.
+   ============================================================================= */
+
+/* --- Профиль ------------------------------------------------------------ */
+
+.profile-hero__main,
+.advice-card,
+.skill-summary-card {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
 }
 
-.page--mentor .site-header__inner {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    rgba(7, 11, 22, 0.84);
+.profile-insights {
+  align-items: start;
 }
 
-.page--mentor .site-nav,
-.page--mentor .theme-switch,
-.page--mentor .viewer-badge,
-.page--mentor .ghost-button {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
-    rgba(255, 255, 255, 0.03);
-}
-
-.page--mentor .theme-switch,
-.page--mentor .viewer-badge,
-.page--mentor .ghost-button,
-.page--mentor .status-chip,
-.page--mentor .tag,
-.page--mentor .hero-fact {
-  color: var(--ink);
-}
+/* --- Наставник ---------------------------------------------------------- */
 
 .mentor-stage {
   display: grid;
-  gap: 24px;
-  width: min(1100px, 100%);
+  gap: var(--space-4);
+  width: min(100%, 1040px);
   margin: 0 auto;
 }
 
-.mentor-stage__hero,
-.mentor-stage__copy,
-.mentor-chat-shell,
-.mentor-chat-stream,
-.mentor-chat-dock,
-.mentor-composer,
-.mentor-entry,
-.mentor-entry__body,
-.mentor-empty {
+.mentor-stage__hero {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
+}
+
+.mentor-stage__copy {
+  display: grid;
+  gap: var(--space-2);
 }
 
 .mentor-stage__copy h1 {
-  max-width: 12ch;
-  color: var(--ink);
-  font-size: clamp(2.6rem, 4.4vw, 4.5rem);
+  font-size: var(--fs-title);
 }
 
-.mentor-stage__copy p:last-child,
-.mentor-entry__body p,
-.mentor-entry__body li,
-.mentor-empty p {
-  margin: 0;
+.mentor-stage__copy p {
   color: var(--ink-soft);
+  font-size: var(--fs-small);
 }
 
-.mentor-stage__meta,
-.mentor-prompt-row {
+.mentor-stage__meta {
   display: flex;
-  gap: 10px;
+  gap: var(--space-2);
   flex-wrap: wrap;
-  align-items: center;
+}
+
+.mentor-chat-shell {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .mentor-chat-stream {
-  min-height: 56vh;
+  min-height: 320px;
+  max-height: 58vh;
+  overflow-y: auto;
 }
 
 .mentor-messages {
   display: grid;
-  gap: 26px;
+  gap: var(--space-4);
 }
 
-.mentor-entry--assistant {
-  justify-items: start;
-}
-
-.mentor-entry--user {
-  justify-items: end;
+.mentor-entry {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 74ch;
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--accent-secondary);
 }
 
 .mentor-entry__meta {
   display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.mentor-entry--user .mentor-entry__meta {
-  justify-content: flex-end;
+  align-items: baseline;
+  gap: var(--space-3);
 }
 
 .mentor-entry__meta strong {
-  color: var(--ink);
-  font-size: 0.92rem;
+  font-size: var(--fs-small);
+  font-weight: 500;
 }
 
 .mentor-entry__meta span {
   color: var(--ink-muted);
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.08em;
 }
 
-.mentor-entry__body {
-  width: min(100%, 820px);
-}
-
-.mentor-entry--assistant .mentor-entry__body {
-  padding: 0 0 20px;
-  border-bottom: 1px solid var(--line);
-}
-
-.mentor-entry--user .mentor-entry__body {
-  width: min(100%, 640px);
-  padding: 16px 18px;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
+.mentor-entry__body p {
+  color: var(--ink-soft);
+  white-space: pre-line;
 }
 
 .mentor-steps {
   display: grid;
-  gap: 8px;
-  margin: 0;
-  padding-left: 20px;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-left: 0;
+  list-style: none;
+  counter-reset: mentor-step;
 }
 
-.mentor-prompt-chip {
-  border-color: rgba(100, 230, 255, 0.22);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
-    rgba(100, 230, 255, 0.08);
-  color: var(--accent-secondary-strong);
+.mentor-steps li {
+  position: relative;
+  padding-left: 28px;
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
+}
+
+.mentor-steps li::before {
+  counter-increment: mentor-step;
+  content: counter(mentor-step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+}
+
+.mentor-entry--user {
+  justify-self: end;
+  border-left-color: var(--accent);
+}
+
+.mentor-entry--user .mentor-entry__meta {
+  flex-direction: row-reverse;
+}
+
+.mentor-entry--user .mentor-entry__body p {
+  color: var(--ink);
+}
+
+.mentor-empty {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.mentor-empty h2 {
+  font-size: var(--fs-title);
+}
+
+.mentor-empty p {
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
 }
 
 .mentor-chat-dock {
-  position: sticky;
-  bottom: 12px;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.mentor-prompt-row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.mentor-prompt-chip {
+  font-family: var(--font-ui);
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .mentor-composer {
-  border-color: rgba(100, 230, 255, 0.14);
+  gap: var(--space-3);
 }
 
 .mentor-composer__field {
@@ -165,22 +178,12 @@ body.page--mentor {
 
 .mentor-composer textarea {
   min-height: 96px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--ink);
-  box-shadow: none;
-}
-
-.mentor-composer textarea::placeholder {
-  color: var(--ink-muted);
 }
 
 .mentor-composer__actions {
-  display: grid;
-  grid-auto-flow: column;
-  justify-content: space-between;
-  gap: 12px;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }

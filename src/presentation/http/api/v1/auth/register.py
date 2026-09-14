@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from src.application.dto.auth import RegistrationDTO
@@ -32,7 +32,7 @@ async def register_page(request: Request) -> HTMLResponse:
 async def register_user(
     request: Request,
     auth_service: AuthServiceDependency,
-    form: Annotated[RegistrationForm, Depends()],
+    form: Annotated[RegistrationForm, Form()],
 ) -> RedirectResponse:
     """Обработать отправку формы регистрации.
 

@@ -1,3 +1,7 @@
+/**
+ * Чипы-подсказки для наставника: заполняют поле ввода заготовленным текстом.
+ */
+
 export const initPromptChips = () => {
   const promptChips = document.querySelectorAll("[data-prompt-chip]");
 

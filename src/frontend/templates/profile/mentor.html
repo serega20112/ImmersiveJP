@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Наставник - ImmersJP{% endblock %} {%
+{% extends "base.html" %} {% block title %}Наставник — ImmersJP{% endblock %} {%
 block body_class %}page--mentor{% endblock %} {% block content %}
 <section class="mentor-stage reveal">
   <div class="panel panel--night mentor-stage__hero">
@@ -28,7 +28,7 @@ block body_class %}page--mentor{% endblock %} {% block content %}
         <article class="mentor-entry mentor-entry--{{ message.role }}">
           <div class="mentor-entry__meta">
             <strong
-              >{% if message.role == 'assistant' %}Наставник{% else %}Ты{% endif
+              >{% if message.role == 'assistant' %}Наставник{% else %}Вы{% endif
               %}</strong
             >
             <span>{{ message.created_at_label }}</span>
@@ -49,7 +49,7 @@ block body_class %}page--mentor{% endblock %} {% block content %}
       {% else %}
       <div class="mentor-empty">
         <p class="section-kicker">Старт</p>
-        <h2>Начни с конкретного запроса.</h2>
+        <h2>Начните с конкретного запроса.</h2>
         <p>
           Например: «я в кандзи вообще не понимаю, как лучше сместить план?» или
           «речь отстает, но базу ломать не хочу».
@@ -87,7 +87,7 @@ block body_class %}page--mentor{% endblock %} {% block content %}
             name="message"
             rows="4"
             maxlength="{{ text_input_limit }}"
-            placeholder="Напиши, что сейчас не идет: кандзи, грамматика, речь, чтение или перегруз."
+            placeholder="Напишите, что сейчас не идет: кандзи, грамматика, речь, чтение или перегруз."
           >
 {{ page.draft_message }}</textarea
           >

@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% block title %}План - ImmersJP{% endblock %} {%
-block body_class %}page--plan{% endblock %} {% block content %}
+{% extends "base.html" %} {% block title %}План — ImmersJP{% endblock %} {% block
+body_class %}page--plan{% endblock %} {% block content %}
 <section class="plan-hero reveal">
   <div class="panel panel--hero plan-hero__main">
     <p class="section-kicker">{{ page.title }}</p>
@@ -66,8 +66,8 @@ block body_class %}page--plan{% endblock %} {% block content %}
     <p class="aside-callout">{{ page.horizon_note }}</p>
     {% else %}
     <p>
-      План показывает всю дорожку, потому что ты не зафиксировал жесткий дедлайн
-      и система может вести тебя дальше по общей карте.
+      План показывает всю дорожку, потому что жесткий дедлайн не зафиксирован и
+      система может вести вас дальше по общей карте.
     </p>
     {% endif %}
   </article>
@@ -83,7 +83,7 @@ block body_class %}page--plan{% endblock %} {% block content %}
   </article>
 
   <article class="panel plan-focus-card">
-    <p class="section-kicker">Темп под твой срок</p>
+    <p class="section-kicker">Темп под ваш срок</p>
     <h2>{{ page.pace_mode.title }}</h2>
     <p>{{ page.pace_mode.summary }}</p>
     <p class="aside-callout">{{ page.pace_mode.detail_note }}</p>

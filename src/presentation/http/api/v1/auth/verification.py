@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from src.application.dto.auth import VerificationDTO
@@ -36,7 +36,7 @@ async def verify_email_page(request: Request) -> HTMLResponse:
 async def verify_email(
     request: Request,
     auth_service: AuthServiceDependency,
-    form: Annotated[VerificationForm, Depends()],
+    form: Annotated[VerificationForm, Form()],
 ) -> RedirectResponse:
     """Обработать отправку кода подтверждения.
 

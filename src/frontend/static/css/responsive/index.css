@@ -1,3 +1,8 @@
+/* =============================================================================
+   Адаптивность: планшет, узкий планшет, мобильный. Плотность и участие
+   декоративных линий сохраняются — меняется только число колонок.
+   ============================================================================= */
+
 @media (max-width: 1180px) {
   .landing-hero,
   .track-hero,
@@ -30,55 +35,68 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .speech-inline-card {
+  .trust-components--stacked {
     grid-template-columns: 1fr;
   }
 
   .mentor-stage {
-    width: min(100%, 920px);
+    width: min(100%, 900px);
+  }
+
+  .plan-roadmap {
+    padding-left: var(--space-4);
   }
 }
 
-@media (max-width: 860px) {
-  .site-header {
-    padding-left: 12px;
-    padding-right: 12px;
+@media (max-width: 980px) {
+  .site-header__inner {
+    grid-template-columns: 1fr;
   }
 
-  .site-main {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .site-header__inner,
-  .site-main__inner {
-    width: 100%;
-  }
-
-  .site-header__inner,
-  .site-header__cluster,
-  .site-tools {
+  .site-header__cluster {
     flex-direction: column;
     align-items: stretch;
   }
 
   .site-nav {
-    width: 100%;
     flex-wrap: nowrap;
     overflow-x: auto;
+    scrollbar-width: thin;
   }
 
   .nav-link {
-    min-width: 138px;
+    min-width: 128px;
+    flex: none;
   }
 
-  .viewer-badge,
-  .theme-switch,
-  .logout-form {
-    width: 100%;
+  .site-tools {
+    justify-content: space-between;
   }
 
-  .logout-form .ghost-button {
+  .speech-inline-card,
+  .landing-kanji-card {
+    grid-template-columns: 1fr;
+  }
+
+  .kanji-column {
+    grid-auto-flow: column;
+    justify-content: start;
+    padding-right: 0;
+    padding-bottom: var(--space-3);
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 860px) {
+  .site-header,
+  .site-main {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+
+  .site-header__inner,
+  .site-main__inner {
     width: 100%;
   }
 
@@ -93,6 +111,7 @@
   .feature-marquee,
   .story-grid,
   .track-gallery,
+  .preview-grid,
   .track-card__stats,
   .trust-components,
   .skill-columns,
@@ -100,8 +119,16 @@
   .dialogue-grid,
   .work-grid,
   .plan-overview,
-  .plan-stage__modules {
+  .plan-stage__modules,
+  .example-grid,
+  .plan-dictionary-grid,
+  .metric-grid--hero {
     grid-template-columns: 1fr;
+  }
+
+  .choice-grid--compact,
+  .choice-grid--triple {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hero__actions,
@@ -114,15 +141,31 @@
   .mentor-stage__meta,
   .preview-card__footer,
   .work-result__head,
-  .track-card__footer {
+  .track-card__footer,
+  .mentor-composer__actions {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .primary-button,
   .ghost-button,
   .word-chip,
-  .hint-button {
+  .hint-button,
+  .viewer-badge,
+  .theme-switch,
+  .logout-form,
+  .logout-form .ghost-button {
     width: 100%;
+  }
+
+  .theme-switch {
+    justify-content: space-between;
+  }
+
+  .hero-fact {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: var(--space-1) 0 0;
   }
 
   .roadmap-stage__head,
@@ -134,47 +177,65 @@
     grid-template-columns: 1fr;
   }
 
-  .mentor-chat-dock {
-    position: static;
+  .dialogue-turn {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
   }
 
-  .mentor-composer__actions {
-    grid-auto-flow: row;
-    justify-content: stretch;
+  .mentor-entry,
+  .mentor-entry--user {
+    max-width: 100%;
+    justify-self: stretch;
   }
 
-  .mentor-entry__body,
-  .mentor-entry--user .mentor-entry__body {
-    width: 100%;
+  .trust-score__hero {
+    grid-template-columns: 1fr;
+    justify-items: start;
   }
 }
 
 @media (max-width: 640px) {
   .panel {
-    padding: 20px;
-    border-radius: 24px;
+    padding: var(--space-4);
+  }
+
+  .site-main {
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-7);
   }
 
   .site-header__inner {
-    border-radius: 24px;
-  }
-
-  .brand-mark__seal {
-    width: 52px;
-    height: 52px;
+    padding: var(--space-2) var(--space-3);
   }
 
   .brand-mark__copy strong {
-    font-size: 1.36rem;
+    font-size: 1.1rem;
+  }
+
+  .brand-mark__copy small {
+    display: none;
+  }
+
+  .choice-grid--compact,
+  .choice-grid--triple {
+    grid-template-columns: 1fr;
   }
 
   .trust-score__ring {
-    width: 152px;
-    height: 152px;
+    width: 116px;
+    height: 116px;
   }
 
-  .kanji-column {
-    font-size: 4rem;
+  .trust-score__ring strong {
+    font-size: 1.7rem;
+  }
+
+  .metric-grid--hero {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-roadmap {
+    padding-left: var(--space-3);
   }
 }
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from src.application.dto.auth import LoginDTO
@@ -37,7 +37,7 @@ async def login_page(request: Request) -> HTMLResponse:
 async def login_user(
     request: Request,
     auth_service: AuthServiceDependency,
-    form: Annotated[LoginForm, Depends()],
+    form: Annotated[LoginForm, Form()],
 ) -> RedirectResponse:
     """Обработать отправку формы входа.
 

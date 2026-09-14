@@ -1,3 +1,8 @@
+/**
+ * Точка входа клиентских ES-модулей: подгружает модули интеракций
+ * с учётом версии ассетов и инициализирует их.
+ */
+
 const assetVersion = document.documentElement.dataset.assetVersion || "dev";
 
 const importModule = (path) => import(`${path}?v=${assetVersion}`);

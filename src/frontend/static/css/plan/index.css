@@ -1,119 +1,197 @@
-.plan-overview,
-.plan-roadmap,
-.plan-dictionary-grid,
-.plan-stage__modules {
-  display: grid;
-  gap: 24px;
-}
+/* =============================================================================
+   План обучения: сводка по этапам, режим контента, дорожная карта по сроку.
+   Дорожная карта — вертикальная линия с тонкими отметками, как разметка на бумаге.
+   ============================================================================= */
 
-.plan-overview {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-}
-
-.plan-mode-card,
-.plan-focus-card,
-.roadmap-stage {
+.plan-hero__main,
+.plan-mode-card {
   display: grid;
-  gap: 18px;
+  gap: var(--space-4);
+  align-content: start;
 }
 
 .plan-horizon-note {
-  margin: -4px 0 0;
-  color: var(--ink-soft);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+}
+
+.plan-overview {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.plan-focus-card {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  border-top: 2px solid var(--line-strong);
+}
+
+.plan-focus-card h2 {
+  font-size: var(--fs-heading);
 }
 
 .plan-focus-card__time {
-  margin: -6px 0 0;
-  color: var(--accent-secondary);
-  font-weight: 700;
+  color: var(--accent-secondary-strong);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
+/* --- Словари режима контента -------------------------------------------- */
+
 .plan-dictionary-grid {
+  display: grid;
+  gap: var(--space-2);
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .plan-dictionary {
   display: grid;
-  gap: 6px;
-  padding: 14px 16px;
+  gap: 2px;
+  padding: var(--space-3);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
+  border-left: 2px solid var(--accent-secondary);
+  border-radius: var(--radius-xs);
+  background: var(--surface-inset);
 }
 
 .plan-dictionary:hover {
-  transform: translateY(-1px);
+  border-color: var(--line-strong);
+  background: var(--surface-muted);
 }
 
-.roadmap-stage__head,
+.plan-dictionary strong {
+  font-size: var(--fs-small);
+  font-weight: 500;
+}
+
+.plan-dictionary span {
+  color: var(--ink-muted);
+  font-size: var(--fs-micro);
+}
+
+/* --- Дорожная карта ----------------------------------------------------- */
+
+.plan-roadmap {
+  display: grid;
+  gap: var(--space-4);
+  padding-left: var(--space-5);
+  border-left: 1px solid var(--line);
+}
+
+.roadmap-stage {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  border-left: 2px solid var(--line-soft);
+}
+
+.roadmap-stage__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
 .roadmap-stage__title {
   display: flex;
-  gap: 16px;
-  align-items: start;
-  justify-content: space-between;
-}
-
-.roadmap-stage__title {
-  justify-content: flex-start;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
 .roadmap-stage__index {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
-  color: var(--accent-secondary);
+  color: var(--ink-muted);
   font-family: var(--font-mono);
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: var(--fs-title);
+  line-height: 1;
+}
+
+.roadmap-stage__title h2 {
+  font-size: var(--fs-title);
+}
+
+.roadmap-stage__title p {
+  margin-bottom: var(--space-1);
+}
+
+.plan-stage__status {
+  white-space: nowrap;
+}
+
+.plan-stage__summary {
+  color: var(--ink-soft);
 }
 
 .plan-stage__modules {
+  display: grid;
+  gap: var(--space-3);
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .plan-module {
   display: grid;
-  gap: 10px;
-  padding: 16px 18px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
-    var(--surface-muted);
+  border-radius: var(--radius-xs);
+  background: var(--surface-inset);
+}
+
+.plan-module strong {
+  font-size: var(--fs-small);
+  font-weight: 500;
+}
+
+/* --- Статусы этапов ----------------------------------------------------- */
+
+.roadmap-stage--done {
+  border-left-color: var(--success);
 }
 
 .plan-stage__status--done {
-  border-color: rgba(121, 223, 172, 0.24);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
-    rgba(121, 223, 172, 0.08);
+  border-color: var(--success);
+  background: var(--success-soft);
   color: var(--success);
 }
 
-.plan-stage__status--current {
-  border-color: rgba(100, 230, 255, 0.24);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
-    rgba(100, 230, 255, 0.08);
-  color: var(--accent-secondary-strong);
+.roadmap-stage--current {
+  border-left-color: var(--accent);
+  border-color: var(--line-strong);
+  background: var(--surface-strong);
+  box-shadow: var(--glow-accent);
 }
 
-.plan-stage__status--next {
+.roadmap-stage--current .roadmap-stage__index {
   color: var(--accent-strong);
 }
 
-.roadmap-stage--current {
-  border-color: rgba(100, 230, 255, 0.26);
+.plan-stage__status--current {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
-.roadmap-stage--done {
-  border-color: rgba(121, 223, 172, 0.24);
+.roadmap-stage--next {
+  border-left-color: var(--accent-secondary);
+}
+
+.plan-stage__status--next {
+  border-color: var(--accent-secondary);
+  background: var(--accent-secondary-soft);
+  color: var(--accent-secondary-strong);
+}
+
+.roadmap-stage--upcoming {
+  opacity: 0.88;
+}
+
+.plan-stage__status--upcoming {
+  color: var(--ink-muted);
 }
