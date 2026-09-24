@@ -18,8 +18,8 @@ class UserDocumentRepository(UserDocumentRepositoryPort):
     def __init__(self, session) -> None:
         self._session = session
 
-    async def create(self, user_id: int, title: str, content: str) -> UserDocument:
-        doc = UserDocumentModel(user_id=user_id, title=title, content=content)
+    async def create(self, user_id: int, title: DocumentTitle, content: str) -> UserDocument:
+        doc = UserDocumentModel(user_id=user_id, title=title.value, content=content)
         self._session.add(doc)
         await self._session.flush()
         return self.to_entity(doc)

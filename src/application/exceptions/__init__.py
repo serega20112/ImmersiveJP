@@ -6,6 +6,7 @@ from .auth import (
     InvalidVerificationCodeError,
 )
 from .base import ApplicationError, ComponentUnavailableError, ErrorCode
+from .documents import InvalidDocumentDataError
 from .knowledge import InvalidKnowledgeDataError
 from .learning import (
     CardNotFoundError,
@@ -34,6 +35,7 @@ __all__ = [
     "EmailNotVerifiedError",
     "ErrorCode",
     "InvalidCredentialsError",
+    "InvalidDocumentDataError",
     "InvalidKnowledgeDataError",
     "InvalidMentorMessageError",
     "InvalidOnboardingDataError",

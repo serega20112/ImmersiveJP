@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import httpx
 
+from src.application.interfaces.exceptions import InfrastructureError
 from src.config.settings import settings
 
 
@@ -57,5 +58,11 @@ class EmbeddingClient:
             raise EmbeddingError(f"Unexpected embeddings response shape: {data!r}") from error
 
 
-class EmbeddingError(RuntimeError):
-    """Ошибка обращения к сервису эмбеддингов."""
+class EmbeddingError(InfrastructureError):
+    """Ошибка обращения к сервису эмбеддингов.
+
+    Наследуется от инфраструктурной ошибки приложения, а не от RuntimeError:
+    вызывающий код должен иметь возможность отличить отказ внешнего сервиса —
+    штатную ситуацию, требующую деградации, — от собственного дефекта, который
+    обязан упасть и попасть в мониторинг.
+    """

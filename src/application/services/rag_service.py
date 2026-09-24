@@ -12,7 +12,9 @@ from hashlib import sha256
 
 from src.application.interfaces import UnitOfWork
 from src.application.interfaces.clients import EmbeddingClient
+from src.application.interfaces.exceptions import InfrastructureError
 from src.config.settings import settings
+from src.domain.entities import UserDocument
 from src.domain.services import chunk_documents, cosine_similarity
 from src.utils.logging import log_event
 
@@ -24,9 +26,11 @@ _EMBEDDING_CACHE_PREFIX = "rag:emb:v1"
 class RAGService:
     """Поиск релевантных фрагментов пользовательских документов.
 
-    Сервис не выбрасывает исключения наружу: при недоступности сервиса
-    эмбеддингов или отсутствии релевантных результатов возвращается
-    пустой список, а ошибка фиксируется в логах.
+    Наружу не выпускаются только отказы инфраструктуры: недоступность базы или
+    сервиса эмбеддингов — штатная ситуация, и контекст просто не добавляется в
+    ответ. Собственный дефект (опечатка, неверная форма данных) обязан упасть:
+    перехват его молча пустым списком превратил бы ошибку сборки в тихое
+    «пользователь ничего не получает».
     """
 
     def __init__(
@@ -66,13 +70,15 @@ class RAGService:
 
         try:
             documents = await self._load_documents(user_id)
-        except Exception:
+        except InfrastructureError as error:
             log_event(
                 logger,
                 logging.ERROR,
                 "rag.docs_load_failed",
                 "Failed to load user docs",
                 user_id=user_id,
+                error_type=type(error).__name__,
+                error=str(error),
             )
             return []
         if not documents:
@@ -89,7 +95,7 @@ class RAGService:
         try:
             query_embedding = (await self._embeddings([query]))[0]
             chunk_embeddings = await self._embeddings([chunk.text for chunk in chunks])
-        except Exception as error:
+        except InfrastructureError as error:
             log_event(
                 logger,
                 logging.WARNING,
@@ -97,6 +103,7 @@ class RAGService:
                 "Embedding service unavailable, RAG context skipped",
                 user_id=user_id,
                 error_type=type(error).__name__,
+                error=str(error),
             )
             return []
 
@@ -110,9 +117,7 @@ class RAGService:
             reverse=True,
         )
         results = [
-            chunk.text
-            for score, chunk in scored[:limit]
-            if score >= settings.rag.rag_min_score
+            chunk.text for score, chunk in scored[:limit] if score >= settings.rag.rag_min_score
         ]
         log_event(
             logger,
@@ -125,7 +130,7 @@ class RAGService:
         )
         return results
 
-    async def _load_documents(self, user_id: int) -> list:
+    async def _load_documents(self, user_id: int) -> list[UserDocument]:
         """Загрузить документы пользователя через Unit of Work.
 
         Args:

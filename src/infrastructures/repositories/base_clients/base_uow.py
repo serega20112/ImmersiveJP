@@ -1,10 +1,14 @@
 import logging
 from typing import Any
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.application.interfaces import UnitOfWork
-from src.application.interfaces.exceptions import DatabaseRepositoryNotFoundError
+from src.application.interfaces.exceptions import (
+    DatabaseError,
+    DatabaseRepositoryNotFoundError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +42,12 @@ class SQLAlchemyUnitOfWork(UnitOfWork):
             raise
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Выход из контекста: при ошибке откат, иначе коммит."""
+        """Выход из контекста: при ошибке откат, иначе коммит.
+
+        Ошибки SQLAlchemy переводятся в ``DatabaseError``: только здесь уместно
+        знать про SQLAlchemy, и без перевода прикладной слой был бы вынужден
+        ловить либо чужие типы, либо вообще всё подряд.
+        """
         try:
             if exc_type is None:
                 await self.commit()
@@ -50,12 +59,25 @@ class SQLAlchemyUnitOfWork(UnitOfWork):
             self._session = None
             self._repositories.clear()
 
+        if exc_type is not None and issubclass(exc_type, SQLAlchemyError):
+            raise DatabaseError(f"Операция с базой данных не выполнена: {exc_val}") from exc_val
+
     async def commit(self) -> None:
-        """Зафиксировать транзакцию."""
+        """Зафиксировать транзакцию.
+
+        Ошибка SQLAlchemy переводится в ``DatabaseError``, чтобы вызывающий код
+        не ловил типы инфраструктуры и не подменял их перехватом всего подряд.
+
+        Raises:
+            DatabaseError: Если фиксация транзакции не удалась.
+        """
         if not self._session:
             return
         try:
             await self._session.commit()
+        except SQLAlchemyError as error:
+            logger.exception("UOW: ошибка commit")
+            raise DatabaseError(f"Фиксация транзакции не выполнена: {error}") from error
         except Exception:
             logger.exception("UOW: ошибка commit")
             raise

@@ -17,6 +17,7 @@ from fastapi.responses import PlainTextResponse, RedirectResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.application.exceptions import ApplicationError, ErrorCode
+from src.domain.exceptions import DomainError
 from src.presentation.http.utils.flash import flash
 from src.presentation.http.utils.redirects import RouteRedirectError
 from src.presentation.http.utils.rendering import render_error_page
@@ -109,6 +110,43 @@ async def application_error_response(request: Request, error: ApplicationError):
     return response
 
 
+async def domain_error_response(request: Request, error: DomainError):
+    """Собрать ответ на доменную ошибку, дошедшую до HTTP.
+
+    Доменная ошибка не должна была попасть сюда: у неё нет кода, а значит нет
+    и согласованного с приложением смысла. Статус выбирается 500, а не 422,
+    потому что дошедшая до границы доменная ошибка — это недосмотр сборки
+    (битая строка в базе, необработанный случай в юзкейсе), а не некорректный
+    запрос: подмена 422 спрятала бы дефект от мониторинга 5xx и переложила бы
+    вину на пользователя. Сообщение домена остаётся в ответе, чтобы страница
+    не показывала пустую ошибку.
+
+    Args:
+        request: Входящий запрос.
+        error: Доменная ошибка.
+
+    Returns:
+        Ответ с ошибкой и безопасными заголовками.
+    """
+    log_event(
+        logger,
+        logging.ERROR,
+        "http.domain_error_escaped",
+        "Domain error reached the HTTP boundary unmapped",
+        request_id=getattr(request.state, "request_id", None),
+        error_type=type(error).__name__,
+        message=error.message,
+        details=error.details,
+        path=request.url.path,
+    )
+    return await _error_response(
+        request,
+        status_code=ERROR_STATUS_CODES[ErrorCode.INTERNAL],
+        title=ERROR_TITLES[ErrorCode.INTERNAL],
+        message=error.message,
+    )
+
+
 async def _error_response(
     request: Request,
     *,
@@ -197,6 +235,23 @@ def register_exception_handlers(app: FastAPI) -> None:
             Ответ с ошибкой.
         """
         return await application_error_response(request, exc)
+
+    @app.exception_handler(DomainError)
+    async def handle_domain_error(request: Request, exc: DomainError):
+        """Преобразовать доменную ошибку в HTTP-ответ.
+
+        Без этого обработчика любое доменное исключение, выпущенное агрегатом
+        или value object при разборе строки из базы, уходило в catch-all и
+        превращалось в ничего не объясняющий 500.
+
+        Args:
+            request: Входящий запрос.
+            exc: Доменная ошибка.
+
+        Returns:
+            Ответ с ошибкой.
+        """
+        return await domain_error_response(request, exc)
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(request: Request, exc: RequestValidationError):
@@ -287,9 +342,7 @@ def register_exception_handlers(app: FastAPI) -> None:
                     "request_id": request_id,
                     "path": request.url.path,
                     "method": request.method,
-                    "user_id": getattr(
-                        getattr(request.state, "current_user", None), "id", None
-                    ),
+                    "user_id": getattr(getattr(request.state, "current_user", None), "id", None),
                     "error_type": type(exc).__name__,
                 },
             },
