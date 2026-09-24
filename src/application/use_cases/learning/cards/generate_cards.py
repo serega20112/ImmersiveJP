@@ -139,7 +139,7 @@ class GenerateCardsUseCase:
             Количество уже записанных карточек.
         """
         async with self._uow as uow:
-            content_repository = uow.repository("content")
+            content_repository = uow.learning_cards
             cards = await content_repository.list_cards_by_batch(user_id, track, batch_number)
         return len(cards)
 
@@ -161,8 +161,8 @@ class GenerateCardsUseCase:
             LookupError: Если пользователь не найден.
         """
         async with self._uow as uow:
-            user_repository = uow.repository("user")
-            content_repository = uow.repository("content")
+            user_repository = uow.users
+            content_repository = uow.learning_cards
             user = await user_repository.get_by_id(user_id)
             if user is None:
                 raise LookupError("Пользователь не найден")
@@ -209,7 +209,7 @@ class GenerateCardsUseCase:
                 position=start_position + offset,
             )
             async with self._uow as uow:
-                content_repository = uow.repository("content")
+                content_repository = uow.learning_cards
                 await content_repository.create(card)
 
     async def _settle(self, user_id: int, track: TrackType, *, succeeded: bool) -> None:
@@ -221,7 +221,7 @@ class GenerateCardsUseCase:
             succeeded: Завершилась ли генерация.
         """
         async with self._uow as uow:
-            session_repository = uow.repository("session")
+            session_repository = uow.sessions
             session = await session_repository.get_track_session(user_id, track)
             if session is None or not session.is_generating:
                 return

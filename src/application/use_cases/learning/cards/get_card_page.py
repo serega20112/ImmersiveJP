@@ -38,9 +38,9 @@ class GetCardPageUseCase:
             CardNotFoundError: If the card is not found.
         """
         async with self._uow as uow:
-            content_repository = uow.repository("content")
-            progress_repository = uow.repository("progress")
-            session_repository = uow.repository("session")
+            content_repository = uow.learning_cards
+            progress_repository = uow.progress
+            session_repository = uow.sessions
             card = await content_repository.get_by_id(card_id)
             if card is None or card.user_id != user_id or card.track != track:
                 raise CardNotFoundError("Карточка не найдена")

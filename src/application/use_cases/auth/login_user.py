@@ -45,7 +45,7 @@ class LoginUserUseCase:
         except InvalidEmailError as error:
             raise InvalidCredentialsError(str(error)) from error
         async with self._uow as uow:
-            user_repository = uow.repository("user")
+            user_repository = uow.users
             user = await user_repository.get_by_email(email.value)
         if user is None or user.id is None or not await self._password_service.verify_password(
             payload.password,

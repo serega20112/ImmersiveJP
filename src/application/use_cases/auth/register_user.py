@@ -57,7 +57,7 @@ class RegisterUserUseCase:
         except Exception as error:
             raise InvalidRegistrationDataError(str(error)) from error
         async with self._uow as uow:
-            user_repository = uow.repository("user")
+            user_repository = uow.users
             existing_user = await user_repository.get_by_email(email.value)
             if existing_user is not None:
                 raise EmailAlreadyExistsError("Пользователь с таким email уже существует")

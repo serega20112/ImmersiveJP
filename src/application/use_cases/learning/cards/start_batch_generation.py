@@ -71,8 +71,8 @@ class StartCardBatchGenerationUseCase:
 
         timeout_seconds = settings.app.learning_batch_generation_timeout_seconds
         async with self._uow as uow:
-            session_repository = uow.repository("session")
-            progress_repository = uow.repository("progress")
+            session_repository = uow.sessions
+            progress_repository = uow.progress
             stored = await session_repository.get_track_session(user_id, track)
             session = stored or LearningSession.create(UserID(user_id), track)
             resumed = False

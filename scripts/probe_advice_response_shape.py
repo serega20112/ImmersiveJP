@@ -107,7 +107,7 @@ async def main() -> None:
     try:
         uow = ImmersiveUnitOfWork(db_module.get_session_factory())
         async with uow as session_uow:
-            user = await session_uow.repository("user").get_by_id(user_id)
+            user = await session_uow.users.get_by_id(user_id)
         if user is None:
             raise SystemExit(f"Пользователь {user_id} не найден")
         report = await BuildProgressReportUseCase(uow).execute(user_id)

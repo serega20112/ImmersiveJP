@@ -37,8 +37,8 @@ class ExportCardsToPDFUseCase:
             NoCompletedCardsError: If no completed cards are available.
         """
         async with self._uow as uow:
-            user_repository = uow.repository("user")
-            content_repository = uow.repository("content")
+            user_repository = uow.users
+            content_repository = uow.learning_cards
             user = await user_repository.get_by_id(user_id)
             if user is None:
                 raise NoCompletedCardsError("Пользователь не найден")

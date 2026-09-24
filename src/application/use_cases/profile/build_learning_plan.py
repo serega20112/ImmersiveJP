@@ -89,8 +89,8 @@ class BuildLearningPlanUseCase:
             CourseProgramUnavailableError: Если программа не заполнена.
         """
         async with self._uow as uow:
-            user_repository = uow.repository("user")
-            course_repository = uow.repository("course")
+            user_repository = uow.users
+            course_repository = uow.course
             user = await user_repository.get_by_id(user_id)
             stages = await course_repository.list_stages()
         if user is None:

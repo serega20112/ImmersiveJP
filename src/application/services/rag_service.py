@@ -140,7 +140,7 @@ class RAGService:
             Список документов пользователя.
         """
         async with self._uow_factory() as uow:
-            doc_repository = uow.repository("user_document")
+            doc_repository = uow.user_documents
             return await doc_repository.get_by_user(user_id)
 
     async def _embeddings(self, texts: list[str]) -> list[list[float]]:

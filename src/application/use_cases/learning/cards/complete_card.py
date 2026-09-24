@@ -28,8 +28,8 @@ class CompleteCardUseCase:
             CardOwnershipError: If the card does not belong to the user.
         """
         async with self._uow as uow:
-            content_repository = uow.repository("content")
-            progress_repository = uow.repository("progress")
+            content_repository = uow.learning_cards
+            progress_repository = uow.progress
             card = await content_repository.get_by_id(card_id)
             if card is None or card.user_id != user_id:
                 raise CardOwnershipError("Карточка не найдена")

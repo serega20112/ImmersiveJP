@@ -42,7 +42,7 @@ class VerifyEmailUseCase:
             raise InvalidVerificationCodeError(str(error)) from error
         code = "".join(character for character in payload.code if character.isdigit())
         async with self._uow as uow:
-            user_repository = uow.repository("user")
+            user_repository = uow.users
             user = await user_repository.get_by_email(email.value)
             if user is None:
                 raise InvalidVerificationCodeError("Пользователь не найден")

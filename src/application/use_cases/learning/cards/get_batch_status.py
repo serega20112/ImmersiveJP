@@ -33,9 +33,9 @@ class GetCardBatchStatusUseCase:
             Статус партии с уже записанными карточками.
         """
         async with self._uow as uow:
-            session_repository = uow.repository("session")
-            content_repository = uow.repository("content")
-            progress_repository = uow.repository("progress")
+            session_repository = uow.sessions
+            content_repository = uow.learning_cards
+            progress_repository = uow.progress
             session = await session_repository.get_track_session(user_id, track)
             batch_number = session.last_generated_batch if session is not None else 0
             cards = []

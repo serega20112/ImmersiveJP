@@ -38,8 +38,8 @@ class GetTrackWorkPageUseCase:
             TrackWorkUnavailableError: If the batch is not available for work.
         """
         async with self._uow as uow:
-            content_repository = uow.repository("content")
-            progress_repository = uow.repository("progress")
+            content_repository = uow.learning_cards
+            progress_repository = uow.progress
             cards = await content_repository.list_cards_by_batch(
                 user_id,
                 track,

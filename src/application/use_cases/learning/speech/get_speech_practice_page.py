@@ -28,9 +28,9 @@ class GetSpeechPracticePageUseCase:
             ValueError: If the user is not found.
         """
         async with self._uow as uow:
-            user_repository = uow.repository("user")
-            content_repository = uow.repository("content")
-            session_repository = uow.repository("session")
+            user_repository = uow.users
+            content_repository = uow.learning_cards
+            session_repository = uow.sessions
             user = await user_repository.get_by_id(user_id)
             if user is None:
                 raise ValueError("Пользователь не найден")

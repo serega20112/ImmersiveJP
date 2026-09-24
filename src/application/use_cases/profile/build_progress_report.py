@@ -32,10 +32,10 @@ class BuildProgressReportUseCase:
             ValueError: If the user is not found.
         """
         async with self._uow as uow:
-            content_repository = uow.repository("content")
-            progress_repository = uow.repository("progress")
-            session_repository = uow.repository("session")
-            user_repository = uow.repository("user")
+            content_repository = uow.learning_cards
+            progress_repository = uow.progress
+            session_repository = uow.sessions
+            user_repository = uow.users
             user = await user_repository.get_by_id(user_id)
             if user is None:
                 raise ValueError("Пользователь не найден")

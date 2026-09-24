@@ -44,6 +44,6 @@ class ResolveCurrentUserUseCase:
         except jwt.InvalidTokenError:
             return None
         async with self._uow as uow:
-            user_repository = uow.repository("user")
+            user_repository = uow.users
             user = await user_repository.get_by_id(user_id)
         return to_user_view_dto(user) if user is not None else None

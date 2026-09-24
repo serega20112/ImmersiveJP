@@ -61,9 +61,9 @@ class SubmitTrackWorkUseCase:
         """
         self._validate_answers(answers)
         async with self._uow as uow:
-            user_repository = uow.repository("user")
-            content_repository = uow.repository("content")
-            progress_repository = uow.repository("progress")
+            user_repository = uow.users
+            content_repository = uow.learning_cards
+            progress_repository = uow.progress
             cards = await content_repository.list_cards_by_batch(
                 user_id,
                 track,

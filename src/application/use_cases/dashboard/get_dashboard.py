@@ -36,7 +36,7 @@ class GetDashboardUseCase:
             ValueError: If the user is not found.
         """
         async with self._uow as uow:
-            user_repository = uow.repository("user")
+            user_repository = uow.users
             user = await user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Пользователь не найден")

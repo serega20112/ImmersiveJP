@@ -30,7 +30,7 @@ class DocumentService:
             Список документов пользователя.
         """
         async with self._uow as uow:
-            doc_repository = uow.repository("user_document")
+            doc_repository = uow.user_documents
             return await doc_repository.get_by_user(user_id)
 
     async def add_document(self, user_id: int, title: str, content: str) -> None:
@@ -55,7 +55,7 @@ class DocumentService:
         except InvalidDocumentTitleError as error:
             raise InvalidDocumentDataError(str(error)) from error
         async with self._uow as uow:
-            doc_repository = uow.repository("user_document")
+            doc_repository = uow.user_documents
             await doc_repository.create(user_id, document_title, content)
 
     async def delete_document(self, user_id: int, doc_id: int) -> bool:
@@ -69,7 +69,7 @@ class DocumentService:
             True, если документ найден и удалён.
         """
         async with self._uow as uow:
-            doc_repository = uow.repository("user_document")
+            doc_repository = uow.user_documents
             document = await doc_repository.get(doc_id)
             if document is None or document.user_id != user_id:
                 return False
