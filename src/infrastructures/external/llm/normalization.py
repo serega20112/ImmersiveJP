@@ -694,7 +694,7 @@ class LLMNormalizationMixin:
             "туризм",
             "ресторан",
             "магазин",
-            "поезд",
+            "поездка",
             "станци",
             "клиник",
             "кафе",
@@ -715,7 +715,13 @@ class LLMNormalizationMixin:
 
     @staticmethod
     def _contains_any(text: str, keywords: tuple[str, ...]) -> bool:
-        """Встречается ли в тексте хотя бы один из стеблей.
+        """Встречается ли в тексте хотя бы одно слово на этот стебель.
+
+        Сравнение по началу слова, а не по подстроке: короткие стебли иначе
+        ловят ложные совпадения внутри чужих слов, и фильтр границ трека
+        перестаёт работать. Стебель «дом» из списка культуры совпадал со словом
+        «переводом», из-за чего карточка целиком про грамматику проходила как
+        культурная и не отсеивалась вовсе.
 
         Args:
             text: Текст в нижнем регистре.
@@ -724,7 +730,8 @@ class LLMNormalizationMixin:
         Returns:
             True при совпадении.
         """
-        return any(keyword in text for keyword in keywords)
+        words = text.split()
+        return any(word.startswith(keyword) for keyword in keywords for word in words)
 
     @staticmethod
     def _contains_japanese_chars(value: str) -> bool:
@@ -898,56 +905,60 @@ class LLMNormalizationMixin:
         questions: list[dict],
         answers: dict[str, str],
     ) -> dict:
-        [
-            {
-                "question_id": q["id"],
-                "is_correct": False,
-                "user_answer": answers.get(q["id"], ""),
-                "expected_answer": q.get("expected_answer", ""),
-                "feedback": "Не удалось проверить.",
-            }
-            for q in questions
-        ]
+        """Собрать результат проверки знаний из ответа модели.
+
+        Отсутствие вердикта по вопросу не приравнивается к неверному ответу:
+        молчание модели пользователь обязан видеть как сбой проверки, иначе
+        сорванный ответ выдаётся за его собственную ошибку.
+
+        Args:
+            parsed: Разобранный ответ модели.
+            questions: Список вопросов проверки.
+            answers: Ответы пользователя по идентификаторам вопросов.
+
+        Returns:
+            Словарь с итоговой оценкой, сводкой и разбором по вопросам.
+        """
         parsed_obj = HuggingFaceLLMClient._coerce_object(parsed)
         raw_results = parsed_obj.get("results") or parsed_obj.get("result") or []
         if not isinstance(raw_results, list):
             raw_results = []
         results_by_id = {
-            str(r.get("question_id", "")): r for r in raw_results if isinstance(r, Mapping)
+            str(item.get("question_id", "")): item
+            for item in raw_results
+            if isinstance(item, Mapping)
         }
 
         final_results = []
-        for q in questions:
-            qid = q["id"]
-            raw = results_by_id.get(qid, {})
-            if isinstance(raw, Mapping):
-                is_correct = HuggingFaceLLMClient._coerce_bool(raw.get("is_correct"))
-                if is_correct is None:
-                    is_correct = False
-                feedback = str(raw.get("feedback") or "").strip()
-                if not feedback:
-                    feedback = "Ответ не совпал с ожидаемым."
+        for question in questions:
+            question_id = question["id"]
+            raw = results_by_id.get(question_id)
+            if not isinstance(raw, Mapping) or not raw:
                 final_results.append(
                     {
-                        "question_id": qid,
-                        "is_correct": is_correct,
-                        "user_answer": answers.get(qid, ""),
-                        "expected_answer": q.get("expected_answer", ""),
-                        "feedback": feedback,
-                    }
-                )
-            else:
-                final_results.append(
-                    {
-                        "question_id": qid,
+                        "question_id": question_id,
                         "is_correct": False,
-                        "user_answer": answers.get(qid, ""),
-                        "expected_answer": q.get("expected_answer", ""),
+                        "user_answer": answers.get(question_id, ""),
+                        "expected_answer": question.get("expected_answer", ""),
                         "feedback": "Не удалось проверить.",
                     }
                 )
+                continue
+            is_correct = HuggingFaceLLMClient._coerce_bool(raw.get("is_correct"))
+            if is_correct is None:
+                is_correct = False
+            feedback = str(raw.get("feedback") or "").strip() or "Ответ не совпал с ожидаемым."
+            final_results.append(
+                {
+                    "question_id": question_id,
+                    "is_correct": is_correct,
+                    "user_answer": answers.get(question_id, ""),
+                    "expected_answer": question.get("expected_answer", ""),
+                    "feedback": feedback,
+                }
+            )
 
-        correct_count = sum(1 for r in final_results if r["is_correct"])
+        correct_count = sum(1 for item in final_results if item["is_correct"])
         total = len(final_results) or 1
         score = round((correct_count / total) * 100)
         summary = str(parsed_obj.get("summary") or "").strip()

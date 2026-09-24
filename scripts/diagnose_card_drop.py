@@ -182,25 +182,19 @@ def report_track(track: str, parsed: list[dict]) -> None:
     """
     payload = {"track": track, "batch_size": 5, "interests": [], "goal": "daily"}
     before = {item["topic"] for item in parsed}
-    result = HuggingFaceLLMClient._normalize_cards(parsed, payload)
-    kept = {draft.topic for draft in result}
+    batch = HuggingFaceLLMClient._normalize_cards(parsed, payload)
+    kept = {draft.topic for draft in batch.drafts}
 
     generated_from_model = [topic for topic in before if topic in kept]
     print(f"--- track={track} ---")
     print(f"  модель отдала карточек      : {len(before)}")
     print(f"  прошло фильтр               : {len(generated_from_model)}")
-    print(f"  итог в партии               : {len(result)}")
-    print(f"  добрано из фолбэка          : {len(result) - len(generated_from_model)}")
+    print(f"  итог в партии               : {len(batch.drafts)}")
+    print(f"  от модели по разделению     : {batch.model_count}")
+    print(f"  добрано из фолбэка          : {batch.fallback_count}")
     for topic in sorted(before - kept):
         item = next(entry for entry in parsed if entry["topic"] == topic)
         examples = HuggingFaceLLMClient._normalize_card_examples(item.get("examples") or [])
-        if len(examples) < 3:
-            examples = HuggingFaceLLMClient._build_dynamic_examples(
-                track=track,
-                context_title=topic,
-                angle_title=topic,
-                base_terms=item.get("key_terms") or [],
-            )
         matches = HuggingFaceLLMClient._card_matches_track(
             track=track,
             topic=topic,
@@ -222,13 +216,15 @@ def main() -> None:
 
     track, off_track = off_track_response()
     payload = {"track": track, "batch_size": len(off_track), "interests": [], "goal": "daily"}
-    result = HuggingFaceLLMClient._normalize_cards(off_track, payload)
+    batch = HuggingFaceLLMClient._normalize_cards(off_track, payload)
     survivors = [
-        draft.topic for draft in result if draft.topic in {item["topic"] for item in off_track}
+        draft.topic
+        for draft in batch.drafts
+        if draft.topic in {item["topic"] for item in off_track}
     ]
     print(f"--- track={track} (заведомо чужие карточки) ---")
-    print(f"  подано на проверку            : {len(off_track)}")
-    print(f"  прошло (должно быть 0)        : {len(survivors)}")
+    print(f"  подано на проверку          : {len(off_track)}")
+    print(f"  прошло (должно быть 0)      : {len(survivors)}")
     for topic in survivors:
         print(f"    ПРОПУЩЕНО: {topic}")
 
