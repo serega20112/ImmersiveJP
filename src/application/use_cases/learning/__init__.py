@@ -8,10 +8,10 @@ Use cases сгруппированы по логическим направле�
 from .cards import (
     CompleteCardUseCase,
     GenerateCardsUseCase,
+    GetCardBatchStatusUseCase,
     GetCardPageUseCase,
-    GetNextCardsUseCase,
     GetTrackPageUseCase,
-    RepairCurrentBatchUseCase,
+    StartCardBatchGenerationUseCase,
 )
 from .export import ExportCardsToPDFUseCase
 from .speech import GenerateSpeechPracticeUseCase, GetSpeechPracticePageUseCase
@@ -22,11 +22,11 @@ __all__ = [
     "ExportCardsToPDFUseCase",
     "GenerateCardsUseCase",
     "GenerateSpeechPracticeUseCase",
+    "GetCardBatchStatusUseCase",
     "GetCardPageUseCase",
-    "GetNextCardsUseCase",
     "GetSpeechPracticePageUseCase",
     "GetTrackPageUseCase",
     "GetTrackWorkPageUseCase",
-    "RepairCurrentBatchUseCase",
+    "StartCardBatchGenerationUseCase",
     "SubmitTrackWorkUseCase",
 ]

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Protocol, runtime_checkable
 
 from src.application.dto.learning import (
-    GeneratedCardDraftDTO,
+    GeneratedCardBatchDTO,
     SpeechPracticeDTO,
     TrackWorkResultDTO,
 )
@@ -26,9 +26,15 @@ class LLMClient(Protocol):
         batch_number: int,
         batch_size: int,
         previous_topics: list[str],
+        previous_key_terms: list[str] | None = None,
         mentor_focus: str | None = None,
-    ) -> list[GeneratedCardDraftDTO]:
-        """Сгенерировать черновики карточек для нового батча."""
+    ) -> GeneratedCardBatchDTO:
+        """Сгенерировать черновики карточек для нового батча.
+
+        Возвращает партию вместе с разделением по источнику: вызывающая
+        сторона обязана отличать ответ модели от доли заготовок, чтобы не
+        выдавать шаблонный контент за сгенерированный.
+        """
         pass
 
     async def generate_advice(self, user: User, report: ProgressReportDTO) -> AIAdviceDTO:

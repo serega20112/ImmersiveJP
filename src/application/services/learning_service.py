@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from src.application.dto.learning import (
+    CardBatchStatusDTO,
     CardCompletionResultDTO,
     PdfDocumentDTO,
     SpeechPracticePageDTO,
@@ -11,13 +12,14 @@ from src.application.dto.learning import (
 from src.application.use_cases.learning import (
     CompleteCardUseCase,
     ExportCardsToPDFUseCase,
+    GenerateCardsUseCase,
     GenerateSpeechPracticeUseCase,
+    GetCardBatchStatusUseCase,
     GetCardPageUseCase,
-    GetNextCardsUseCase,
     GetSpeechPracticePageUseCase,
     GetTrackPageUseCase,
     GetTrackWorkPageUseCase,
-    RepairCurrentBatchUseCase,
+    StartCardBatchGenerationUseCase,
     SubmitTrackWorkUseCase,
 )
 from src.domain.value_objects.track_type import TrackType
@@ -28,9 +30,10 @@ class LearningService:
         self,
         get_track_page_use_case: GetTrackPageUseCase,
         get_card_page_use_case: GetCardPageUseCase,
-        repair_current_batch_use_case: RepairCurrentBatchUseCase,
         complete_card_use_case: CompleteCardUseCase,
-        get_next_cards_use_case: GetNextCardsUseCase,
+        start_batch_generation_use_case: StartCardBatchGenerationUseCase,
+        generate_cards_use_case: GenerateCardsUseCase,
+        get_card_batch_status_use_case: GetCardBatchStatusUseCase,
         export_cards_to_pdf_use_case: ExportCardsToPDFUseCase,
         get_speech_practice_page_use_case: GetSpeechPracticePageUseCase,
         generate_speech_practice_use_case: GenerateSpeechPracticeUseCase,
@@ -42,9 +45,10 @@ class LearningService:
         Args:
             get_track_page_use_case: Use case for getting a track page.
             get_card_page_use_case: Use case for getting a card page.
-            repair_current_batch_use_case: Use case for repairing the current batch.
             complete_card_use_case: Use case for completing a card.
-            get_next_cards_use_case: Use case for getting the next cards.
+            start_batch_generation_use_case: Use case for reserving a card batch.
+            generate_cards_use_case: Use case for writing a reserved batch.
+            get_card_batch_status_use_case: Use case for polling batch status.
             export_cards_to_pdf_use_case: Use case for exporting cards to PDF.
             get_speech_practice_page_use_case: Use case for getting speech practice page.
             generate_speech_practice_use_case: Use case for generating speech practice.
@@ -53,9 +57,10 @@ class LearningService:
         """
         self._get_track_page_use_case = get_track_page_use_case
         self._get_card_page_use_case = get_card_page_use_case
-        self._repair_current_batch_use_case = repair_current_batch_use_case
         self._complete_card_use_case = complete_card_use_case
-        self._get_next_cards_use_case = get_next_cards_use_case
+        self._start_batch_generation_use_case = start_batch_generation_use_case
+        self._generate_cards_use_case = generate_cards_use_case
+        self._get_card_batch_status_use_case = get_card_batch_status_use_case
         self._export_cards_to_pdf_use_case = export_cards_to_pdf_use_case
         self._get_speech_practice_page_use_case = get_speech_practice_page_use_case
         self._generate_speech_practice_use_case = generate_speech_practice_use_case
@@ -63,7 +68,7 @@ class LearningService:
         self._submit_track_work_use_case = submit_track_work_use_case
 
     async def get_track_page(self, user_id: int, track: TrackType) -> TrackPageDTO:
-        """Get the track page after repairing the current batch.
+        """Get the track page.
 
         Args:
             user_id: ID of the user.
@@ -72,7 +77,6 @@ class LearningService:
         Returns:
             The track page data.
         """
-        await self._repair_current_batch_use_case.execute(user_id, track)
         return await self._get_track_page_use_case.execute(user_id, track)
 
     async def get_card_page(
@@ -81,7 +85,7 @@ class LearningService:
         track: TrackType,
         card_id: int,
     ) -> TrackCardPageDTO:
-        """Get the card page after repairing the current batch.
+        """Get the card page.
 
         Args:
             user_id: ID of the user.
@@ -91,7 +95,6 @@ class LearningService:
         Returns:
             The track card page data.
         """
-        await self._repair_current_batch_use_case.execute(user_id, track)
         return await self._get_card_page_use_case.execute(user_id, track, card_id)
 
     async def complete_card(self, user_id: int, card_id: int) -> CardCompletionResultDTO:
@@ -106,17 +109,39 @@ class LearningService:
         """
         return await self._complete_card_use_case.execute(user_id, card_id)
 
-    async def get_next_cards(self, user_id: int, track: TrackType) -> TrackPageDTO:
-        """Get the next batch of cards for a track.
+    async def start_batch_generation(self, user_id: int, track: TrackType) -> int:
+        """Reserve the next card batch and return its number.
 
         Args:
             user_id: ID of the user.
             track: The learning track type.
 
         Returns:
-            The updated track page data.
+            Number of the batch the page should follow.
         """
-        return await self._get_next_cards_use_case.execute(user_id, track)
+        return await self._start_batch_generation_use_case.execute(user_id, track)
+
+    async def generate_batch(self, user_id: int, track: TrackType, batch_number: int) -> None:
+        """Write a reserved batch; runs detached from the request.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+            batch_number: Reserved batch number.
+        """
+        await self._generate_cards_use_case.execute(user_id, track, batch_number)
+
+    async def get_batch_status(self, user_id: int, track: TrackType) -> CardBatchStatusDTO:
+        """Get the current batch state and the cards already written.
+
+        Args:
+            user_id: ID of the user.
+            track: The learning track type.
+
+        Returns:
+            Batch status data for the page poll.
+        """
+        return await self._get_card_batch_status_use_case.execute(user_id, track)
 
     async def export_cards_to_pdf(self, user_id: int, track: TrackType) -> PdfDocumentDTO:
         """Export completed cards to a PDF document.

@@ -17,7 +17,8 @@ class STTClient:
         self._http_client = httpx.AsyncClient(timeout=30)
 
     async def transcribe(self, audio_data: bytes) -> str:
-        if not settings.llm.hf_api_token:
+        hf_tokens = settings.llm.hf_api_tokens
+        if not hf_tokens:
             log_event(logger, logging.WARNING, "stt.missing_token", "HF API token not configured")
             return ""
         try:
@@ -25,7 +26,7 @@ class STTClient:
                 self._WHISPER_URL,
                 content=audio_data,
                 headers={
-                    "Authorization": f"Bearer {settings.llm.hf_api_token}",
+                    "Authorization": f"Bearer {hf_tokens[0]}",
                     "Content-Type": "audio/webm",
                 },
             )

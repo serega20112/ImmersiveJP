@@ -1,3 +1,4 @@
+from .batch_generation_state import BatchGenerationState
 from .batch_number import BatchNumber
 from .card_count import CardCount
 from .card_position import CardPosition
@@ -36,6 +37,7 @@ __all__ = [
     # Progress
     "CardCount",
     "CompletionRate",
+    "BatchGenerationState",
     # Documents
     "DocumentTitle",
 ]

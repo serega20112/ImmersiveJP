@@ -25,24 +25,6 @@ class LearningCardRepository(
 
     model = LearningCardModel
 
-    async def add_many(self, cards: list[LearningCard]) -> list[LearningCard]:
-        models = [
-            LearningCardModel(
-                user_id=int(card.user_id),
-                track=card.track.value,
-                topic=card.topic,
-                explanation=card.explanation,
-                examples_json=card.examples,
-                key_terms_json=card.key_terms,
-                batch_number=int(card.batch_number),
-                position=int(card.position),
-            )
-            for card in cards
-        ]
-        self._session.add_all(models)
-        await self._session.flush()
-        return [self.to_entity(model) for model in models]
-
     async def update_many(self, cards: list[LearningCard]) -> list[LearningCard]:
         if not cards:
             return []
@@ -112,6 +94,34 @@ class LearningCardRepository(
             .limit(limit)
         )
         return list(result.scalars().all())
+
+    async def list_recent_key_terms(
+        self,
+        user_id: int,
+        track: TrackType,
+        limit: int = 40,
+    ) -> list[str]:
+        """Вернуть ключевые термины последних карточек без повторов (по created_at desc)."""
+        result = await self._session.execute(
+            select(LearningCardModel.key_terms_json)
+            .where(
+                LearningCardModel.user_id == user_id,
+                LearningCardModel.track == track.value,
+            )
+            .order_by(desc(LearningCardModel.created_at))
+            .limit(limit)
+        )
+        terms: list[str] = []
+        seen: set[str] = set()
+        for row in result.scalars().all():
+            for term in row or []:
+                normalized = str(term).strip()
+                marker = normalized.casefold()
+                if not normalized or marker in seen:
+                    continue
+                seen.add(marker)
+                terms.append(normalized)
+        return terms
 
     async def count_cards(self, user_id: int, track: TrackType) -> int:
         result = await self._session.execute(

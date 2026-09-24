@@ -3,9 +3,15 @@ from __future__ import annotations
 import re
 
 from src.application.dto.auth import UserViewDTO
-from src.application.dto.learning import CardExampleDTO, TrackCardDTO
+from src.application.dto.learning import (
+    CardExampleDTO,
+    PreparedWorkTaskDTO,
+    TrackCardDTO,
+    TrackWorkTaskDTO,
+)
 from src.application.dto.profile import TrackProgressDTO
 from src.application.dto.skill import SkillAssessmentDTO
+from src.application.use_cases.card_example import parse_example
 from src.application.use_cases.key_terms import build_key_term_dtos
 from src.domain.aggregates.user import User
 from src.domain.entities.content import LearningCard
@@ -92,13 +98,13 @@ def to_track_progress_dto(snapshot: TrackProgressSnapshot) -> TrackProgressDTO:
 def to_skill_assessment_dto(
     assessment: SkillAssessment | None,
 ) -> SkillAssessmentDTO | None:
-    """Convert a SkillAssessment to a SkillAssessmentDTO.
+    """Преобразовать оценку навыков в DTO для показа.
 
     Args:
-        assessment: The skill assessment entity, or None.
+        assessment: Доменная оценка навыков либо None.
 
     Returns:
-        The skill assessment DTO, or None.
+        DTO оценки навыков либо None, если оценки нет.
     """
     if assessment is None or assessment.estimated_level is None:
         return None
@@ -110,6 +116,65 @@ def to_skill_assessment_dto(
         strengths=list(assessment.strengths),
         weak_points=list(assessment.weak_points),
     )
+
+
+def to_track_work_task_dto(
+    task: PreparedWorkTaskDTO,
+    submitted_answer: str | None = None,
+) -> TrackWorkTaskDTO:
+    """Преобразовать подготовленное задание в DTO для показа.
+
+    Args:
+        task: Подготовленное задание работы.
+        submitted_answer: Ответ пользователя, если он уже известен.
+
+    Returns:
+        DTO задания для страницы работы.
+    """
+    return TrackWorkTaskDTO(
+        id=task.id,
+        kind=task.kind,
+        title=task.title,
+        prompt=task.prompt,
+        expected_format=task.expected_format,
+        source_topic=task.source_topic,
+        placeholder=task.placeholder,
+        required_terms=list(task.required_terms),
+        hints=list(task.hints),
+        submitted_answer=submitted_answer,
+    )
+
+
+def to_track_work_review_payload(
+    task: PreparedWorkTaskDTO,
+    submitted_answer: str | None = None,
+) -> dict[str, object]:
+    """Подготовить описание задания для проверки нейросетью.
+
+    В отличие от DTO для страницы сюда попадают правила засчёта: допустимые
+    варианты и порог обязательных элементов. Без них модель не сможет
+    отличить зачётный ответ от формально похожего.
+
+    Args:
+        task: Подготовленное задание работы.
+        submitted_answer: Ответ пользователя, если он уже известен.
+
+    Returns:
+        Словарь задания для промпта проверки работы.
+    """
+    return {
+        "id": task.id,
+        "kind": task.kind,
+        "title": task.title,
+        "prompt": task.prompt,
+        "expected_format": task.expected_format,
+        "source_topic": task.source_topic,
+        "required_terms": list(task.required_terms),
+        "minimum_term_hits": task.minimum_term_hits,
+        "expected_answers": list(task.expected_answers),
+        "revealed_answer": task.revealed_answer,
+        "answer": str(submitted_answer or "").strip(),
+    }
 
 
 def _build_preview(text: str, max_length: int = 170) -> str:
@@ -210,28 +275,18 @@ def _is_noise_sentence(sentence: str) -> bool:
 
 
 def _to_card_example_dto(example: str) -> CardExampleDTO:
-    """Convert a raw example string to a CardExampleDTO.
+    """Преобразовать строку примера карточки в DTO.
 
     Args:
-        example: The raw example string (format: "japanese|romaji|translation").
+        example: Исходная строка примера из карточки.
 
     Returns:
-        The card example DTO.
+        DTO разобранного примера.
     """
-    parts = [part.strip() for part in example.split("|")]
-    if len(parts) >= 3:
-        japanese, romaji, translation = parts[:3]
-        return CardExampleDTO(
-            raw_text=example,
-            japanese=japanese,
-            romaji=romaji,
-            translation=translation,
-        )
-    if len(parts) == 2:
-        japanese, translation = parts
-        return CardExampleDTO(
-            raw_text=example,
-            japanese=japanese,
-            translation=translation,
-        )
-    return CardExampleDTO(raw_text=example, japanese=example)
+    parsed = parse_example(example)
+    return CardExampleDTO(
+        raw_text=example,
+        japanese=parsed["japanese"],
+        romaji=parsed["romaji"],
+        translation=parsed["translation"],
+    )

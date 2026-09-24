@@ -1,4 +1,4 @@
-﻿"""Схемы форм и запросов обучения."""
+"""Схемы форм и запросов обучения."""
 
 from __future__ import annotations
 
@@ -18,6 +18,19 @@ class CompleteCardForm(BaseModel):
     card_id: int = Form()
     track: str = Form()
     return_to: str | None = Form(None)
+
+
+class GenerateBatchForm(BaseModel):
+    """Форма запуска генерации партии карточек.
+
+    Форма, а не ссылка: генерация платная и мутирует состояние, и запрос не
+    должен повторяться от предзагрузки или простого обновления страницы.
+
+    Атрибуты:
+        track: Ключ трека обучения.
+    """
+
+    track: str = Form()
 
 
 class SpeechPracticeForm(BaseModel):

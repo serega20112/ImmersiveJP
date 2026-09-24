@@ -411,15 +411,18 @@ def evaluate_diagnostic_answers(
     declared_level: LanguageLevel,
     hints_used: int = 0,
 ) -> SkillAssessment:
-    """Evaluate diagnostic answers and produce a skill assessment.
+    """Оценить ответы диагностики и собрать оценку навыков.
 
     Args:
-        answers: Dictionary of question key to answer value.
-        declared_level: The user's declared language level.
-        hints_used: Number of hints used during the assessment.
+        answers: Ответы, где ключ — идентификатор вопроса.
+        declared_level: Заявленный пользователем уровень.
+        hints_used: Число подсказок, использованных при ответе.
 
     Returns:
-        The computed skill assessment.
+        Рассчитанная оценка навыков.
+
+    Raises:
+        ValueError: Если отвечены не все вопросы банка.
     """
     bank = _DIAGNOSTIC_BANKS[declared_level]["questions"]
     normalized_answers = {
@@ -433,12 +436,11 @@ def evaluate_diagnostic_answers(
     strengths: list[str] = []
     weak_points: list[str] = []
     for item in bank:
-        label = item["skill_label"]
         if normalized_answers[item["key"]] == item["correct"]:
             raw_score += 1
-            strengths.append(label)
+            strengths.append(item["skill_label"])
         else:
-            weak_points.append(label)
+            weak_points.append(item["skill_label"])
 
     penalty = min(2, hints_used // 2)
     score = max(0, raw_score - penalty)

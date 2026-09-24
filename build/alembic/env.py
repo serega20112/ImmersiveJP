@@ -9,8 +9,12 @@ from src.config.settings import settings
 from src.infrastructures.database.database import Base
 from src.infrastructures.database.models import (
     CardCompletionModel,
+    CourseModuleModel,
+    CourseStageModel,
+    CourseTopicModel,
     LearningCardModel,
     LearningSessionModel,
+    SkillAreaModel,
     UserDocument,
     UserModel,
 )

@@ -32,6 +32,8 @@ class GetTrackPageUseCase:
             session_repository = uow.repository("session")
             session = await session_repository.get_track_session(user_id, track)
             current_batch = session.last_generated_batch if session is not None else 0
+            is_generating = session is not None and session.is_generating
+            generation_failed = session is not None and session.needs_retry
             cards = []
             if current_batch > 0:
                 cards = await content_repository.list_cards_by_batch(
@@ -48,7 +50,12 @@ class GetTrackPageUseCase:
             all_current_batch_completed = bool(cards) and all(
                 int(card.id or 0) in completed_ids for card in cards
             )
-            can_generate_next = not cards or all_current_batch_completed
+            if is_generating:
+                can_generate_next = False
+            elif generation_failed:
+                can_generate_next = True
+            else:
+                can_generate_next = not cards or all_current_batch_completed
             completed_batches, work_ready_batch = await summarize_completed_batches(
                 progress_repository,
                 user_id=user_id,
@@ -66,10 +73,18 @@ class GetTrackPageUseCase:
                 all_current_batch_completed=all_current_batch_completed,
                 can_generate_next=can_generate_next,
                 generate_action_label=(
-                    "Создать первую партию" if generated_total == 0 else "Следующая партия"
+                    "Дописать партию"
+                    if generation_failed
+                    else (
+                        "Создать первую партию"
+                        if generated_total == 0
+                        else "Следующая партия"
+                    )
                 ),
                 completed_batches=completed_batches,
                 work_ready_batch=work_ready_batch,
+                is_generating=is_generating,
+                generation_failed=generation_failed,
                 work_href=(
                     f"/learn/{track.value}/work/{work_ready_batch}"
                     if work_ready_batch is not None

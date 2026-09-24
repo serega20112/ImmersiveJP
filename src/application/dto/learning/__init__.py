@@ -1,8 +1,10 @@
 """Публичные DTO модуля обучения: карточки, документы, речь, работа."""
 
 from .cards import (
+    CardBatchStatusDTO,
     CardCompletionResultDTO,
     CardExampleDTO,
+    GeneratedCardBatchDTO,
     GeneratedCardDraftDTO,
     KeyTermDTO,
     TrackCardDTO,
@@ -18,6 +20,7 @@ from .speech import (
     SpeechPracticePageDTO,
 )
 from .work import (
+    PreparedWorkTaskDTO,
     TrackWorkPageDTO,
     TrackWorkResultDTO,
     TrackWorkTaskDTO,
@@ -26,11 +29,14 @@ from .work import (
 )
 
 __all__ = [
+    "CardBatchStatusDTO",
     "CardCompletionResultDTO",
     "CardExampleDTO",
     "GeneratedCardDraftDTO",
+    "GeneratedCardBatchDTO",
     "KeyTermDTO",
     "PdfDocumentDTO",
+    "PreparedWorkTaskDTO",
     "SpeechDialogueDTO",
     "SpeechDialogueTurnDTO",
     "SpeechLineDTO",

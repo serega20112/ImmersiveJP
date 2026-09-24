@@ -9,6 +9,7 @@ const importModule = (path) => import(`${path}?v=${assetVersion}`);
 
 const boot = async () => {
   const [
+    { initBatchPolling },
     { initChoiceGroups },
     { initHintToggles },
     { initPendingForms },
@@ -16,6 +17,7 @@ const boot = async () => {
     { initThemeToggle },
     { initWordChips },
   ] = await Promise.all([
+    importModule("./batch/index.js"),
     importModule("./choices/index.js"),
     importModule("./hints/index.js"),
     importModule("./pending/index.js"),
@@ -30,6 +32,7 @@ const boot = async () => {
   initPromptChips();
   initWordChips();
   initHintToggles();
+  initBatchPolling();
 };
 
 void boot();

@@ -8,7 +8,7 @@
 from .auth import LoginForm, RegistrationForm, VerificationForm
 from .documents import DocumentAddForm
 from .knowledge import KnowledgeGenerateForm, KnowledgeSubmitForm
-from .learning import CompleteCardForm, SpeechPracticeForm, TrackQuery
+from .learning import CompleteCardForm, GenerateBatchForm, SpeechPracticeForm, TrackQuery
 from .mentor import MentorMessageForm, VoiceInputResponse
 from .onboarding import OnboardingForm
 from .system import SystemHealthResponse
@@ -16,6 +16,7 @@ from .system import SystemHealthResponse
 __all__ = [
     "CompleteCardForm",
     "DocumentAddForm",
+    "GenerateBatchForm",
     "KnowledgeGenerateForm",
     "KnowledgeSubmitForm",
     "LoginForm",

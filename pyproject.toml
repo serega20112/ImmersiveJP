@@ -61,7 +61,8 @@ src = [
 addopts = "-ra"
 asyncio_mode = "auto"
 python_files = ["*_test.py", "test_*.py"]
-testpaths = ["src/tests"]
+testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.coverage.run]
 branch = true

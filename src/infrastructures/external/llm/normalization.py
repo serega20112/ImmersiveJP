@@ -10,6 +10,7 @@ import re
 from collections.abc import Mapping
 
 from src.application.dto.learning import (
+    GeneratedCardBatchDTO,
     GeneratedCardDraftDTO,
     SpeechDialogueDTO,
     SpeechDialogueTurnDTO,
@@ -24,8 +25,8 @@ from src.application.dto.profile import (
     LearningPlanPageDTO,
     ProgressReportDTO,
 )
-from src.domain.aggregates.user import User
 from src.domain.entities.mentor import MentorFocus
+from src.infrastructures.external.llm.requests import LLMResponseUnusableError
 from src.utils.logging import get_logger, log_event
 
 logger = get_logger(__name__)
@@ -33,40 +34,71 @@ logger = get_logger(__name__)
 
 class LLMNormalizationMixin:
     @staticmethod
-    def _normalize_cards(parsed: object, payload: dict) -> list[GeneratedCardDraftDTO]:
-        parsed_items = HuggingFaceLLMClient._coerce_list(parsed)
+    def _normalize_cards(parsed: object, payload: dict) -> GeneratedCardBatchDTO:
+        """Собрать партию карточек из ответа модели.
+
+        В партию берутся только те карточки, которые действительно вернула модель.
+        Её примеры не подменяются шаблонными: на языке learning подстановка
+        давала всем карточкам один и тот же текст, из-за чего живые карточки
+        терялись как дубликаты, а партия доливается заготовками. Примеров может
+        быть мало — это честный ответ модели, а не повод его выбрасывать.
+
+        Дубликаты ищутся по теме: тема и есть идентичность карточки. Сколько
+        карточек пришло от модели и сколько добрал заготовками — пишется в лог,
+        чтобы тихая подмена не выглядела успешной генерацией.
+
+        Args:
+            parsed: Разобранный ответ модели.
+            payload: Контекст запроса с треком и размером партии.
+
+        Returns:
+            Партию длиной не больше размера партии, с разделением на то, что
+            дала модель, и что добрал заготовками.
+        """
+        batch_size = payload["batch_size"]
+        track = str(payload["track"])
         normalized: list[GeneratedCardDraftDTO] = []
         seen_topics: set[str] = set()
         seen_example_signatures: set[tuple[str, ...]] = set()
-        for raw_item in parsed_items[: payload["batch_size"]]:
+
+        for raw_item in HuggingFaceLLMClient._coerce_list(parsed):
+            if len(normalized) == batch_size:
+                break
             if not isinstance(raw_item, Mapping):
                 continue
-            item = dict(raw_item)
-            topic = str(item.get("topic") or "Тема без названия").strip()
-            normalized_topic = topic.casefold()
-            if not topic or normalized_topic in seen_topics:
-                continue
-            if HuggingFaceLLMClient._is_placeholder_topic(topic):
-                continue
-            key_terms = HuggingFaceLLMClient._normalize_key_terms(
-                item.get("key_terms") or [],
-                track=str(payload["track"]),
-            )[:5]
-            normalized_examples = HuggingFaceLLMClient._normalize_card_examples(
-                item.get("examples") or []
-            )
-            if len(normalized_examples) < 3:
-                normalized_examples = HuggingFaceLLMClient._build_dynamic_examples(
-                    track=str(payload["track"]),
-                    context_title=topic,
-                    angle_title=topic,
-                    base_terms=key_terms,
+            topic = str(raw_item.get("topic") or "").strip()
+            if not topic or HuggingFaceLLMClient._is_placeholder_topic(topic):
+                log_event(
+                    logger,
+                    logging.WARNING,
+                    "llm.card_dropped_empty_topic",
+                    "Dropped generated card without a usable topic",
+                    track=track,
+                    topic=topic or None,
                 )
+                continue
+            normalized_topic = topic.casefold()
+            if normalized_topic in seen_topics:
+                log_event(
+                    logger,
+                    logging.WARNING,
+                    "llm.card_dropped_duplicate_topic",
+                    "Dropped generated card repeating an earlier topic",
+                    track=track,
+                    topic=topic,
+                )
+                continue
+            explanation = str(raw_item.get("explanation") or "").strip()
+            key_terms = HuggingFaceLLMClient._normalize_key_terms(
+                raw_item.get("key_terms") or [],
+                track=track,
+            )[:5]
+            examples = HuggingFaceLLMClient._normalize_card_examples(raw_item.get("examples") or [])
             if not HuggingFaceLLMClient._card_matches_track(
-                track=str(payload["track"]),
+                track=track,
                 topic=topic,
-                explanation=str(item.get("explanation") or "").strip(),
-                examples=normalized_examples,
+                explanation=explanation,
+                examples=examples,
                 key_terms=key_terms,
             ):
                 log_event(
@@ -74,32 +106,29 @@ class LLMNormalizationMixin:
                     logging.WARNING,
                     "llm.card_track_filtered",
                     "Filtered generated card outside track scope",
-                    track=str(payload["track"]),
+                    track=track,
                     topic=topic,
                 )
                 continue
-            example_signature = HuggingFaceLLMClient._example_signature(normalized_examples)
-            if example_signature and example_signature in seen_example_signatures:
-                continue
             seen_topics.add(normalized_topic)
-            if example_signature:
-                seen_example_signatures.add(example_signature)
             normalized.append(
                 GeneratedCardDraftDTO(
                     topic=topic,
-                    explanation=str(item.get("explanation") or "").strip(),
-                    examples=normalized_examples[:3],
+                    explanation=explanation,
+                    examples=examples[:3],
                     key_terms=key_terms,
                 )
             )
-        if len(normalized) < payload["batch_size"]:
+
+        from_model = len(normalized)
+        if from_model < batch_size:
             fallback = HuggingFaceLLMClient._fallback_cards(
                 payload,
                 seen_topics,
                 seen_example_signatures,
             )
             for draft in fallback:
-                if len(normalized) == payload["batch_size"]:
+                if len(normalized) == batch_size:
                     break
                 topic_key = draft.topic.casefold()
                 if topic_key in seen_topics:
@@ -111,7 +140,23 @@ class LLMNormalizationMixin:
                 if example_signature:
                     seen_example_signatures.add(example_signature)
                 normalized.append(draft)
-        return normalized
+
+        fallback_count = len(normalized) - from_model
+        log_event(
+            logger,
+            logging.INFO if from_model == batch_size else logging.WARNING,
+            "llm.cards_normalized",
+            "Composed card batch from the model response",
+            track=track,
+            batch_size=batch_size,
+            from_model=from_model,
+            filled_by_fallback=fallback_count,
+        )
+        return GeneratedCardBatchDTO(
+            drafts=normalized,
+            model_count=from_model,
+            fallback_count=fallback_count,
+        )
 
     @staticmethod
     def _normalize_mentor_reply(
@@ -120,6 +165,22 @@ class LLMNormalizationMixin:
         plan: LearningPlanPageDTO,
         active_focus: MentorFocus | None,
     ) -> MentorReplyDTO:
+        """Собрать ответ наставника из ответа модели.
+
+        Модель вместо объекта иногда отдаёт просто массив коротких строк. Тогда
+        первая строка трактуется как ответ, а остальные — как шаги: приём
+        неполный, но полезнее молчаливой заготовки. Сам случай подмены
+        фиксируется в логе, чтобы деградация была видна, а не угадывалась.
+
+        Args:
+            parsed: Разобранный ответ модели.
+            report: Отчёт о прогрессе для заготовки.
+            plan: Учебный план для заготовки.
+            active_focus: Активный фокус наставника либо None.
+
+        Returns:
+            Ответ наставника.
+        """
         parsed_object = HuggingFaceLLMClient._coerce_object(parsed)
         reply = str(
             parsed_object.get("reply")
@@ -143,12 +204,19 @@ class LLMNormalizationMixin:
             limit=3,
         )
 
-        # Если reply пустой, но есть список строк — попробуем интерпретировать как reply + steps
         if not reply and isinstance(parsed, list) and len(parsed) >= 2:
             strings = [str(item).strip() for item in parsed if str(item).strip()]
+            log_event(
+                logger,
+                logging.WARNING,
+                "llm.response_shape_mismatch",
+                "Mentor answered with a plain array; first line taken as reply, rest as steps",
+                parsed_type=type(parsed).__name__,
+                array_length=len(strings),
+            )
             if strings:
                 reply = strings[0]
-                action_steps = [s for s in strings[1:] if s][:3]
+                action_steps = [item for item in strings[1:] if item][:3]
 
         if not reply or len(action_steps) < 2:
             log_event(
@@ -188,7 +256,10 @@ class LLMNormalizationMixin:
             if isinstance(item, dict)
         ]
         if len(sentences) < 10 or len(dialogues) < 5:
-            return HuggingFaceLLMClient._fallback_speech_practice(payload)
+            raise LLMResponseUnusableError(
+                "speech_shape",
+                f"Речевая практика неполная: sentences={len(sentences)}, dialogues={len(dialogues)}",
+            )
         return SpeechPracticeDTO(
             words=list(payload["words"]),
             sentences=sentences[:10],
@@ -444,9 +515,21 @@ class LLMNormalizationMixin:
         examples: list[str],
         key_terms: list[str],
     ) -> bool:
+        """Проверить, что карточка осталась в границах своего трека.
+
+        Args:
+            track: Ключ трека обучения.
+            topic: Тема карточки.
+            explanation: Объяснение карточки.
+            examples: Примеры употребления.
+            key_terms: Ключевые термины.
+
+        Returns:
+            True, если карточка относится к запрошенному треку.
+        """
         combined = " ".join([topic, explanation, *examples, *key_terms]).casefold()
         if track == "language":
-            return HuggingFaceLLMClient._matches_language_scope(combined, examples)
+            return HuggingFaceLLMClient._matches_language_scope(combined)
         if track == "culture":
             return HuggingFaceLLMClient._matches_culture_scope(combined)
         if track == "history":
@@ -454,8 +537,20 @@ class LLMNormalizationMixin:
         return True
 
     @staticmethod
-    def _matches_language_scope(text: str, examples: list[str]) -> bool:
-        if any(HuggingFaceLLMClient._contains_japanese_chars(example) for example in examples):
+    def _matches_language_scope(text: str) -> bool:
+        """Относится ли текст к языковому треку.
+
+        Японская письменность ищется во всём тексте карточки, а не только в
+        примерах: модель вправе отдать один короткий пример или не отдать его
+        вовсе, и это не повод считать карточку чужеродной.
+
+        Args:
+            text: Склеенный текст карточки в нижнем регистре.
+
+        Returns:
+            True, если в тексте есть канны или лексика про язык.
+        """
+        if HuggingFaceLLMClient._contains_japanese_chars(text):
             return True
         language_keywords = (
             "фраз",
@@ -477,6 +572,19 @@ class LLMNormalizationMixin:
 
     @staticmethod
     def _matches_culture_scope(text: str) -> bool:
+        """Относится ли текст к культурному треку.
+
+        Проверка работает как отсев явного чужого, а не как белый список:
+        карточка о бытовых нормах обязана быть узнаваема без присутствия слова
+        «культура», поэтому отсутствие сигналов считается нормой. Уходит карточка
+        только тогда, когда целиком про историю или про язык.
+
+        Args:
+            text: Склеенный текст карточки в нижнем регистре.
+
+        Returns:
+            True, если явных признаков другого трека нет.
+        """
         culture_keywords = (
             "культур",
             "обыча",
@@ -526,14 +634,23 @@ class LLMNormalizationMixin:
         )
         if HuggingFaceLLMClient._contains_any(text, culture_keywords):
             return True
-        if HuggingFaceLLMClient._contains_any(text, history_keywords):
-            return False
-        if HuggingFaceLLMClient._contains_any(text, language_keywords):
-            return False
-        return False
+        return not HuggingFaceLLMClient._contains_any(text, (*history_keywords, *language_keywords))
 
     @staticmethod
     def _matches_history_scope(text: str) -> bool:
+        """Относится ли текст к историческому треку.
+
+        Как и в случае с культурой, отсутствие сигналов не порок: историческая
+        карточка может быть написана словами про людей, место и последствия.
+        Отбраковывается только то, что явно про бытовые нормы, язык или оформление
+        переезда.
+
+        Args:
+            text: Склеенный текст карточки в нижнем регистре.
+
+        Returns:
+            True, если явных признаков другого трека нет.
+        """
         history_keywords = (
             "истор",
             "эпох",
@@ -594,16 +711,31 @@ class LLMNormalizationMixin:
             return True
         if HuggingFaceLLMClient._contains_any(text, history_keywords):
             return True
-        if HuggingFaceLLMClient._contains_any(text, offscope_keywords):
-            return False
-        return False
+        return not HuggingFaceLLMClient._contains_any(text, offscope_keywords)
 
     @staticmethod
     def _contains_any(text: str, keywords: tuple[str, ...]) -> bool:
+        """Встречается ли в тексте хотя бы один из стеблей.
+
+        Args:
+            text: Текст в нижнем регистре.
+            keywords: Стебли для поиска.
+
+        Returns:
+            True при совпадении.
+        """
         return any(keyword in text for keyword in keywords)
 
     @staticmethod
     def _contains_japanese_chars(value: str) -> bool:
+        """Есть ли в тексте канны или иероглифы.
+
+        Args:
+            value: Текст для проверки.
+
+        Returns:
+            True при наличии японской письменности.
+        """
         return bool(re.search(r"[ぁ-んァ-ヶ一-龯々ー]", value))
 
     @staticmethod
@@ -676,11 +808,22 @@ class LLMNormalizationMixin:
         return tuple(dict.fromkeys(signatures))
 
     @staticmethod
-    def _normalize_advice_payload(
-        parsed: object,
-        user: User,
-        report: ProgressReportDTO,
-    ) -> AIAdviceDTO:
+    def _normalize_advice_payload(parsed: object) -> AIAdviceDTO:
+        """Собрать персональный совет из ответа модели.
+
+        Непригодную форму ответа поднимает ошибкой вместо тихого возврата к
+        заготовке: иначе страница выглядела успешной, тратила платный запрос и
+        всё равно показывала шаблон.
+
+        Args:
+            parsed: Разобранный ответ модели.
+
+        Returns:
+            Персональный совет.
+
+        Raises:
+            LLMResponseUnusableError: Если в ответе нет summary или набора шагов.
+        """
         parsed_object = HuggingFaceLLMClient._coerce_object(parsed)
         focus_points = HuggingFaceLLMClient._coerce_text_list(
             parsed_object.get("focus_points")
@@ -699,7 +842,19 @@ class LLMNormalizationMixin:
             or ""
         ).strip()
         if not summary or len(focus_points) < 2:
-            return HuggingFaceLLMClient._fallback_advice(user, report)
+            log_event(
+                logger,
+                logging.WARNING,
+                "llm.response_shape_mismatch",
+                "Advice response is unusable: expected an object with headline, summary, focus_points",
+                parsed_type=type(parsed).__name__,
+                summary_present=bool(summary),
+                focus_points_count=len(focus_points),
+            )
+            raise LLMResponseUnusableError(
+                "advice_shape",
+                f"Совет непригоден: summary={bool(summary)}, focus_points={len(focus_points)}",
+            )
         return AIAdviceDTO(
             headline=headline,
             summary=summary,

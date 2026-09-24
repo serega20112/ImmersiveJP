@@ -9,10 +9,10 @@ from .learning import (
     CompleteCardUseCase,
     ExportCardsToPDFUseCase,
     GenerateCardsUseCase,
+    GetCardBatchStatusUseCase,
     GetCardPageUseCase,
-    GetNextCardsUseCase,
     GetTrackPageUseCase,
-    RepairCurrentBatchUseCase,
+    StartCardBatchGenerationUseCase,
 )
 from .onboarding import CompleteOnboardingUseCase
 from .profile import BuildProgressReportUseCase, GenerateAIAdviceUseCase

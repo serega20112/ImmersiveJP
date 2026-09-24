@@ -1,15 +1,17 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 
 from src.application.dto.learning import TrackWorkPageDTO
-from src.application.exceptions import InvalidTrackWorkSubmissionError
+from src.application.exceptions import (
+    InvalidTrackWorkSubmissionError,
+    TrackWorkUnavailableError,
+)
 from src.application.interfaces import UnitOfWork
 from src.application.interfaces.clients import LLMClient
-from src.application.use_cases.learning.work.get_track_work_page import TrackWorkUnavailableError
-from src.application.use_cases.learning.work.work_tasks import (
-    build_prepared_work_tasks,
-    evaluate_work_submission,
+from src.application.use_cases.learning.work.grading import evaluate_work_submission
+from src.application.use_cases.learning.work.task_builder import build_prepared_work_tasks
+from src.application.use_cases.mappers import (
     to_track_work_review_payload,
     to_track_work_task_dto,
 )

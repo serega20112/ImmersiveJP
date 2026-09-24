@@ -1,4 +1,4 @@
-﻿"""DTO работы по партии: задания, результаты, страница работы."""
+"""DTO работы по партии: задания, результаты, страница работы."""
 
 from __future__ import annotations
 
@@ -19,6 +19,44 @@ class WorkHintDTO(BaseModel):
 
     title: str
     content: str
+
+
+class PreparedWorkTaskDTO(BaseModel):
+    """Подготовленное задание работы по партии, ещё не показанное пользователю.
+
+    Хранит условие задания и всё, что нужно для проверки ответа: допустимые
+    варианты, обязательные элементы и порог их совпадения. В шаблон уходит
+    только переработанное в TrackWorkTaskDTO, поля проверки из него не читают.
+
+    Атрибуты:
+        id: Идентификатор задания внутри работы.
+        kind: Тип задания: recall, production или immersion.
+        title: Название задания.
+        prompt: Формулировка условия.
+        expected_format: Ожидаемый формат ответа.
+        source_topic: Тема карточки, из которой взято задание.
+        placeholder: Подсказка-заполнитель поля ввода.
+        required_terms: Элементы, которые должны встретиться в ответе.
+        hints: Подсказки к заданию.
+        expected_answers: Допустимые варианты короткого ответа.
+        minimum_term_hits: Сколько обязательных элементов нужно зачесть.
+        revealed_answer: Ответ, показываемый при промахе.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: str
+    kind: str
+    title: str
+    prompt: str
+    expected_format: str
+    source_topic: str
+    placeholder: str
+    required_terms: list[str] = Field(default_factory=list)
+    hints: list[WorkHintDTO] = Field(default_factory=list)
+    expected_answers: list[str] = Field(default_factory=list)
+    minimum_term_hits: int = 0
+    revealed_answer: str | None = None
 
 
 class TrackWorkTaskDTO(BaseModel):

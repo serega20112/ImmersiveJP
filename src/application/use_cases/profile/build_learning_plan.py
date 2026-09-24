@@ -9,296 +9,34 @@ from src.application.dto.profile import (
     PlanStageDTO,
     ProgressReportDTO,
 )
+from src.application.exceptions import CourseProgramUnavailableError
 from src.application.interfaces import UnitOfWork
 from src.application.use_cases.profile.build_progress_report import (
     BuildProgressReportUseCase,
 )
+from src.domain.entities.course import CourseStage
 from src.domain.value_objects.user import StudyTimeline
 
-_ROADMAP = (
-    {
-        "index": 0,
-        "title": "База",
-        "timeframe": "0-1 месяц",
-        "summary": "Сначала ставится фундамент чтения и распознавания базовых слогов. Без этого дальше идти бессмысленно: грамматика и речь будут разваливаться на каждом новом шаге.",
-        "modules": (
-            (
-                "Хирагана",
-                (
-                    "символы",
-                    "дакутэн и хандакутэн",
-                    "сочетания вроде きゃ / しゃ",
-                    "маленькое つ",
-                ),
-            ),
-            (
-                "Катакана",
-                (
-                    "символы",
-                    "долгие гласные ー",
-                    "удвоение ッ",
-                    "иностранные сочетания вроде ファ / ティ",
-                ),
-            ),
-            (
-                "Чтение",
-                (
-                    "простые слова",
-                    "чтение вслух",
-                    "ритм коротких фраз",
-                ),
-            ),
+_KANJI_STAGE_CODE = "kanji"
+
+_WEAK_POINT_STAGES: tuple[tuple[int, frozenset[str]], ...] = (
+    (0, frozenset({"Хирагана", "Катакана", "Чтение слов"})),
+    (1, frozenset({"Частицы", "Базовый порядок предложения", "Отрицательная форма"})),
+    (
+        2,
+        frozenset(
+            {
+                "Базовая лексика",
+                "Формулы вежливости",
+                "Вежливая просьба",
+                "Бытовые сцены",
+            }
         ),
-    },
-    {
-        "index": 1,
-        "title": "Базовая грамматика",
-        "timeframe": "1-3 месяц",
-        "summary": "Здесь собирается каркас предложения: тема, объект, отрицание, вопросы и базовые глагольные формы. Это этап, где язык перестает быть списком слов.",
-        "modules": (
-            (
-                "Предложения",
-                (
-                    "A は B です",
-                    "вопросы с か",
-                    "отрицание じゃないです",
-                ),
-            ),
-            (
-                "Частицы",
-                (
-                    "は как тема",
-                    "が как субъект",
-                    "を как объект",
-                    "に для времени и направления",
-                    "の для принадлежности",
-                ),
-            ),
-            (
-                "Глаголы",
-                (
-                    "ます-форма",
-                    "отрицание",
-                    "прошедшее время",
-                ),
-            ),
-            (
-                "Словарь",
-                (
-                    "бытовой словарь до ~300 слов",
-                    "частые существительные и глаголы",
-                ),
-            ),
-        ),
-    },
-    {
-        "index": 2,
-        "title": "Начало речи",
-        "timeframe": "3-6 месяц",
-        "summary": "На этом этапе язык начинает работать в коротких сценах: просьба, магазин, знакомство, бытовой диалог. Важно не просто помнить форму, а быстро доставать ее в ситуации.",
-        "modules": (
-            (
-                "Глаголы",
-                (
-                    "て-форма",
-                    "просьбы через ください",
-                    "разрешение через いいです",
-                    "запрет через だめ",
-                ),
-            ),
-            (
-                "Прилагательные",
-                (
-                    "い-прилагательные",
-                    "な-прилагательные",
-                    "прошедшие и отрицательные формы",
-                ),
-            ),
-            (
-                "Простые диалоги",
-                (
-                    "знакомство",
-                    "магазин",
-                    "повседневные сцены",
-                ),
-            ),
-            (
-                "Словарь",
-                (
-                    "расширение до ~800 слов",
-                    "частые бытовые конструкции",
-                ),
-            ),
-        ),
-    },
-    {
-        "index": 3,
-        "title": "Кандзи",
-        "timeframe": "параллельно с этапа 2",
-        "summary": "Кандзи не должны ждать идеального момента. Как только базовая речь пошла, чтение и письмо постепенно подхватываются параллельной дорожкой.",
-        "modules": (
-            (
-                "Базовые кандзи",
-                (
-                    "числа",
-                    "время",
-                    "частые базовые слова",
-                ),
-            ),
-            (
-                "Чтения",
-                (
-                    "онъёми",
-                    "кунъёми",
-                    "контекстный выбор чтения",
-                ),
-            ),
-            (
-                "Письмо",
-                (
-                    "порядок черт",
-                    "ручная практика",
-                    "распознавание в словах",
-                ),
-            ),
-        ),
-    },
-    {
-        "index": 4,
-        "title": "Уверенный базис",
-        "timeframe": "6-12 месяц",
-        "summary": "Этап, где базовые формы связываются в устойчивую практику: слушание, чтение и грамматика начинают работать вместе, а не по отдельности.",
-        "modules": (
-            (
-                "Грамматика",
-                (
-                    "ている",
-                    "たい",
-                    "つもり",
-                    "ことができる",
-                ),
-            ),
-            (
-                "Слушание",
-                (
-                    "аниме с разбором",
-                    "подкасты",
-                    "повторение фраз вслух",
-                ),
-            ),
-            (
-                "Чтение",
-                (
-                    "простые тексты",
-                    "короткие диалоги",
-                    "привычка читать без ромадзи",
-                ),
-            ),
-            (
-                "Словарь",
-                (
-                    "расширение до ~1500 слов",
-                    "бытовые и учебные темы",
-                ),
-            ),
-        ),
-    },
-    {
-        "index": 5,
-        "title": "Средний уровень",
-        "timeframe": "1-2 год",
-        "summary": "Здесь уже строится речь без постоянной опоры на заготовки. Добавляются сложные формы, больше кандзи и настоящее погружение в живой материал.",
-        "modules": (
-            (
-                "Кандзи",
-                (
-                    "~1000 знаков",
-                    "чтение в реальном контексте",
-                ),
-            ),
-            (
-                "Грамматика",
-                (
-                    "условные формы なら / たら",
-                    "пассив",
-                    "каузатив",
-                    "сложные конструкции",
-                ),
-            ),
-            (
-                "Разговор",
-                (
-                    "свободные диалоги",
-                    "выражение мыслей",
-                    "ответы без долгой паузы",
-                ),
-            ),
-            (
-                "Погружение",
-                (
-                    "аниме без сабов",
-                    "манга",
-                    "игры",
-                ),
-            ),
-        ),
-    },
-    {
-        "index": 6,
-        "title": "Продвинутый",
-        "timeframe": "2-3 год",
-        "summary": "На этом уровне язык уже используется как инструмент: для разговора, понимания длинных форматов, письма и переключения между стилями.",
-        "modules": (
-            (
-                "Кандзи",
-                (
-                    "~2000+ знаков",
-                    "быстрое чтение без постоянной расшифровки",
-                ),
-            ),
-            (
-                "Речь",
-                (
-                    "беглая разговорная речь",
-                    "сленг",
-                    "переключение между стилями",
-                ),
-            ),
-            (
-                "Понимание",
-                (
-                    "фильмы",
-                    "интервью",
-                    "живое общение",
-                ),
-            ),
-            (
-                "Письмо",
-                (
-                    "тексты",
-                    "сообщения",
-                    "практическая переписка",
-                ),
-            ),
-        ),
-    },
-    {
-        "index": 7,
-        "title": "Финал",
-        "timeframe": "после 3 лет и дальше",
-        "summary": "Финальный этап не про очередной набор тем, а про устойчивую жизнь в языке: понимание без перевода, свободная речь и самостоятельное расширение словаря.",
-        "modules": (
-            (
-                "Свобода использования",
-                (
-                    "свободный разговор",
-                    "понимание без постоянного перевода",
-                    "жизнь в языковой среде",
-                ),
-            ),
-        ),
-    },
+    ),
+    (4, frozenset({"Намерение и план", "Связность фразы", "Точность в контексте"})),
+    (5, frozenset({"Регистр речи", "Чтение канжи в контексте"})),
 )
+
 
 _DICTIONARY_LINKS = (
     {
@@ -335,66 +73,104 @@ class BuildLearningPlanUseCase:
         self._build_progress_report_use_case = build_progress_report_use_case
 
     async def execute(self, user_id: int) -> LearningPlanPageDTO:
-        """Build a learning plan for a user.
+        """Собрать учебный план пользователя.
+
+        Этапы программы читаются из справочных таблиц, поэтому порядок и
+        содержимое блока можно менять миграцией, не трогая код.
 
         Args:
-            user_id: ID of the user.
+            user_id: Идентификатор пользователя.
 
         Returns:
-            The learning plan page data.
+            Данные страницы учебного плана.
 
         Raises:
-            ValueError: If the user is not found.
+            ValueError: Если пользователь не найден.
+            CourseProgramUnavailableError: Если программа не заполнена.
         """
         async with self._uow as uow:
             user_repository = uow.repository("user")
+            course_repository = uow.repository("course")
             user = await user_repository.get_by_id(user_id)
+            stages = await course_repository.list_stages()
         if user is None:
             raise ValueError("Пользователь не найден")
+        if not stages:
+            raise CourseProgramUnavailableError(
+                "Учебная программа пуста: не применена миграция course_stages"
+            )
 
         report = await self._build_progress_report_use_case.execute(user_id)
         weak_points = list(report.skill_assessment.weak_points) if report.skill_assessment else []
 
+        stages_by_position = {stage.position: stage for stage in stages}
         progress_stage_index = _stage_from_progress(report)
         weak_stage_index = _stage_from_weak_points(weak_points)
         current_stage_index = progress_stage_index
         recovery_note = None
         if weak_stage_index is not None and weak_stage_index < progress_stage_index:
             current_stage_index = weak_stage_index
-            recovery_note = _recovery_note(weak_points, _ROADMAP[weak_stage_index]["title"])
+            recovery_note = _recovery_note(
+                weak_points,
+                _select_stage(stages_by_position, weak_stage_index).title,
+            )
 
-        current_stage = _ROADMAP[current_stage_index]
+        current_stage = _select_stage(stages_by_position, current_stage_index)
         content_mode = _build_content_mode(current_stage_index, report.trust_score.score)
         pace_mode = _build_pace_mode(user.study_timeline)
         horizon_stage_index = max(
             current_stage_index,
             _timeline_horizon_index(user.study_timeline),
         )
-        horizon_stage = _ROADMAP[horizon_stage_index]
+        horizon_stage = _select_stage(stages_by_position, horizon_stage_index)
 
         return LearningPlanPageDTO(
             title="Учебный план",
             subtitle=_subtitle_for_plan(current_stage_index, recovery_note is not None),
-            horizon_title=(f"Горизонт на текущий срок: до этапа '{horizon_stage['title']}'"),
+            horizon_title=(f"Горизонт на текущий срок: до этапа '{horizon_stage.title}'"),
             horizon_note=_horizon_note(
                 study_timeline=user.study_timeline,
-                horizon_stage_index=horizon_stage_index,
+                horizon_stage=horizon_stage,
             ),
-            current_stage_title=current_stage["title"],
-            current_stage_timeframe=current_stage["timeframe"],
-            current_stage_summary=current_stage["summary"],
+            current_stage_title=current_stage.title,
+            current_stage_timeframe=current_stage.timeframe,
+            current_stage_summary=current_stage.summary,
             recovery_note=recovery_note,
-            next_action=_next_action(report, weak_points, current_stage["title"]),
+            next_action=_next_action(report, weak_points, current_stage.title),
             parallel_note="Культура и история идут рядом с языком: они не заменяют языковую дорожку, а дают сцены, контекст и повторение в новых ситуациях.",
             content_mode=content_mode,
             pace_mode=pace_mode,
             stages=_build_stage_dtos(
+                program=stages,
                 current_stage_index=current_stage_index,
                 progress_stage_index=progress_stage_index,
                 weak_stage_index=weak_stage_index,
                 visible_horizon_index=horizon_stage_index,
             ),
         )
+
+
+def _select_stage(stages_by_position: dict[int, CourseStage], position: int) -> CourseStage:
+    """Достать этап по порядковому номеру из загруженной программы.
+
+    Номера этапов приходят из расчётов прогресса и срока, поэтому пропущенный
+    номер означает рассогласование данных программы с кодом, и молча подменять
+    его соседним этапом нельзя.
+
+    Args:
+        stages_by_position: Этапы, индексированные позицией.
+        position: Нужная позиция этапа.
+
+    Returns:
+        Найденный этап.
+
+    Raises:
+        CourseProgramUnavailableError: Если этапа с такой позицией нет.
+    """
+    stage = stages_by_position.get(position)
+    if stage is None:
+        raise CourseProgramUnavailableError(f"В учебной программе нет этапа с номером {position}")
+    return stage
 
 
 def _stage_from_progress(report: ProgressReportDTO) -> int:
@@ -435,24 +211,8 @@ def _stage_from_weak_points(weak_points: list[str]) -> int | None:
     Returns:
         The stage index, or None if no weak points match.
     """
-    stage_map = (
-        (0, {"Хирагана", "Катакана", "Чтение слов"}),
-        (1, {"Частицы", "Базовый порядок предложения", "Отрицательная форма"}),
-        (
-            2,
-            {
-                "Базовая лексика",
-                "Формулы вежливости",
-                "Вежливая просьба",
-                "Бытовые сцены",
-            },
-        ),
-        (4, {"Намерение и план", "Связность фразы", "Точность в контексте"}),
-        (5, {"Регистр речи", "Чтение канжи в контексте"}),
-    )
-
     weak_set = set(weak_points)
-    for stage_index, labels in stage_map:
+    for stage_index, labels in _WEAK_POINT_STAGES:
         if weak_set & labels:
             return stage_index
     return None
@@ -658,13 +418,13 @@ def _timeline_horizon_index(study_timeline: StudyTimeline | None) -> int:
 def _horizon_note(
     *,
     study_timeline: StudyTimeline | None,
-    horizon_stage_index: int,
+    horizon_stage: CourseStage,
 ) -> str | None:
     """Build a horizon note for the learning plan.
 
     Args:
         study_timeline: The user's study timeline.
-        horizon_stage_index: The horizon stage index.
+        horizon_stage: The stage closing the visible horizon.
 
     Returns:
         The horizon note text, or None for flexible timelines.
@@ -673,34 +433,35 @@ def _horizon_note(
     if timeline == StudyTimeline.FLEXIBLE:
         return None
 
-    stage = _ROADMAP[horizon_stage_index]
     return (
         f"Дальние этапы за пределами срока сейчас скрыты. В этом режиме план держит "
-        f"фокус до блока '{stage['title']}', а не размазывает внимание до финала."
+        f"фокус до блока '{horizon_stage.title}', а не размазывает внимание до финала."
     )
 
 
 def _build_stage_dtos(
     *,
+    program: list[CourseStage],
     current_stage_index: int,
     progress_stage_index: int,
     weak_stage_index: int | None,
     visible_horizon_index: int,
 ) -> list[PlanStageDTO]:
-    """Build DTOs for visible learning stages.
+    """Собрать DTO видимых этапов учебного плана.
 
     Args:
-        current_stage_index: The current stage index.
-        progress_stage_index: The progress stage index.
-        weak_stage_index: The weak stage index, or None.
-        visible_horizon_index: The maximum visible horizon index.
+        program: Этапы загруженной программы.
+        current_stage_index: Позиция текущего этапа.
+        progress_stage_index: Позиция этапа, до которого дошёл прогресс.
+        weak_stage_index: Позиция этапа со слабой базой, либо None.
+        visible_horizon_index: Максимальная видимая позиция этапа.
 
     Returns:
-        A list of stage DTOs.
+        Список этапов, не выходящих за горизонт срока.
     """
-    stages: list[PlanStageDTO] = []
-    for stage in _ROADMAP:
-        index = stage["index"]
+    rows: list[PlanStageDTO] = []
+    for stage in program:
+        index = stage.position
         if index > visible_horizon_index:
             continue
         status, status_label = _status_for_stage(index, current_stage_index)
@@ -711,27 +472,29 @@ def _build_stage_dtos(
             and weak_stage_index < progress_stage_index
         ):
             focus_note = "Пока здесь есть просадка, план удерживает фокус на повторении базы."
-        elif index == 3 and current_stage_index >= 2:
+        elif stage.code == _KANJI_STAGE_CODE and current_stage_index >= 2:
             focus_note = (
                 "Кандзи идут параллельной дорожкой и не ждут, пока вся речь станет идеальной."
             )
 
-        stages.append(
+        rows.append(
             PlanStageDTO(
                 index=index,
-                title=stage["title"],
-                timeframe=stage["timeframe"],
-                summary=stage["summary"],
+                title=stage.title,
+                timeframe=stage.timeframe,
+                summary=stage.summary,
                 status=status,
                 status_label=status_label,
                 focus_note=focus_note,
                 modules=[
-                    PlanModuleDTO(title=module_title, items=list(items))
-                    for module_title, items in stage["modules"]
+                    PlanModuleDTO(
+                        title=module.title, items=[topic.title for topic in module.topics]
+                    )
+                    for module in stage.modules
                 ],
             )
         )
-    return stages
+    return rows
 
 
 def _status_for_stage(index: int, current_stage_index: int) -> tuple[str, str]:

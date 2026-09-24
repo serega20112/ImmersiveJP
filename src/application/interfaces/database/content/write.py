@@ -9,12 +9,11 @@ from src.domain.entities import LearningCard
 
 
 class LearningCardWriteRepositoryPort(WriteRepositoryPort[LearningCard, int], ABC):
-    """Порт записи учебных карточек."""
+    """Порт записи учебных карточек.
 
-    @abstractmethod
-    async def add_many(self, cards: list[LearningCard]) -> list[LearningCard]:
-        """Сохранить список новых карточек."""
-        raise NotImplementedError
+    Добавление одной карточки приходит из базового порта (create): партия
+    дописывается по одной карточке, и отдельного пакетного метода больше не нужно.
+    """
 
     @abstractmethod
     async def update_many(self, cards: list[LearningCard]) -> list[LearningCard]:

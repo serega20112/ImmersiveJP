@@ -17,7 +17,8 @@ class LLMPromptMixin:
     @staticmethod
     def _build_cards_prompt(payload: dict) -> str:
         interests = ", ".join((payload["interests"] or [])[:6]) or "не указаны"
-        previous = ", ".join((payload["previous_topics"] or [])[:12]) or "нет"
+        previous = ", ".join((payload["previous_topics"] or [])[:20]) or "нет"
+        previous_key_terms = ", ".join((payload.get("previous_key_terms") or [])[:30]) or "нет"
         mentor_focus_note = (
             f"Особый запрос пользователя на ближайшие партии: {payload.get('mentor_focus')}\n"
             if payload.get("mentor_focus")
@@ -32,7 +33,9 @@ class LLMPromptMixin:
             f"Интересы: {interests}\n"
             f"Номер партии: {payload['batch_number']}\n"
             f"Размер партии: {payload['batch_size']}\n"
-            f"Избегай повторов тем: {previous}\n"
+            f"Уже использованные темы (не повторяй и не перефразируй их): {previous}\n"
+            f"Уже использованные ключевые слова (не строй на них новые карточки): {previous_key_terms}\n"
+            "Каждая новая карточка должна раскрывать отдельную сцену или аспект, которых ещё не было в прошлых партиях.\n"
             f"{HuggingFaceLLMClient._build_generation_context(payload)}\n"
             f"{HuggingFaceLLMClient._track_scope_instruction(payload.get('track'))}\n"
             "Цель, интересы и горизонт обучения могут менять только угол подачи внутри выбранного трека, "
@@ -41,7 +44,8 @@ class LLMPromptMixin:
             "Верни JSON-массив, где у каждой карточки есть topic, explanation, examples, key_terms.\n"
             "topic: короткий заголовок до 7 слов.\n"
             f"{HuggingFaceLLMClient._explanation_length_instruction(payload)}\n"
-            "Examples можно вернуть пустым массивом или массивом до 2 очень коротких строк в формате: Japanese | Romaji | Русский перевод.\n"
+            "Examples верни массивом из 1-3 очень коротких строк в формате: Japanese | Romaji | Русский перевод.\n"
+            "Если примера нет — верни пустой массив, придумывать его за тебя не будем.\n"
             "key_terms возвращай массивом ровно из 3 коротких строк. Если термин японский, формат каждой строки: Термин | Русский перевод.\n"
             "Если термин уже русский, можно вернуть его как есть или дать короткое пояснение через |.\n"
             "Пиши естественным русским языком без канцелярита и рекламного тона.\n"

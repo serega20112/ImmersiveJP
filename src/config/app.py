@@ -15,6 +15,7 @@ class AppSettings(BaseAppSettings):
 
     metrics_enabled: bool = True
     onboarding_page_cache_ttl_seconds: int = Field(default=900)
+    learning_batch_generation_timeout_seconds: int = Field(default=120)
     text_input_limit: int = Field(default=500)
 
     api_rate_limit_enabled: bool = True
@@ -26,11 +27,23 @@ class AppSettings(BaseAppSettings):
 
     @field_validator(
         "onboarding_page_cache_ttl_seconds",
+        "learning_batch_generation_timeout_seconds",
         "api_rate_limit_requests",
         "api_rate_limit_window_seconds",
     )
     @classmethod
     def validate_positive_ints(cls, value: int) -> int:
+        """Проверить, что числовые лимиты строго положительны.
+
+        Args:
+            value: Проверяемое значение.
+
+        Returns:
+            То же значение.
+
+        Raises:
+            ValueError: Если значение меньше или равно нулю.
+        """
         if value <= 0:
             raise ValueError("Numeric limits must be greater than zero")
         return value

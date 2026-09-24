@@ -43,6 +43,16 @@ class LearningCardReadRepositoryPort(ReadRepositoryPort[LearningCard, int, objec
         raise NotImplementedError
 
     @abstractmethod
+    async def list_recent_key_terms(
+        self,
+        user_id: int,
+        track: TrackType,
+        limit: int = 40,
+    ) -> list[str]:
+        """Получить ключевые термины последних карточек без повторов."""
+        raise NotImplementedError
+
+    @abstractmethod
     async def count_cards(self, user_id: int, track: TrackType) -> int:
         """Посчитать количество карточек пользователя по треку."""
         raise NotImplementedError

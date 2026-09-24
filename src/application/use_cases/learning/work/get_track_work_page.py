@@ -1,12 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from src.application.dto.learning import TrackWorkPageDTO
 from src.application.exceptions import TrackWorkUnavailableError
 from src.application.interfaces import UnitOfWork
-from src.application.use_cases.learning.work.work_tasks import (
-    build_prepared_work_tasks,
-    to_track_work_task_dto,
-)
+from src.application.use_cases.learning.work.grading import WORK_PASS_SCORE
+from src.application.use_cases.learning.work.task_builder import build_prepared_work_tasks
+from src.application.use_cases.mappers import to_track_work_task_dto
 from src.domain.value_objects.track_type import TrackType
 
 
@@ -70,7 +69,7 @@ class GetTrackWorkPageUseCase:
                 subtitle="Партия уже закрыта. Теперь нужно показать, что материал реально используется без карточек перед глазами.",
                 batch_number=batch_number,
                 source_topics=[card.topic for card in cards[:5]],
-                pass_score=80,
+                pass_score=WORK_PASS_SCORE,
                 tasks=[to_track_work_task_dto(task) for task in tasks],
             )
 

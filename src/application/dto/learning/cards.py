@@ -88,6 +88,8 @@ class TrackPageDTO(BaseModel):
         completed_batches: Завершённые партии.
         work_ready_batch: Партия для работы.
         work_href: Ссылка на работу.
+        is_generating: Генерируется ли партия прямо сейчас.
+        generation_failed: Оборвалась ли последняя генерация.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -105,6 +107,37 @@ class TrackPageDTO(BaseModel):
     completed_batches: int
     work_ready_batch: int | None = None
     work_href: str | None = None
+    is_generating: bool = False
+    generation_failed: bool = False
+
+
+class CardBatchStatusDTO(BaseModel):
+    """Состояние партии карточек для дорисовки страницы.
+
+    Отдаётся опросу каждые две секунды, поэтому содержит и статус, и уже
+    записанные карточки: одного статуса не хватило бы, чтобы страница
+    показывала содержимое по мере генерации.
+
+    Атрибуты:
+        state: Состояние генерации для отображения и лога.
+        is_generating: Признак незавершённой генерации, вычисленный доменом.
+        batch_number: Номер отслеживаемой партии.
+        expected_cards: Сколько карточек должно получиться.
+        cards: Уже записанные карточки партии.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    state: str
+    is_generating: bool
+    batch_number: int
+    expected_cards: int
+    cards: list[TrackCardDTO] = Field(default_factory=list)
+
+    @property
+    def missing_cards(self) -> int:
+        """Сколько карточек партии ещё не записано."""
+        return max(self.expected_cards - len(self.cards), 0)
 
 
 class TrackCardPageDTO(BaseModel):
@@ -175,3 +208,28 @@ class GeneratedCardDraftDTO(BaseModel):
     explanation: str
     examples: list[str]
     key_terms: list[str]
+
+
+class GeneratedCardBatchDTO(BaseModel):
+    """Партия черновиков вместе с честным составом их источника.
+
+    Без разделения по источнику партия, досочинённая заготовками,
+    неотличима от партии, которую дала модель: ровно это и позволяло
+    выдавать шаблонный контент за сгенерированный под персональный запрос.
+
+    Атрибуты:
+        drafts: Черновики карточек в порядке партии.
+        model_count: Сколько карточек пришло от модели.
+        fallback_count: Сколько добрано заготовками.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    drafts: list[GeneratedCardDraftDTO] = Field(default_factory=list)
+    model_count: int = 0
+    fallback_count: int = 0
+
+    @property
+    def is_all_from_model(self) -> bool:
+        """Сложена ли вся партия из ответа модели."""
+        return bool(self.drafts) and self.fallback_count == 0

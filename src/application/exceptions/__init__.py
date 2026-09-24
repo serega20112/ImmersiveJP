@@ -19,7 +19,7 @@ from .learning import (
     TrackWorkUnavailableError,
 )
 from .onboarding import InvalidOnboardingDataError
-from .profile import InvalidMentorMessageError
+from .profile import CourseProgramUnavailableError, InvalidMentorMessageError
 from .rate_limiting import RateLimitExceededError
 from .security import SecurityViolationError
 
@@ -28,6 +28,7 @@ __all__ = [
     "CardNotFoundError",
     "CardOwnershipError",
     "ComponentUnavailableError",
+    "CourseProgramUnavailableError",
     "CurrentBatchNotCompletedError",
     "EmailAlreadyExistsError",
     "EmailNotVerifiedError",

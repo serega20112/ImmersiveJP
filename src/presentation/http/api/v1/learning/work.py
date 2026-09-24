@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
 from src.application.dto.auth import UserViewDTO
+from src.domain.value_objects.track_type import TrackType
 from src.infrastructures.di_containers.auth_dependencies import require_onboarded_user
 from src.infrastructures.di_containers.service_dependencies import LearningServiceDependency
 from src.presentation.http import render_template
@@ -39,7 +40,7 @@ async def work_page(
     """
     page = await learning_service.get_track_work_page(
         current_user.id,
-        track,
+        TrackType(track),
         batch_number,
     )
     return await render_template(request, "learn/work.html", page=page)
@@ -75,7 +76,7 @@ async def work_submit(
     }
     page = await learning_service.submit_track_work(
         current_user.id,
-        track,
+        TrackType(track),
         batch_number,
         answers,
     )
