@@ -75,11 +75,7 @@ class GetTrackPageUseCase:
                 generate_action_label=(
                     "Дописать партию"
                     if generation_failed
-                    else (
-                        "Создать первую партию"
-                        if generated_total == 0
-                        else "Следующая партия"
-                    )
+                    else ("Создать первую партию" if generated_total == 0 else "Следующая партия")
                 ),
                 completed_batches=completed_batches,
                 work_ready_batch=work_ready_batch,

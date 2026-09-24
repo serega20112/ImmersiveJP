@@ -43,7 +43,9 @@ class SessionRepository(LearningSessionRepositoryPort):
         user_id = int(session.user_id)
         track_value = session.track.value
         started_at = (
-            session.generation_started_at.value if session.generation_started_at is not None else None
+            session.generation_started_at.value
+            if session.generation_started_at is not None
+            else None
         )
         result = await self._session.execute(
             select(LearningSessionModel).where(

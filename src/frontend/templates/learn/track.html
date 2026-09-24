@@ -36,11 +36,21 @@
         class="ghost-button"
         >Скачать PDF</a
       >
-      <a
-        href="{{ url_for('learning.next_cards') }}?track={{ page.track }}"
-        class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}"
-        >{{ page.generate_action_label }}</a
+      <form
+        action="{{ url_for('learning.next_cards') }}"
+        method="post"
+        class="utility-stack__form"
       >
+        {% include "partials/csrf_field.html" %}
+        <input type="hidden" name="track" value="{{ page.track }}" />
+        <button
+          type="submit"
+          class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}"
+          {% if not page.can_generate_next %}disabled{% endif %}
+        >
+          {{ page.generate_action_label }}
+        </button>
+      </form>
     </div>
     <div class="mini-metrics">
       <div class="mini-metric">
@@ -57,12 +67,14 @@
       </div>
     </div>
     <p class="utility-card__note">
-      {% if page.can_generate_next %} {% if page.generated_total == 0 %} Для
-      этого трека партия еще не создана. Можно запустить первую генерацию
-      вручную. {% else %} Текущая партия закрыта. Сначала можно пройти работу,
-      потом открывать новый батч. {% endif %} {% else %} Новая партия откроется
-      после завершения текущего батча. Работа строится только по завершенным
-      батчам. {% endif %}
+      {% if page.is_generating %} Партия генерируется прямо сейчас, карточки
+      появятся в списке по мере записи. Страницу можно не держать открытой —
+      статус живёт в базе. {% elif page.can_generate_next %} {% if
+      page.generated_total == 0 %} Для этого трека партия еще не создана. Можно
+      запустить первую генерацию вручную. {% else %} Текущая партия закрыта.
+      Сначала можно пройти работу, потом открывать новый батч. {% endif %} {%
+      else %} Новая партия откроется после завершения текущего батча. Работа
+      строится только по завершенным батчам. {% endif %}
     </p>
   </aside>
 </section>
@@ -81,56 +93,22 @@
     >Открыть практику</a
   >
 </section>
-{% endif %} {% if not page.cards %}
+{% endif %} {% if not page.cards and not page.is_generating %}
 <section class="panel empty-state reveal">
   <p class="section-kicker">Пусто</p>
   {% if page.generated_total == 0 %}
   <h2>Первая партия еще не создана.</h2>
   <p>Этот трек можно запустить отдельно, когда он вам реально нужен.</p>
-  <a
-    href="{{ url_for('learning.next_cards') }}?track={{ page.track }}"
-    class="primary-button"
-    >Создать первую партию</a
-  >
   {% else %}
   <h2>Карточки пока не готовы.</h2>
-  <p>
-    Вернитесь чуть позже или откройте другой трек, если генерация еще
-    продолжается.
-  </p>
+  <p>Партия ещё не записана — запусти генерацию или допиши оборвавшуюся.</p>
   {% endif %}
 </section>
 {% else %}
-<section class="preview-grid reveal">
-  {% for card in page.cards %}
-  <a
-    href="{{ url_for('learning.card_page', track=page.track, card_id=card.id) }}"
-    class="panel preview-card {% if card.is_completed %}preview-card--done{% endif %}"
-  >
-    <div class="preview-card__meta">
-      <span>Карточка {{ card.position }}</span>
-      <span>Партия {{ card.batch_number }}</span>
-    </div>
-    <h2>{{ card.topic }}</h2>
-    <p class="preview-card__excerpt">{{ card.preview }}</p>
-    <div class="tag-row tag-row--terms">
-      {% for term in card.key_term_items[:3] %}
-      <article class="term-chip term-chip--compact">
-        <strong class="term-chip__label">{{ term.label }}</strong>
-        {% if term.translation %}
-        <span class="term-chip__translation">{{ term.translation }}</span>
-        {% endif %}
-      </article>
-      {% endfor %}
-    </div>
-    <div class="preview-card__footer">
-      {% if card.is_completed %}
-      <span class="status-chip status-chip--done">Пройдено</span>
-      {% else %}
-      <span class="status-chip">Открыть конспект</span>
-      {% endif %}
-    </div>
-  </a>
-  {% endfor %}
+<section
+  class="batch-live reveal"
+  data-batch-status-url="{{ url_for('learning.batch_status', track=page.track) }}"
+>
+  {% include "learn/partials/batch_cards.html" %}
 </section>
 {% endif %} {% endblock %}

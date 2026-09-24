@@ -68,7 +68,14 @@ async def render_track_page(
         Ответ с шаблоном трека.
     """
     page = await learning_service.get_track_page(current_user.id, track)
-    return await render_template(request, "learn/track.html", page=page)
+    status = await learning_service.get_batch_status(current_user.id, track)
+    return await render_template(
+        request,
+        "learn/track.html",
+        page=page,
+        status=status,
+        track=page.track,
+    )
 
 
 @tracks_router.get("/language", name="learning.language")

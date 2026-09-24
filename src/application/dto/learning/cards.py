@@ -121,6 +121,7 @@ class CardBatchStatusDTO(BaseModel):
     Атрибуты:
         state: Состояние генерации для отображения и лога.
         is_generating: Признак незавершённой генерации, вычисленный доменом.
+        is_failed: Признак оборванной генерации, требующей повтора.
         batch_number: Номер отслеживаемой партии.
         expected_cards: Сколько карточек должно получиться.
         cards: Уже записанные карточки партии.
@@ -130,6 +131,7 @@ class CardBatchStatusDTO(BaseModel):
 
     state: str
     is_generating: bool
+    is_failed: bool = False
     batch_number: int
     expected_cards: int
     cards: list[TrackCardDTO] = Field(default_factory=list)

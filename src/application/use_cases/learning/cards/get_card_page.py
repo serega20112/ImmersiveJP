@@ -81,8 +81,7 @@ class GetCardPageUseCase:
                 subtitle=track.subtitle,
                 card=to_track_card_dto(card, batch_completed_ids),
                 batch_cards=[
-                    to_track_card_dto(batch_card, batch_completed_ids)
-                    for batch_card in batch_cards
+                    to_track_card_dto(batch_card, batch_completed_ids) for batch_card in batch_cards
                 ],
                 current_batch=current_batch,
                 completed_total=completed_total,
@@ -115,9 +114,7 @@ class GetCardPageUseCase:
             A set of completed card IDs.
         """
         card_ids = [int(card.id or 0) for card in cards]
-        return set(
-            await progress_repository.list_completed_card_ids(user_id, card_ids)
-        )
+        return set(await progress_repository.list_completed_card_ids(user_id, card_ids))
 
     async def _is_current_batch_completed(
         self,

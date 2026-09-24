@@ -1,0 +1,44 @@
+{% if status.is_generating %}
+<p class="batch-status__note" data-batch-generating>
+  Готовим партию {{ status.batch_number }}: записано
+  {{ status.cards|length }} из {{ status.expected_cards }}.
+</p>
+{% elif status.is_failed %}
+<p class="batch-status__note batch-status__note--error">
+  Партия {{ status.batch_number }} оборвалась на
+  {{ status.cards|length }} из {{ status.expected_cards }}. Повтори генерацию —
+  карточки допишутся на месте.
+</p>
+{% endif %}
+<div class="preview-grid">
+  {% for card in status.cards %}
+  <a
+    href="{{ url_for('learning.card_page', track=track, card_id=card.id) }}"
+    class="panel preview-card {% if card.is_completed %}preview-card--done{% endif %}"
+  >
+    <div class="preview-card__meta">
+      <span>Карточка {{ card.position }}</span>
+      <span>Партия {{ card.batch_number }}</span>
+    </div>
+    <h2>{{ card.topic }}</h2>
+    <p class="preview-card__excerpt">{{ card.preview }}</p>
+    <div class="tag-row tag-row--terms">
+      {% for term in card.key_term_items[:3] %}
+      <article class="term-chip term-chip--compact">
+        <strong class="term-chip__label">{{ term.label }}</strong>
+        {% if term.translation %}
+        <span class="term-chip__translation">{{ term.translation }}</span>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    <div class="preview-card__footer">
+      {% if card.is_completed %}
+      <span class="status-chip status-chip--done">Пройдено</span>
+      {% else %}
+      <span class="status-chip">Открыть конспект</span>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>

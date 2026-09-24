@@ -25,26 +25,6 @@ class LearningCardRepository(
 
     model = LearningCardModel
 
-    async def update_many(self, cards: list[LearningCard]) -> list[LearningCard]:
-        if not cards:
-            return []
-        card_map = {int(card.id): card for card in cards if card.id is not None}
-        result = await self._session.execute(
-            select(LearningCardModel).where(LearningCardModel.id.in_(card_map.keys()))
-        )
-        models = result.scalars().all()
-        for model in models:
-            card = card_map.get(model.id)
-            if card is None:
-                continue
-            model.topic = card.topic
-            model.explanation = card.explanation
-            model.examples_json = card.examples
-            model.key_terms_json = card.key_terms
-        await self._session.flush()
-        ordered_models = sorted(models, key=lambda item: item.position)
-        return [self.to_entity(model) for model in ordered_models]
-
     async def get_by_id(self, card_id: int) -> LearningCard | None:
         result = await self._session.execute(
             select(LearningCardModel).where(LearningCardModel.id == card_id)

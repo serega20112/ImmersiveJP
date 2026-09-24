@@ -38,11 +38,17 @@ content %}
         class="ghost-button"
         >Скачать PDF</a
       >
-      <a
-        href="{{ url_for('learning.next_cards') }}?track={{ page.track }}"
-        class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}"
-        >Следующая партия</a
-      >
+      <form action="{{ url_for('learning.next_cards') }}" method="post">
+        {% include "partials/csrf_field.html" %}
+        <input type="hidden" name="track" value="{{ page.track }}" />
+        <button
+          type="submit"
+          class="ghost-button {% if not page.can_generate_next %}is-disabled{% endif %}"
+          {% if not page.can_generate_next %}disabled{% endif %}
+        >
+          Следующая партия
+        </button>
+      </form>
       {% if not page.card.is_completed %}
       <form
         action="{{ url_for('learning.complete_card') }}"

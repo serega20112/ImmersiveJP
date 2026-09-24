@@ -352,3 +352,16 @@
 .flash--error .flash__label {
   color: var(--danger);
 }
+
+.batch-status__note {
+  margin: 0 0 var(--sp-3, 0.75rem);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+}
+
+.batch-status__note--error {
+  color: var(--danger);
+}

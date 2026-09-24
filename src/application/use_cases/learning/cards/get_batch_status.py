@@ -50,7 +50,8 @@ class GetCardBatchStatusUseCase:
         state = session.generation_state if session is not None else BatchGenerationState.READY
         return CardBatchStatusDTO(
             state=state.value,
-            is_generating=session is not None and session.is_generating,
+            is_generating=state is BatchGenerationState.GENERATING,
+            is_failed=state is BatchGenerationState.FAILED,
             batch_number=batch_number,
             expected_cards=CARD_BATCH_SIZE,
             cards=[to_track_card_dto(card, completed_ids) for card in cards],
