@@ -31,5 +31,5 @@ async def document_list(
     Returns:
         Ответ с шаблоном списка документов.
     """
-    documents = await document_service.list_documents(current_user.id)
-    return await render_template(request, "documents/index.html", documents=documents)
+    page = await document_service.list_documents(current_user.id)
+    return await render_template(request, "documents/index.html", page=page)

@@ -1,0 +1,108 @@
+/* =============================================================================
+   Проверка знаний: сборка теста, бланк ответов и разбор результата.
+   ============================================================================= */
+
+.knowledge-stage {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.knowledge-composer {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.knowledge-composer__field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.knowledge-composer__field input {
+  width: 100%;
+}
+
+.knowledge-composer__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.knowledge-answer {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.knowledge-questions {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.knowledge-question {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.knowledge-question__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+}
+
+.knowledge-question__context {
+  color: var(--ink-soft);
+}
+
+.knowledge-question__field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.knowledge-question__field textarea {
+  width: 100%;
+}
+
+.knowledge-hints {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-4);
+  color: var(--ink-muted);
+  font-size: var(--fs-small);
+}
+
+.knowledge-submit-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.knowledge-verdict {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.knowledge-review {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.knowledge-review__item {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.knowledge-review__item p {
+  margin: 0;
+}

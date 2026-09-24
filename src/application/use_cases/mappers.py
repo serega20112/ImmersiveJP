@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from src.application.dto.auth import UserViewDTO
+from src.application.dto.documents import UserDocumentDTO
 from src.application.dto.learning import (
     CardExampleDTO,
     PreparedWorkTaskDTO,
@@ -15,6 +16,7 @@ from src.application.use_cases.card_example import parse_example
 from src.application.use_cases.key_terms import build_key_term_dtos
 from src.domain.aggregates.user import User
 from src.domain.entities.content import LearningCard
+from src.domain.entities.documents import UserDocument
 from src.domain.entities.progress import TrackProgressSnapshot
 from src.domain.value_objects.skill_assessment import SkillAssessment
 
@@ -71,6 +73,23 @@ def to_track_card_dto(card: LearningCard, completed_ids: set[int]) -> TrackCardD
         batch_number=int(card.batch_number),
         position=int(card.position),
         is_completed=card_id in completed_ids,
+    )
+
+
+def to_user_document_dto(document: UserDocument) -> UserDocumentDTO:
+    """Преобразовать конспект пользователя в DTO для списка.
+
+    Args:
+        document: Доменный конспект пользователя.
+
+    Returns:
+        DTO конспекта.
+    """
+    return UserDocumentDTO(
+        id=int(document.id) if document.id is not None else 0,
+        title=str(document.title),
+        preview=_build_preview(document.content, max_length=180),
+        created_at=document.created_at.value.strftime("%d.%m.%Y %H:%M"),
     )
 
 

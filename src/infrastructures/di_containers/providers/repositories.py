@@ -3,6 +3,11 @@ from __future__ import annotations
 from functools import cached_property
 
 from src.application.services import DocumentService, RAGService
+from src.application.use_cases.documents import (
+    AddUserDocumentUseCase,
+    DeleteUserDocumentUseCase,
+    ListUserDocumentsUseCase,
+)
 from src.infrastructures.database import get_session_factory
 from src.infrastructures.external.cached_embedding_client import CachedEmbeddingClient
 from src.infrastructures.repositories.database import (
@@ -22,7 +27,11 @@ class RepositoryProvidersMixin:
 
     @cached_property
     def document_service(self) -> DocumentService:
-        return DocumentService(self.uow)
+        return DocumentService(
+            ListUserDocumentsUseCase(self.uow),
+            AddUserDocumentUseCase(self.uow),
+            DeleteUserDocumentUseCase(self.uow),
+        )
 
     @cached_property
     def rag_service(self) -> RAGService:

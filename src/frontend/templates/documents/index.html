@@ -1,0 +1,76 @@
+{% extends "base.html" %} {% block title %}Конспекты — ImmersJP{% endblock %}
+{% block body_class %}page--documents{% endblock %} {% block content %}
+<section class="documents-stage reveal">
+  <div class="panel panel--hero documents-stage__hero">
+    <p class="section-kicker">Конспекты</p>
+    <h1>Ваши материалы, из которых наставник берёт контекст.</h1>
+    <p class="page-lead">
+      {% if page.documents %}
+      Записано материалов: {{ page.documents|length }}, всего символов текста:
+      {{ page.character_count }}. {% else %} Пока здесь пусто. Добавьте первый
+      конспект — он пойдет в контекст ответов наставника. {% endif %}
+    </p>
+    <div class="hero-facts">
+      <span class="hero-fact">{{ page.documents|length }} материала</span>
+      <span class="hero-fact">{{ page.character_count }} символов</span>
+    </div>
+  </div>
+
+  <form
+    action="{{ url_for('documents.add') }}"
+    method="post"
+    class="panel panel--night documents-composer"
+  >
+    {% include "partials/csrf_field.html" %}
+    <label class="documents-composer__field">
+      <span class="field-label">Заголовок</span>
+      <input
+        type="text"
+        name="title"
+        maxlength="120"
+        placeholder="Например: глаголы движения"
+        required
+      />
+    </label>
+    <label class="documents-composer__field">
+      <span class="field-label">Текст конспекта</span>
+      <textarea
+        name="content"
+        rows="6"
+        maxlength="{{ text_input_limit }}"
+        placeholder="Перенесите сюда свои заметки, выписки или разбор упражнения."
+        required
+      ></textarea>
+    </label>
+    <div class="documents-composer__actions">
+      <small class="field-note">
+        Заголовок обязателен, текст — от 20 символов.
+      </small>
+      <button type="submit" class="primary-button">Сохранить</button>
+    </div>
+  </form>
+</section>
+
+{% if page.documents %}
+<section class="preview-grid reveal">
+  {% for document in page.documents %}
+  <article class="panel preview-card">
+    <div class="preview-card__meta">
+      <span>{{ document.created_at }}</span>
+    </div>
+    <h2>{{ document.title }}</h2>
+    <p class="preview-card__excerpt">{{ document.preview }}</p>
+    <div class="preview-card__footer">
+      <form
+        action="{{ url_for('documents.delete', doc_id=document.id) }}"
+        method="post"
+        class="documents-delete-form"
+      >
+        {% include "partials/csrf_field.html" %}
+        <button type="submit" class="ghost-button">Удалить</button>
+      </form>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% endif %} {% endblock %}

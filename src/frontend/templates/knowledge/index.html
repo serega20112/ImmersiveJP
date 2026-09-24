@@ -1,0 +1,128 @@
+{% extends "base.html" %} {% block title %}{{ page.title if page else 'Проверка
+знаний' }} — ImmersJP{% endblock %} {% block body_class %}page--knowledge{%
+endblock %} {% block content %}
+<section class="knowledge-stage reveal">
+  <div class="panel panel--hero knowledge-stage__hero">
+    <p class="section-kicker">{{ page.title if page else 'Проверка знаний' }}</p>
+    <h1>
+      {{ page.subtitle if page else 'Покажем, что уже держится, а что ещё
+      осыпается.' }}
+    </h1>
+    <p class="page-lead">
+      {% if page and page.focus_area %}Фокус проверки: {{ page.focus_area }}.
+      {% else %}Проверка собирается по вашим слабым местам и последним темам.
+      Можно уточнить фокус — например «кандзи» или «частицы».{% endif %}
+    </p>
+    <div class="hero-facts">
+      {% if page %}
+      <span class="hero-fact">{{ page.questions|length }} вопроса</span>
+      {% if page.score is not none %}
+      <span class="hero-fact">оценка {{ page.score }}</span>
+      {% endif %} {% endif %}
+    </div>
+  </div>
+
+  {% if not page or not page.questions %}
+  <form
+    action="{{ url_for('knowledge.generate') }}"
+    method="post"
+    class="panel panel--night knowledge-composer"
+    data-pending-form
+    data-pending-label="Готовим вопросы..."
+  >
+    {% include "partials/csrf_field.html" %}
+    <label class="knowledge-composer__field">
+      <span class="field-label">Область фокуса</span>
+      <input
+        type="text"
+        name="focus_area"
+        maxlength="80"
+        placeholder="Например: кандзи, частицы, речь"
+      />
+    </label>
+    <div class="knowledge-composer__actions">
+      <small class="field-note">
+        Вопросы собираются по вашей диагностике и последним темам.
+      </small>
+      <button type="submit" class="primary-button" data-pending-button>
+        Собрать проверку
+      </button>
+    </div>
+  </form>
+  {% endif %}
+</section>
+
+{% if page and page.questions %}
+<form
+  action="{{ url_for('knowledge.submit') }}"
+  method="post"
+  class="knowledge-answer"
+>
+  {% include "partials/csrf_field.html" %}
+  <input type="hidden" name="questions_json" value="{{ page.questions_json }}" />
+
+  <section class="knowledge-questions">
+    {% for question in page.questions %}
+    <article class="panel knowledge-question">
+      <div class="knowledge-question__meta">
+        <span>Вопрос {{ loop.index }}</span>
+        <span class="status-chip">{{ question.kind }}</span>
+      </div>
+      <h2>{{ question.question }}</h2>
+      {% if question.context %}
+      <p class="knowledge-question__context">{{ question.context }}</p>
+      {% endif %}
+      <label class="knowledge-question__field">
+        <span class="field-label">Ваш ответ</span>
+        <textarea
+          name="answer_{{ question.id }}"
+          rows="2"
+          maxlength="{{ text_input_limit }}"
+        >{% for result in page.results or [] %}{% if result.question_id == question.id %}{{ result.user_answer }}{% endif %}{% endfor %}</textarea
+        >
+      </label>
+      {% if question.hints %}
+      <ul class="knowledge-hints">
+        {% for hint in question.hints %}
+        <li>{{ hint }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </section>
+
+  <div class="knowledge-submit-row">
+    {% if page.results %}
+    <button type="submit" class="ghost-button">Перепроверить</button>
+    {% else %}
+    <button type="submit" class="primary-button">Отправить ответы</button>
+    {% endif %}
+  </div>
+</form>
+{% endif %}
+
+{% if page and page.results %}
+<section class="panel panel--night knowledge-verdict reveal">
+  <p class="section-kicker">Разбор</p>
+  <h2>
+    {% if page.passed %}Держится{% else %}Есть провалы{% endif %} — оценка
+    {{ page.score }}
+  </h2>
+  {% if page.summary %}<p>{{ page.summary }}</p>{% endif %}
+  <ol class="knowledge-review">
+    {% for result in page.results %}
+    <li class="knowledge-review__item">
+      <span
+        class="status-chip {% if result.is_correct %}status-chip--done{% endif %}"
+        >{% if result.is_correct %}Верно{% else %}Разобрать{% endif %}</span
+      >
+      <p>{{ result.feedback }}</p>
+      {% if not result.is_correct and result.expected_answer %}
+      <small class="field-note">Ожидалось: {{ result.expected_answer }}</small>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endif %} {% endblock %}

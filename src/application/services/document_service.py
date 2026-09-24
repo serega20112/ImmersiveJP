@@ -1,77 +1,72 @@
-"""Сервис управления пользовательскими документами."""
+"""Сервис пользовательских конспектов."""
 
 from __future__ import annotations
 
-from src.application.exceptions import InvalidDocumentDataError
-from src.application.interfaces import UnitOfWork
-from src.domain.entities import UserDocument
-from src.domain.exceptions import InvalidDocumentTitleError
-from src.domain.value_objects import DocumentTitle
+from src.application.dto.documents import UserDocumentsPageDTO
+from src.application.use_cases.documents import (
+    AddUserDocumentUseCase,
+    DeleteUserDocumentUseCase,
+    ListUserDocumentsUseCase,
+)
 
 
 class DocumentService:
-    """Инкапсулирует работу с документами пользователя через UoW."""
+    """Фасад конспектов для презентационного слоя.
 
-    def __init__(self, uow: UnitOfWork):
-        """Инициализировать сервис документов.
+    Сам ничего не знает про базу и про домен: только разбирает вызов роута в
+    конкретный юзкейс. Так держится один ответ на вопрос «где живёт логика» —
+    в юзкейсе, а сервис остаётся точкой входа для HTTP-слоя.
+    """
+
+    def __init__(
+        self,
+        list_documents_use_case: ListUserDocumentsUseCase,
+        add_document_use_case: AddUserDocumentUseCase,
+        delete_document_use_case: DeleteUserDocumentUseCase,
+    ):
+        """Инициализировать сервис конспектов.
 
         Args:
-            uow: Unit of Work для транзакционной работы с БД.
+            list_documents_use_case: Юзкейс списка конспектов.
+            add_document_use_case: Юзкейс добавления конспекта.
+            delete_document_use_case: Юзкейс удаления конспекта.
         """
-        self._uow = uow
+        self._list_documents_use_case = list_documents_use_case
+        self._add_document_use_case = add_document_use_case
+        self._delete_document_use_case = delete_document_use_case
 
-    async def list_documents(self, user_id: int) -> list[UserDocument]:
-        """Получить все документы пользователя.
+    async def list_documents(self, user_id: int) -> UserDocumentsPageDTO:
+        """Вернуть страницу списка конспектов пользователя.
 
         Args:
             user_id: Идентификатор пользователя.
 
         Returns:
-            Список документов пользователя.
+            Страницу списка конспектов.
         """
-        async with self._uow as uow:
-            doc_repository = uow.user_documents
-            return await doc_repository.get_by_user(user_id)
+        return await self._list_documents_use_case.execute(user_id)
 
     async def add_document(self, user_id: int, title: str, content: str) -> None:
-        """Сохранить новый документ пользователя.
-
-        Заголовок собирается в value object до похода в репозиторий. Иначе
-        инвариант «не пустой» не действует вовсе: строка уходит в базу, а
-        обратно её прочитать нельзя — разбор в DocumentTitle бросает исключение
-        на чтении. Пропущенная проверка превращалась в отложенный 500 там, где
-        пользователь просто отправил пустую форму.
+        """Сохранить новый конспект пользователя.
 
         Args:
             user_id: Идентификатор пользователя.
-            title: Заголовок документа.
-            content: Текст документа.
+            title: Заголовок конспекта.
+            content: Текст конспекта.
 
         Raises:
-            InvalidDocumentDataError: Если домен отклонил заголовок.
+            InvalidDocumentDataError: Если домен отклонил данные конспекта.
         """
-        try:
-            document_title = DocumentTitle(title)
-        except InvalidDocumentTitleError as error:
-            raise InvalidDocumentDataError(str(error)) from error
-        async with self._uow as uow:
-            doc_repository = uow.user_documents
-            await doc_repository.create(user_id, document_title, content)
+        await self._add_document_use_case.execute(user_id, title, content)
 
     async def delete_document(self, user_id: int, doc_id: int) -> bool:
-        """Удалить документ пользователя, если он ему принадлежит.
+        """Удалить конспект пользователя, если он ему принадлежит.
 
         Args:
             user_id: Идентификатор пользователя.
-            doc_id: Идентификатор документа.
+            doc_id: Идентификатор конспекта.
 
         Returns:
-            True, если документ найден и удалён.
+            True, если конспект найден и удалён.
         """
-        async with self._uow as uow:
-            doc_repository = uow.user_documents
-            document = await doc_repository.get(doc_id)
-            if document is None or document.user_id != user_id:
-                return False
-            await doc_repository.delete(doc_id)
-            return True
+        return await self._delete_document_use_case.execute(user_id, doc_id)

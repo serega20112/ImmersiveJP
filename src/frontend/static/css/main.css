@@ -1,15 +1,17 @@
 /* =============================================================================
    main.css — агрегирующая точка входа CSS (совместимость).
 
-   base.html подключает стили раздельно (core/, forms/, learn/, plan/, profile/,
-   responsive/), поэтому этот файл не загружается на страницах и существует как
-   единый бандл для сред, где удобнее один файл. Порядок импортов повторяет
-   порядок <link> в base.html.
+   base.html подключает стили раздельно (core/, forms/, learn/, documents/,
+   knowledge/, plan/, profile/, responsive/), поэтому этот файл не загружается на
+   страницах и существует как единый бандл для сред, где удобнее один файл.
+   Порядок импортов повторяет порядок <link> в base.html.
    ============================================================================= */
 
 @import url("./core/index.css");
 @import url("./forms/index.css");
 @import url("./learn/index.css");
+@import url("./documents/index.css");
+@import url("./knowledge/index.css");
 @import url("./plan/index.css");
 @import url("./profile/index.css");
 @import url("./responsive/index.css");

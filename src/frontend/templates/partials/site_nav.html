@@ -23,6 +23,13 @@
     <small class="nav-link__meta">речь</small>
   </a>
   <a
+    href="/documents"
+    class="nav-link {% if request.url.path.startswith('/documents') %}is-active{% endif %}"
+  >
+    <span class="nav-link__label">Конспекты</span>
+    <small class="nav-link__meta">материалы</small>
+  </a>
+  <a
     href="/plan"
     class="nav-link {% if request.url.path.startswith('/plan') %}is-active{% endif %}"
   >

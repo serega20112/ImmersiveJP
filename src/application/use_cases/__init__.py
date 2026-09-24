@@ -5,6 +5,11 @@ from .auth import (
     VerifyEmailUseCase,
 )
 from .dashboard import GetDashboardUseCase
+from .documents import (
+    AddUserDocumentUseCase,
+    DeleteUserDocumentUseCase,
+    ListUserDocumentsUseCase,
+)
 from .learning import (
     CompleteCardUseCase,
     ExportCardsToPDFUseCase,

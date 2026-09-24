@@ -1,0 +1,39 @@
+/* =============================================================================
+   Конспекты пользователя: форма добавления и список материалов.
+   ============================================================================= */
+
+.documents-stage {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.documents-composer {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.documents-composer__field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.documents-composer__field input,
+.documents-composer__field textarea {
+  width: 100%;
+}
+
+.documents-composer__actions,
+.documents-delete-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.documents-delete-form {
+  justify-content: flex-start;
+  width: 100%;
+}

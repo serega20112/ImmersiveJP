@@ -21,9 +21,10 @@ from typing import Any
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.application.exceptions import ApplicationError, InvalidDocumentDataError
+from src.application.interfaces import UnitOfWork
 from src.application.interfaces.exceptions import DatabaseError, InfrastructureError
-from src.application.services.document_service import DocumentService
 from src.application.services.rag_service import RAGService
+from src.application.use_cases.documents import AddUserDocumentUseCase
 from src.domain.entities import UserDocument
 from src.domain.exceptions import DomainError, UserAlreadyVerifiedError
 from src.domain.value_objects import DocumentTitle, Timestamp, UserDocumentID, UserID
@@ -64,8 +65,13 @@ class _FakeDocumentRepository:
         return self.documents
 
 
-class _FakeUnitOfWork:
-    """Минимальная подмена UoW с одним репозиторием."""
+class _FakeUnitOfWork(UnitOfWork):
+    """Минимальная подмена UoW с одним репозиторием.
+
+    Наследуется от интерфейса, а не притворяется им: типизированные свойства
+    репозиториев живут в самом интерфейсе, и подмена обязана получать их бесплатно,
+    как и настоящий Unit of Work.
+    """
 
     def __init__(self, repositories: dict[str, Any]) -> None:
         self._repositories = repositories
@@ -76,6 +82,12 @@ class _FakeUnitOfWork:
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type is not None and exc_type not in (ApplicationError, DomainError):
             raise exc_val
+
+    async def commit(self) -> None:
+        pass
+
+    async def rollback(self) -> None:
+        pass
 
     def repository(self, name: str) -> Any:
         return self._repositories[name]
@@ -127,12 +139,13 @@ def check_domain_error_maps_to_user_already_verified() -> None:
 
 
 async def check_document_title_enforced() -> None:
-    """Проверить, что заголовок проверяется до записи, а не после."""
+    """Проверить, что заголовок и текст проверяются до записи, а не после."""
     repository = _FakeDocumentRepository()
-    service = DocumentService(_FakeUnitOfWork({"user_document": repository}))
+    use_case = AddUserDocumentUseCase(_FakeUnitOfWork({"user_document": repository}))
+    valid_content = "Конспект про частицы: は маркирует тему предложения."
 
     try:
-        await service.add_document(1, "   ", "текст")
+        await use_case.execute(1, "   ", valid_content)
         report("пустой заголовок отклонён до записи", False, "исключение не поднято")
         return
     except InvalidDocumentDataError as error:
@@ -140,12 +153,23 @@ async def check_document_title_enforced() -> None:
 
     report("пустой заголовок не дошёл до репозитория", not repository.created)
 
-    await service.add_document(1, "  Конспект  ", "текст")
-    stored_title = repository.created[0][1]
+    try:
+        await use_case.execute(1, "Заголовок", " kurz ")
+        report("обрывок текста отклонён до записи", False, "исключение не поднято")
+    except InvalidDocumentDataError:
+        report("обрывок текста отклонён до записи", True)
+
+    await use_case.execute(1, "  Конспект  ", valid_content)
+    stored_user_id, stored_title, stored_content = repository.created[0]
     report(
         "заголовок нормализуется перед записью",
         isinstance(stored_title, DocumentTitle) and stored_title.value == "Конспект",
         f"(получено {stored_title!r})",
+    )
+    report(
+        "текст сохраняется очищенным",
+        stored_content == valid_content and stored_user_id == 1,
+        f"(получено {stored_content!r})",
     )
 
 

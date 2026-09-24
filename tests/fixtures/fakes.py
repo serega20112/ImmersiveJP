@@ -268,8 +268,11 @@ class FakeUserDocumentRepository:
                 return document
         return None
 
-    async def create(self, user_id: int, title: str, content: str) -> UserDocument:
+    async def create(self, user_id: int, title: DocumentTitle, content: str) -> UserDocument:
         """Создать документ и добавить его в хранилище.
+
+        Заголовок приходит проверенным value object'ом — как требует порт,
+        а не строкой, которую репозиторий валидирует сам.
 
         Args:
             user_id: Идентификатор пользователя.
@@ -279,11 +282,11 @@ class FakeUserDocumentRepository:
         Returns:
             Созданный документ.
         """
-        self.created.append((user_id, title, content))
+        self.created.append((user_id, str(title), content))
         document = UserDocument(
             id=UserDocumentID(len(self.documents) + 1),
             user_id=UserID(user_id),
-            title=DocumentTitle(title),
+            title=title,
             content=content,
             created_at=Timestamp.now(),
         )
