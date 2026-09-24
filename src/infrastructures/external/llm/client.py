@@ -30,6 +30,7 @@ from src.infrastructures.external.llm import (
 )
 from src.infrastructures.external.llm import prompts as prompt_module
 from src.infrastructures.external.llm import requests as request_module
+from src.infrastructures.external.llm.fallback_content import ensure_available
 from src.infrastructures.external.llm.fallbacks import LLMFallbackMixin
 from src.infrastructures.external.llm.normalization import LLMNormalizationMixin
 from src.infrastructures.external.llm.prompts import LLMPromptMixin
@@ -58,6 +59,7 @@ class HuggingFaceLLMClient(
         self._store = store
         self._http_client = httpx.AsyncClient(timeout=settings.llm.hf_timeout_seconds)
         self._generation_locks: dict[str, asyncio.Lock] = {}
+        ensure_available()
         self._warn_incomplete_fallback()
 
     @staticmethod

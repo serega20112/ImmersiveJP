@@ -1,0 +1,154 @@
+{
+  "scenes": [
+    {
+      "marker": "кафе",
+      "scene": {
+        "request_jp": "メニュー",
+        "request_ro": "menyuu",
+        "request_ru": "меню",
+        "option_jp": "おすすめ",
+        "option_ro": "osusume",
+        "option_ru": "рекомендация",
+        "action_jp": "注文",
+        "action_ro": "chuumon",
+        "action_ru": "заказ",
+        "place_jp": "カフェ",
+        "place_ro": "kafe",
+        "place_ru": "кафе"
+      }
+    },
+    {
+      "marker": "стан",
+      "scene": {
+        "request_jp": "路線図",
+        "request_ro": "rosenzu",
+        "request_ru": "схема линий",
+        "option_jp": "乗り場",
+        "option_ro": "noriba",
+        "option_ru": "нужная платформа",
+        "action_jp": "乗り換え",
+        "action_ro": "norikae",
+        "action_ru": "пересадка",
+        "place_jp": "駅",
+        "place_ro": "eki",
+        "place_ru": "станция"
+      }
+    },
+    {
+      "marker": "магаз",
+      "scene": {
+        "request_jp": "これ",
+        "request_ro": "kore",
+        "request_ru": "этот товар",
+        "option_jp": "別のサイズ",
+        "option_ro": "betsu no saizu",
+        "option_ru": "другой размер",
+        "action_jp": "支払い",
+        "action_ro": "shiharai",
+        "action_ru": "оплата",
+        "place_jp": "店内",
+        "place_ro": "tennai",
+        "place_ru": "магазин"
+      }
+    },
+    {
+      "marker": "универс",
+      "scene": {
+        "request_jp": "資料",
+        "request_ro": "shiryou",
+        "request_ru": "материалы",
+        "option_jp": "この課題",
+        "option_ro": "kono kadai",
+        "option_ru": "это задание",
+        "action_jp": "確認",
+        "action_ro": "kakunin",
+        "action_ru": "уточнение",
+        "place_jp": "教室",
+        "place_ro": "kyoushitsu",
+        "place_ru": "аудитория"
+      }
+    },
+    {
+      "marker": "офис",
+      "scene": {
+        "request_jp": "資料",
+        "request_ro": "shiryou",
+        "request_ru": "документ",
+        "option_jp": "進捗",
+        "option_ro": "shinchoku",
+        "option_ru": "статус задачи",
+        "action_jp": "共有",
+        "action_ro": "kyouyuu",
+        "action_ru": "обновление для команды",
+        "place_jp": "会議",
+        "place_ro": "kaigi",
+        "place_ru": "рабочая встреча"
+      }
+    },
+    {
+      "marker": "жиль",
+      "scene": {
+        "request_jp": "契約書",
+        "request_ro": "keiyakusho",
+        "request_ru": "договор",
+        "option_jp": "更新料",
+        "option_ro": "koushinryou",
+        "option_ru": "плата за продление",
+        "action_jp": "確認",
+        "action_ro": "kakunin",
+        "action_ru": "уточнение условий",
+        "place_jp": "不動産屋",
+        "place_ro": "fudousanya",
+        "place_ru": "агентство жилья"
+      }
+    },
+    {
+      "marker": "клиник",
+      "scene": {
+        "request_jp": "薬",
+        "request_ro": "kusuri",
+        "request_ru": "лекарство",
+        "option_jp": "症状",
+        "option_ro": "shoujou",
+        "option_ru": "симптом",
+        "action_jp": "説明",
+        "action_ro": "setsumei",
+        "action_ru": "объяснение состояния",
+        "place_jp": "受付",
+        "place_ro": "uketsuke",
+        "place_ru": "регистратура"
+      }
+    },
+    {
+      "marker": "улиц",
+      "scene": {
+        "request_jp": "地図",
+        "request_ro": "chizu",
+        "request_ru": "карта",
+        "option_jp": "近い道",
+        "option_ro": "chikai michi",
+        "option_ru": "ближайший путь",
+        "action_jp": "案内",
+        "action_ro": "annai",
+        "action_ru": "подсказка по маршруту",
+        "place_jp": "この道",
+        "place_ro": "kono michi",
+        "place_ru": "эта дорога"
+      }
+    }
+  ],
+  "default": {
+    "request_jp": "言い方",
+    "request_ro": "iikata",
+    "request_ru": "эту формулировку",
+    "option_jp": "表現",
+    "option_ro": "hyougen",
+    "option_ru": "выражение",
+    "action_jp": "会話",
+    "action_ro": "kaiwa",
+    "action_ru": "разговор",
+    "place_jp": "場面",
+    "place_ro": "bamen",
+    "place_ru": "сцену"
+  }
+}

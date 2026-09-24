@@ -55,6 +55,7 @@ src = [
     "frontend/static/**/*",
     "frontend/templates/*",
     "frontend/templates/**/*",
+    "infrastructures/external/llm/fallback_data/*.json",
 ]
 
 [tool.pytest.ini_options]
